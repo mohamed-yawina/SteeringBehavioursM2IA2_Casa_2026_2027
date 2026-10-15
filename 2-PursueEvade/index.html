@@ -1,21 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Sketch</title>
-
-    <link rel="stylesheet" type="text/css" href="style.css">
-
-    <script src="libraries/p5.min.js"></script>
-    <script src="libraries/p5.sound.min.js"></script>
-    <script src="vehicle.js"></script>
-    <script src="target.js"></script>
-    <script src="bouncingBall.js"></script>
-    <script src="sketch.js"></script>
-  </head>
-  <body>
-    <!-- Pas besoin de déclarer un canvas pour dessiner en P5.js -->
-  </body>
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090e19">
+  <meta name="description" content="Explorez Pursuit et Evade dans un challenge interactif et un laboratoire scientifique.">
+  <title>Pursuit &amp; Evade — Intelligence Lab | TD2 Master IA2</title>
+  <link rel="stylesheet" href="home.css">
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="index.html"><span class="brand-mark">P</span><span><strong>STEERING / TD 02</strong><small>MASTER IA2 · IA RÉACTIVE</small></span></a><span class="course-pill">PURSUIT &amp; EVADE</span></header>
+  <main>
+    <section class="intro"><p class="eyebrow">COMPORTEMENTS PRÉDICTIFS · MICHEL BUFFA</p><h1>Anticiper le mouvement.<br><em>Réagir au bon moment.</em></h1><p class="intro-copy">Deux expériences complémentaires : mesurez la force de steering dans le laboratoire, puis mettez la poursuite prédictive à l’épreuve dans le jeu.</p><div class="formula"><span>position future</span><b>=</b><span>position cible</span><strong>+</strong><span>vitesse cible × temps</span></div></section>
+    <section class="apps" aria-label="Applications du TD2">
+      <article class="app-card challenge-card"><div class="card-top"><span class="app-index">01 / PLAY</span><span class="tag">PREDATOR &amp; PREY</span></div><div class="preview preview-game" aria-hidden="true"><i class="orbit"></i><i class="agent agent-a"></i><i class="agent agent-b"></i><i class="agent agent-c"></i><i class="target-mark"></i><i class="trail"></i></div><div class="card-copy"><p class="eyebrow">CHALLENGE / ARCADE</p><h2>Predator &amp; Prey</h2><p>Pilotez un ou plusieurs chasseurs, choisissez la difficulté et observez les proies réagir à leur perception.</p></div><a class="launch launch-game" href="predator-prey.html"><span>Lancer le challenge</span><b>↗</b></a></article>
+      <article class="app-card lab-card"><div class="card-top"><span class="app-index">02 / STUDY</span><span class="tag">SCIENTIFIC LAB</span></div><div class="preview preview-lab" aria-hidden="true"><i class="grid-glow"></i><i class="vector vector-a"></i><i class="vector vector-b"></i><i class="vector vector-c"></i><i class="lab-agent"></i><i class="lab-target"></i></div><div class="card-copy"><p class="eyebrow">LABORATOIRE / EXPÉRIMENTAL</p><h2>Pursuit &amp; Evade Lab</h2><p>Comparez Seek, Pursuit, Flee et Evade. Inspectez les vecteurs, les prédictions et des essais à conditions identiques.</p></div><a class="launch launch-lab" href="pursuit-lab.html"><span>Ouvrir le laboratoire</span><b>↗</b></a></article>
+    </section>
+    <section class="principle"><span class="principle-icon">Δv</span><p><strong>Une loi de steering commune.</strong> La prédiction déplace l’objectif dans le futur ; le véhicule conserve sa locomotion et limite la force appliquée.</p><span class="principle-ref">REYNOLDS · 1999</span></section>
+  </main>
+  <footer><span>TD2 · PURSUIT &amp; EVADE</span><span>MASTER IA2 · 2026–2027</span></footer>
+</body>
 </html>

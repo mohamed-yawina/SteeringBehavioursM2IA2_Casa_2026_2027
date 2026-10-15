@@ -1,19 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Sketch</title>
-
-    <link rel="stylesheet" type="text/css" href="style.css">
-
-    <script src="libraries/p5.min.js"></script>
-    <script src="libraries/p5.sound.min.js"></script>
-    <script src="vehicle.js"></script>
-    <script src="sketch.js"></script>
-  </head>
-  <body>
-    <!-- Pas besoin de déclarer un canvas pour dessiner en P5.js -->
-  </body>
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#07111b">
+  <title>Arrival Intelligence Studio — TD3</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/home.css">
+</head>
+<body class="home-page">
+  <main class="home-shell">
+    <header class="home-header"><a class="studio-mark" href="index.html"><span>AI</span><span><b>ARRIVAL</b><small>INTELLIGENCE STUDIO · TD03</small></span></a><span class="course-tag">MASTER IA2 / STEERING BEHAVIORS</span></header>
+    <section class="hero"><p class="eyebrow">CRAIG REYNOLDS · COMPORTEMENTS RÉACTIFS</p><h1>Donner le bon freinage<br><em>au bon moment.</em></h1><p>Explorez Arrive, comparez-le à Seek et observez comment une vitesse désirée décroît à l’approche de la cible.</p><div class="hero-equation">desiredSpeed = maxSpeed × clamp((distance − stopDistance) / (slowRadius − stopDistance), 0, 1)</div></section>
+    <section class="studio-grid" aria-label="Applications TD3">
+      <article class="studio-card lab-card"><div class="card-kicker">01 / EXPÉRIMENTER</div><div class="card-visual"><span class="ring ring-outer"></span><span class="ring ring-inner"></span><span class="dot target-dot"></span><span class="dot agent-dot"></span><i class="vector-line"></i></div><h2>Scientific Arrive Lab</h2><p>Réglez les paramètres, inspectez les vecteurs et exportez les mesures de vos scénarios.</p><a class="card-link" href="arrive-lab.html">Ouvrir le laboratoire <b>↗</b></a></article>
+      <article class="studio-card challenge-card"><div class="card-kicker">02 / GUIDER</div><div class="card-visual formation-visual"><span class="formation-dot d1"></span><span class="formation-dot d2"></span><span class="formation-dot d3"></span><span class="formation-dot d4"></span><span class="formation-dot leader"></span></div><h2>Snake &amp; Formation Challenge</h2><p>Guidez un leader et comparez les formations de véhicules suiveurs.</p><a class="card-link" href="arrive-challenge.html">Lancer le challenge <b>↗</b></a></article>
+      <article class="studio-card text-card"><div class="card-kicker">03 / COMPOSER</div><div class="card-visual text-visual"><span>A</span><span>R</span><span>R</span><span>I</span><span>V</span><span>E</span></div><h2>Text Formation Studio</h2><p>Transformez un mot en points d’arrivée et animez les transitions de formation.</p><a class="card-link" href="text-studio.html">Ouvrir le studio texte <b>↗</b></a></article>
+    </section>
+    <footer class="home-footer"><span>TD3 · ARRIVE</span><span>MIAGE IA2 · LABORATOIRE DE COMPORTEMENTS RÉACTIFS</span></footer>
+  </main>
+</body>
 </html>

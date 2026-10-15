@@ -1,19 +1,136 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Air Traffic Lab — Wander</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="app">
+    <header class="top">
+      <div class="brand">
+        <div class="logo">✈</div>
+        <div>
+          <div class="eyebrow">Steering Behaviors · Wander · Air Traffic</div>
+          <h1>Air Traffic Lab</h1>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button id="addBtn" class="primary">＋ Avion</button>
+        <button id="addWaypointBtn">＋ Waypoint</button>
+        <button id="addWeatherBtn">＋ Turbulence</button>
+        <button id="clearBtn">✕ Tout effacer</button>
+      </div>
+    </header>
 
-    <title>Sketch</title>
+    <p id="simulationStatus" role="status">Simulation en cours</p>
+    <div class="layout">
+      <section class="canvas-card">
+        <canvas id="game"></canvas>
+        <div class="radar" id="radar">
+          <div class="radar-title">📡 RADAR</div>
+          <canvas id="radarCanvas"></canvas>
+        </div>
+      </section>
 
-    <link rel="stylesheet" type="text/css" href="style.css">
+      <aside class="side">
+        <section class="side-card">
+          <h3>🛩 Paramètres avion</h3>
+          <div class="field">
+            <label for="speed">Vitesse max (px/pas) : <span id="speedVal">4.0</span></label>
+            <input type="range" id="speed" min="0.5" max="10" step="0.1" value="4.0">
+          </div>
+          <div class="field">
+            <label for="force">Force max (px/pas²) : <span id="forceVal">0.15</span></label>
+            <input type="range" id="force" min="0.03" max="0.5" step="0.01" value="0.15">
+          </div>
+          <div class="field">
+            <label for="sep">Distance de séparation (px) : <span id="sepVal">80</span></label>
+            <input type="range" id="sep" min="30" max="200" value="80">
+          </div>
+        </section>
 
-    <script src="libraries/p5.min.js"></script>
-    <script src="libraries/p5.sound.min.js"></script>
-    <script src="vehicle.js"></script>
-    <script src="sketch.js"></script>
-  </head>
-  <body>
-    <!-- Pas besoin de déclarer un canvas pour dessiner en P5.js -->
-  </body>
+        <section class="side-card">
+          <h3>🌀 Paramètres Wander</h3>
+          <div class="field">
+            <label for="dist">Distance du cercle (px) : <span id="distVal">80</span></label>
+            <input type="range" id="dist" min="20" max="200" value="80">
+          </div>
+          <div class="field">
+            <label for="radius">Rayon du cercle (px) : <span id="radiusVal">40</span></label>
+            <input type="range" id="radius" min="5" max="100" value="40">
+          </div>
+          <div class="field">
+            <label for="angle">Variation d'angle (rad/pas) : <span id="angleVal">0.20</span></label>
+            <input type="range" id="angle" min="0" max="1" step="0.01" value="0.20">
+          </div>
+        </section>
+
+        <section class="side-card">
+          <h3>🎨 Mode de vol</h3>
+          <p id="modeDescription" class="help">Wander : exploration par cible fluctuante. Paramètres Wander actifs sur tous les avions.</p>
+          <div class="modes">
+            <button class="mode-btn active" data-mode="wander">Wander</button>
+            <button class="mode-btn" data-mode="waypoints">Waypoints</button>
+            <button class="mode-btn" data-mode="formation">Formation</button>
+            <button class="mode-btn" data-mode="patrol">Patrouille</button>
+          </div>
+        </section>
+
+        <section class="side-card">
+          <h3>🎬 Affichage</h3>
+          <p class="help">Masquer un dessin ne désactive aucun comportement. Les cercles de séparation apparaissent seulement en alerte.</p>
+          <div class="toggles">
+            <label><input type="checkbox" id="showWanderDebug"> Observer Wander du premier avion</label>
+            <label><input type="checkbox" id="showTrails" checked> Traînées</label>
+            <label><input type="checkbox" id="showSeparation" checked> Zones anti-collision</label>
+            <label><input type="checkbox" id="showWaypoints" checked> Waypoints</label>
+            <label><input type="checkbox" id="showWeather" checked> Turbulences</label>
+          </div>
+        </section>
+
+        <section class="side-card">
+          <h3>📊 Trafic</h3>
+          <p class="help">ATC : paires critiques à moins de 40 px ; avertissements à moins de 80 px. Seuils fixes, indépendants du curseur de séparation.</p>
+          <div class="stats">
+            <div class="stat-row"><span>Avions :</span><strong id="count">6</strong></div>
+            <div class="stat-row"><span>Vitesse moy. (px/pas) :</span><strong id="avgSpeed">0.0</strong></div>
+            <div class="stat-row"><span>Paires critiques :</span><strong id="alerts" class="red">0</strong></div>
+            <div class="stat-row"><span>FPS :</span><strong id="fps">60</strong></div>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <section class="side-card pedagogy">
+      <h2>Comprendre Wander</h2>
+      <p>Le centre C est projeté devant l’avion dans la direction de sa vitesse, à la distance d. La cible T varie sur un cercle de rayon r. L’angle θ varie de −a à +a radians par pas (borne haute exclue), dans le repère du monde : seule la projection du centre suit la vitesse.</p>
+      <p><code>C = position + direction(vitesse) × d</code> (direction +x si vitesse ≤ 0,1).<br>
+      <code>T = C + r × (cos θ, sin θ)</code>. Wander appelle Seek vers T : vitesse désirée dirigée vers T, de norme maxSpeed ; <code>steering = vitesse désirée − vitesse actuelle</code>, limité à maxForce. À distance nulle, Seek retourne zéro.</p>
+      <p>Force appliquée = principale + séparation × 2 + météo × 1,5 + bordures × 3, puis plafonnement global à maxForce. Un pas vaut 1/60 seconde.</p>
+      <p id="debugStatus" role="status">Visualisation désactivée.</p>
+      <p class="help">Dernier pas physique : centre/cercle bleu, rayon/cible jaune, vitesse blanche (×12), steering Wander vert (×240), force totale plafonnée rose (×240). Les flèches sont agrandies ; elles peuvent se superposer. Après redimensionnement, la géométrie mémorisée est adaptée au canvas jusqu’au prochain pas.</p>
+      <p><strong>Pour essayer :</strong> tout effacer, ajouter un avion, choisir Wander et activer l’observation. Comparer la variation d’angle à 0 puis 0,5, loin des bords. Modifier ensuite distance et rayon séparément. Ajouter une turbulence pour comparer force Wander et force totale.</p>
+    </section>
+    <div class="foot">
+      <span class="key">Clic gauche</span> Ajouter avion ·
+      <span class="key">Clic droit</span> Retirer ·
+      <span class="key">Espace</span> Pause/reprise ·
+      <span class="key">+</span> Ajouter avion · <span class="key">−</span> Retirer le dernier ·
+      <span class="key">C</span> Tout effacer
+    </div>
+  </main>
+
+  <script src="libraries/p5.min.js"></script>
+  <script src="js/vehicle.js"></script>
+  <script src="js/airplane.js"></script>
+  <script src="js/waypoint.js"></script>
+  <script src="js/weather.js"></script>
+  <script src="js/particle.js"></script>
+  <script src="js/atc.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/main.js"></script>
+</body>
 </html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090e19">
+  <title>Predator &amp; Prey Challenge — TD2</title>
+  <link rel="stylesheet" href="challenge.css">
+  <script src="libraries/p5.min.js"></script>
+  <script src="libraries/p5.sound.min.js"></script>
+</head>
+<body>
+  <nav class="app-nav" aria-label="Navigation TD2">
+    <a href="index.html">TD2 / accueil</a>
+    <a href="pursuit-lab.html">Ouvrir Scientific Lab</a>
+  </nav>
+  <aside class="challenge-controls" aria-label="Paramètres du challenge">
+    <label for="difficulty-select">Difficulté</label>
+    <select id="difficulty-select"><option value="easy">Facile</option><option value="normal" selected>Standard</option><option value="hard">Difficile</option></select>
+    <label for="hunter-count">Poursuivants <output id="hunter-count-value">1</output></label>
+    <input id="hunter-count" type="range" min="1" max="4" value="1">
+    <label for="prey-count">Proies <output id="prey-count-value">5</output></label>
+    <input id="prey-count" type="range" min="3" max="10" value="5">
+    <button id="challenge-reset" type="button">Nouvelle partie</button>
+    <section class="challenge-live-stats" aria-label="Statistiques de poursuite"><span>FPS <strong id="challenge-fps">—</strong></span><span>Captures <strong id="challenge-captures">0</strong></span><span>Temps <strong id="challenge-time">0.0 s</strong></span><span>Distance min. <strong id="challenge-distance">—</strong></span><span>Dernière capture <strong id="challenge-last-capture">—</strong></span></section>
+    <small>Réglages pris en compte à la nouvelle partie. Clavier : P Pursuit · S Seek · W Wander · V Vision · M Son</small>
+  </aside>
+  <script src="storage.js"></script>
+  <script src="achievement.js"></script>
+  <script src="vehicle.js"></script>
+  <script src="obstacle.js"></script>
+  <script src="target-selection.js"></script>
+  <script src="target.js"></script>
+  <script src="bouncingBall.js"></script>
+  <script src="particle.js"></script>
+  <script src="powerup.js"></script>
+  <script src="combo.js"></script>
+  <script src="audio.js"></script>
+  <script src="ui.js"></script>
+  <script src="sketch.js"></script>
+</body>
+</html>

@@ -64,14 +64,22 @@ const SeekPopulation = (() => {
     return true;
   }
 
+  // Le modèle Vehicle local n'embarque pas la gestion des bords; la scène la possède.
+  function wrap(vehicle, w, h) {
+    if (vehicle.pos.x > w + vehicle.r) vehicle.pos.x = -vehicle.r;
+    else if (vehicle.pos.x < -vehicle.r) vehicle.pos.x = w + vehicle.r;
+    if (vehicle.pos.y > h + vehicle.r) vehicle.pos.y = -vehicle.r;
+    else if (vehicle.pos.y < -vehicle.r) vehicle.pos.y = h + vehicle.r;
+  }
+
   function step(vehicle, target, w, h, rng = Math.random) {
     if (hasArrived(vehicle, target)) {
       respawn(vehicle, target, w, h, rng);
       return;
     }
-    vehicle.applyBehaviors(target);
+    vehicle.applyForce(vehicle.seek(target));
     vehicle.update();
-    vehicle.edges();
+    wrap(vehicle, w, h);
     if (hasArrived(vehicle, target)) respawn(vehicle, target, w, h, rng);
   }
 
@@ -86,5 +94,5 @@ const SeekPopulation = (() => {
   }
 
   return { MIN_COUNT, MAX_COUNT, INITIAL_COUNT, ARRIVAL_RADIUS,
-    hasArrived, spawnPosition, resize, respawn, step, bindSlider };
+    hasArrived, spawnPosition, resize, respawn, wrap, step, bindSlider };
 })();

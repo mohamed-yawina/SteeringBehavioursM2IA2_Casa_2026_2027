@@ -16,7 +16,8 @@ class Vector {
 }
 function scene(w = 800, h = 600) {
   const context = vm.createContext({ createVector: (x, y) => new Vector(x, y),
-    p5: { Vector }, width: w, height: h });
+    p5: { Vector }, width: w, height: h, color: () => ({}),
+    random: max => max / 2, TWO_PI: Math.PI * 2 });
   for (const file of ['vehicle.js', 'population.js', 'mouseTarget.js']) {
     vm.runInContext(readFileSync(new URL(`../${file}`, import.meta.url), 'utf8'), context);
   }
@@ -52,14 +53,14 @@ test('slider : input met à jour population et compteur sans change', () => {
   assert.equal(events.change, undefined);
 });
 
-test('edges fourni : quatre seuils stricts, angles et vitesse conservée', () => {
-  const { Vehicle } = scene();
+test('rebouclage de scène : quatre seuils stricts, angles et vitesse conservée', () => {
+  const { Vehicle, population: p } = scene();
   for (const [x, y, expectedX, expectedY] of [
     [817, 100, -16, 100], [-17, 100, 816, 100],
     [100, 617, 100, -16], [100, -17, 100, 616],
     [817, -17, -16, 616], [816, 616, 816, 616], [-16, -16, -16, -16],
   ]) {
-    const v = new Vehicle(x, y); v.vel.set(2, -3); v.edges();
+    const v = new Vehicle(x, y); v.r = 16; v.vel.set(2, -3); p.wrap(v, 800, 600);
     assert.deepEqual([v.pos.x, v.pos.y], [expectedX, expectedY]);
     assert.deepEqual([v.vel.x, v.vel.y], [2, -3]);
   }
@@ -73,7 +74,7 @@ test('seek fourni : forces proches/lointaines limitées et cible intacte', () =>
     assert.ok(force.mag() <= v.maxForce + 1e-12);
     if (position.mag()) assert.ok(force.x > 0);
     assert.deepEqual([position.x, position.y], original);
-    v.vel.set(100, 100); v.applyBehaviors(position); v.update();
+    v.vel.set(100, 100); v.applyForce(v.seek(position)); v.update();
     assert.ok(v.vel.mag() <= v.maxSpeed + 1e-12);
     assert.equal(v.acc.mag(), 0);
   }

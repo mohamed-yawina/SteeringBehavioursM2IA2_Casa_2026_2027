@@ -1,0 +1,12 @@
+.studio-app { width:min(1500px,100%); }
+.studio-mini { width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,#73dfd0,#29889a);color:#07131c;font-weight:900; }
+.app-nav { display:flex;flex-wrap:wrap;gap:8px; }.app-nav a { padding:8px 10px;border:1px solid var(--line);border-radius:9px;color:#9fb5c1;text-decoration:none;font-size:11px; }.app-nav a:hover{color:#7ce8da;border-color:#477477}
+.studio-app .brand { color:inherit;text-decoration:none; }.studio-app .brand h1{font-size:20px}.studio-app .layout{grid-template-columns:minmax(0,1fr) 330px}.studio-app .canvas-card{min-height:450px;background:#07121c}
+#game { width:100%;height:auto;aspect-ratio:16/10; }
+.canvas-overlay { display:flex;gap:16px;position:absolute;left:14px;bottom:12px;padding:8px 10px;border:1px solid #263d4b;background:#08131bdd;border-radius:9px;color:#a8bac5;font-size:10px; }.canvas-overlay span{display:flex;align-items:center;gap:6px}.legend-dot{width:7px;height:7px;border-radius:50%;background:#ffd166}.legend-dot.vehicle{background:#5ec8ff}.legend-dot.force{background:#79e0d1}
+.side-card .field:last-child{margin-bottom:0}.select-field{display:grid;gap:6px;margin-top:12px;color:var(--muted);font-size:11px}.select-field select{padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:#0a141d;color:var(--text)}
+.button-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.wide-button{width:100%;margin-top:9px}.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}.stat-grid>div{padding:9px;border-radius:8px;background:#09141e}.stat-grid small,.stat-grid strong{display:block}.stat-grid small{color:var(--muted);font-size:9px;letter-spacing:.1em}.stat-grid strong{margin-top:3px;font-size:13px;color:#8be5da;font-variant-numeric:tabular-nums}
+.studio-foot{color:var(--muted);font-size:11px;text-align:center;padding:13px 0}.info-text{margin-top:12px}
+.vector-readout{font-size:11px;line-height:1.9;color:var(--muted);font-variant-numeric:tabular-nums}.legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:12px;color:var(--muted);font-size:10px}
+@media(max-width:980px){.studio-app .layout{grid-template-columns:1fr}.studio-app .side{grid-template-columns:repeat(2,minmax(0,1fr))}.studio-app .side-card:last-child{grid-column:1/-1}}
+@media(max-width:640px){.studio-app .top{align-items:flex-start}.app-nav{width:100%}.studio-app .side{grid-template-columns:1fr}.studio-app .side-card:last-child{grid-column:auto}.canvas-overlay{font-size:9px;gap:8px}}

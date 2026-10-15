@@ -1,23 +1,41 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seek — population de véhicules</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="libraries/p5.min.js"></script>
-    <script src="vehicle.js"></script>
-    <script src="population.js"></script>
-    <script src="mouseTarget.js"></script>
-    <script src="sketch.js"></script>
-  </head>
-  <body>
-    <header id="controls">
-      <label for="vehicle-count">Véhicules :</label>
-      <input id="vehicle-count" type="range" min="1" max="200" step="1" value="20">
-      <output id="vehicle-count-value" for="vehicle-count">20 / 200</output>
-      <span class="hint">Déplacez la souris dans la scène pour guider la cible rouge.</span>
-    </header>
-    <main id="scene" aria-label="Simulation de véhicules poursuivant une cible"></main>
-  </body>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090e19">
+  <meta name="description" content="TD1 de steering behaviors : explorez Seek et Flee dans Steering Lab et Swarm Attack.">
+  <title>TD1 · Steering Behaviors — Master IA2</title>
+  <link rel="stylesheet" href="home.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="brand-mark">S</span><span><strong>STEERING / TD 01</strong><small>MASTER IA2 · IA RÉACTIVE</small></span></a>
+    <span class="course-pill"><span></span> SEEK &amp; FLEE</span>
+  </header>
+  <main>
+    <section class="intro">
+      <p class="eyebrow">COMPORTEMENTS DE PILOTAGE · MICHEL BUFFA</p>
+      <h1>Deux façons d’explorer<br><em>le mouvement réactif.</em></h1>
+      <p class="intro-copy">Un même modèle de véhicule, deux expériences complémentaires : jouez avec les comportements, puis observez les forces qui les produisent.</p>
+      <div class="formula"><span>desired velocity</span><b>−</b><span>current velocity</span><b>=</b><strong>steering force</strong></div>
+    </section>
+    <section class="apps" aria-label="Applications du TD1">
+      <article class="app-card game-card">
+        <div class="card-top"><span class="app-index">01 / PLAY</span><span class="tag tag-game">EXPÉRIENCE LUDIQUE</span></div>
+        <div class="preview preview-game" aria-hidden="true"><div class="orbit orbit-a"></div><div class="orbit orbit-b"></div><span class="spark spark-a">✦</span><span class="spark spark-b">✦</span><span class="craft craft-a">➤</span><span class="craft craft-b">➤</span><span class="craft craft-c">➤</span><span class="core"></span></div>
+        <div class="card-copy"><p class="eyebrow">SURVIVAL / ACTION</p><h2>Swarm Attack</h2><p>Une expérience arcade construite autour d’un essaim d’agents. Déplacez-vous, esquivez les ennemis et observez les forces de poursuite en action.</p></div>
+        <a class="launch launch-game" href="swarm-attack.html"><span>Lancer le jeu</span><b>↗</b></a>
+      </article>
+      <article class="app-card lab-card">
+        <div class="card-top"><span class="app-index">02 / STUDY</span><span class="tag tag-lab">OBSERVATION SCIENTIFIQUE</span></div>
+        <div class="preview preview-lab" aria-hidden="true"><div class="grid-glow"></div><span class="vector vector-a"></span><span class="vector vector-b"></span><span class="vector vector-c"></span><span class="agent agent-a"></span><span class="agent agent-b"></span><span class="target-mark"></span><span class="vector-label label-a">v</span><span class="vector-label label-b">s</span></div>
+        <div class="card-copy"><p class="eyebrow">LABORATOIRE / INTERACTIF</p><h2>Steering Lab</h2><p>Comparez Seek et Flee, ajustez les paramètres et suivez la vitesse souhaitée, la vitesse actuelle et la force de steering.</p></div>
+        <a class="launch launch-lab" href="steering-lab.html"><span>Ouvrir le laboratoire</span><b>↗</b></a>
+      </article>
+    </section>
+    <section class="principle"><span class="principle-icon">∑</span><p><strong>Un principe commun.</strong> Les comportements choisissent une direction souhaitée. La locomotion applique ensuite la force limitée au véhicule.</p><span class="principle-ref">REYNOLDS · 1999</span></section>
+  </main>
+  <footer><span>TD1 · STEERING BEHAVIORS</span><span>MASTER IA2 <i>·</i> 2026—2027</span></footer>
+</body>
 </html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Swarm Attack — TD1 Steering Behaviors</title>
+  <script src="libraries/p5.min.js"></script>
+  <script src="libraries/p5.sound.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a1a;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      overflow: auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 12px;
+    }
+    canvas {
+      width: auto;
+      height: auto;
+      max-width: calc(100vw - 24px);
+      max-height: calc(100vh - 24px);
+      box-shadow: 0 0 40px rgba(100, 150, 255, 0.3);
+      border-radius: 8px;
+    }
+  </style>
+  <style>
+    .home-link { position: fixed; z-index: 10; top: 16px; left: 16px; padding: 9px 12px; border: 1px solid #ffffff2c; border-radius: 8px; background: #0a0a1add; color: #dce8ff; font: 600 12px 'Segoe UI', Arial, sans-serif; text-decoration: none; backdrop-filter: blur(8px); }
+    .home-link:hover { border-color: #80aaff; background: #182541eF; }
+    canvas { width: min(1200px, calc(100vw - 24px)); height: auto; }
+  </style>
+</head>
+<body>
+  <a class="home-link" href="index.html">← Accueil du TD1</a>
+  <script src="vehicle.js"></script>
+  <script src="obstacle.js"></script>
+  <script src="target.js"></script>
+  <script src="particle.js"></script>
+  <script src="powerup.js"></script>
+  <script src="projectile.js"></script>
+  <script src="boss.js"></script>
+  <script src="combo.js"></script>
+  <script src="upgrades.js"></script>
+  <script src="survival.js"></script>
+  <script src="storage.js"></script>
+  <script src="audio.js"></script>
+  <script src="ui.js"></script>
+  <script src="sketch.js"></script>
+</body>
+</html>

@@ -1,199 +1,184 @@
+// ============================================
+// Classe Vehicle - CHASSEUR
+// ============================================
 class Vehicle {
   constructor(x, y) {
-    // position du véhicule
     this.pos = createVector(x, y);
-    // vitesse du véhicule
     this.vel = createVector(0, 0);
-    // accélération du véhicule
     this.acc = createVector(0, 0);
-    // vitesse maximale du véhicule
-    this.maxSpeed = 10;
-    // force maximale appliquée au véhicule
-    this.maxForce = 0.25;
-    // rayon du véhicule
-    this.r = 16;
+    this.maxSpeed = 7;
+    this.maxForce = 0.6;
+    this.r = 15;
+    this.color = color(0, 220, 255);
+
+    this.wanderAngle = random(TWO_PI);
+
+    this.trail = [];
+
+    this.speedBoostTimer = 0;
+    this.visionBoostTimer = 0;
+    this.baseMaxSpeed = this.maxSpeed;
   }
 
-  /*
-   seek est une méthode qui permet de faire se rapprocher le véhicule de la cible passée en paramètre
-   */
-    seek(target) {
-    // on calcule la direction vers la cible
-    // C'est l'ETAPE 1 (action : se diriger vers une cible)
-    let force = p5.Vector.sub(target, this.pos);
-
-    // Dessous c'est l'ETAPE 2 : le pilotage (comment on se dirige vers la cible)
-    // on limite ce vecteur à la longueur maxSpeed
-    force.setMag(this.maxSpeed);
-    // on calcule la force à appliquer pour atteindre la cible
-    force.sub(this.vel);
-    // on limite cette force à la longueur maxForce
-    force.limit(this.maxForce);
-    // on applique la force au véhicule
-    return force;
+  // ============================================
+  // Comportements de steering
+  // ============================================
+  seek(target) {
+    let d = p5.Vector.sub(target, this.pos);
+    d.setMag(this.maxSpeed);
+    let s = p5.Vector.sub(d, this.vel);
+    s.limit(this.maxForce);
+    return s;
   }
 
-  // inverse de seek !
-  flee(target, distanceDeDetection = Infinity) {
-    return this.seek(target.pos, distanceDeDetection).mult(-1);
+  flee(target) {
+    let d = p5.Vector.sub(this.pos, target);
+    d.setMag(this.maxSpeed);
+    let s = p5.Vector.sub(d, this.vel);
+    s.limit(this.maxForce);
+    return s;
   }
 
-  /* Poursuite d'un point devant la target !
-     cette methode renvoie la force à appliquer au véhicule
-  */
-  pursue(target) {
-
-    // On dessine le vecteur vitesse de la target
-    this.drawVector(target.pos, target.vel.copy().mult(10));
-
-    // TODO
-    // 1 - calcul de la position future de la cible
-    // on fait une copie de la vitesse de la target
-    // (pour ne pas modifier la vitesse de la target)
-    let targetAhead = target.vel.copy();
-
-    // et on le multiplie par 10 (10 frames)
-    // 2 - prediction dans 10 frames = 10 fois la longueur du vecteur
-    // (on multiplie le vecteur vitesse par 10)
-    // TODO
-    targetAhead.mult(20);
-
-    // 3 - on positionne  la target au bout de ce vecteur
-    // (on ajoute ce vecteur à la position de la target)
-    // TODO
-    targetAhead.add(target.pos);
-
-    // 4 -dessin du point devant la target
-    fill("green");
-    circle(targetAhead.x, targetAhead.y, 16); 
-
-    // 6 - appel à seek avec ce point comme cible 
-    let force = this.seek(targetAhead);
-
-    // n'oubliez pas, on renvoie la force à appliquer au véhicule !
-    return force;
+  arrive(target, slowR = 150) {
+    let d = p5.Vector.sub(target, this.pos);
+    let dist = d.mag();
+    if (dist < slowR) d.setMag(map(dist, 0, slowR, 0, this.maxSpeed));
+    else d.setMag(this.maxSpeed);
+    let s = p5.Vector.sub(d, this.vel);
+    s.limit(this.maxForce);
+    return s;
   }
 
-  /* inverse de pursue
-     cette methode renvoie la force à appliquer au véhicule
-  */
-  evade(target) {
-    // TODO : on inverse la logique de pursue
-    let force = this.pursue(target).mult(-1);
-    return force;
+  pursue(target, T = 10) {
+    let f = p5.Vector.add(target.pos, p5.Vector.mult(target.vel, T));
+    return this.seek(f);
   }
 
-  /**  Fonction de poursuite parfaite (avec le point devant la
-  target qui se rapproche quand le poursuiveur se rapproche)
-  */
-  pursuePerfect(vehicle) {
-    // Use the Law of Sines (https://en.wikipedia.org/wiki/Law_of_sines)
-    // to predict the right collision point
-    const speed_ratio = vehicle.vel.mag() / this.maxSpeed;
-    const target_angle = vehicle.vel.angleBetween(p5.Vector.sub(this.pos, vehicle.pos));
-    const my_angle = asin(sin(target_angle) * speed_ratio);
-    const dist = this.pos.dist(vehicle.pos);
-    const prediction = dist * sin(my_angle) / sin(PI - my_angle - target_angle);
-    const target = vehicle.vel.copy().setMag(prediction).add(vehicle.pos);
-    
-    drawArrow(vehicle.pos, p5.Vector.mult(vehicle.vel, 20), 'red');
-    drawArrow(this.pos, p5.Vector.sub(target, this.pos), 'green');
-    
-    fill(0, 255, 0);
-    circle(target.x, target.y, 8);
-    return this.seek(target);
+  evade(target, T = 10) {
+    let f = p5.Vector.add(target.pos, p5.Vector.mult(target.vel, T));
+    return this.flee(f);
   }
 
-
-  // applyForce est une méthode qui permet d'appliquer une force au véhicule
-  // en fait on additionne le vecteurr force au vecteur accélération
-  applyForce(force) {
-    this.acc.add(force);
+  wander() {
+    this.wanderAngle += random(-0.3, 0.3);
+    let c = this.vel.copy().setMag(80);
+    let d = createVector(0, -1).setMag(30).rotate(this.wanderAngle);
+    return this.seek(p5.Vector.add(this.pos, p5.Vector.add(c, d)));
   }
+
+  boundaries(margin = 60) {
+    let d = null;
+    if (this.pos.x < margin) d = createVector(this.maxSpeed, this.vel.y);
+    else if (this.pos.x > width - margin) d = createVector(-this.maxSpeed, this.vel.y);
+    if (this.pos.y < margin) d = createVector(this.vel.x, this.maxSpeed);
+    else if (this.pos.y > height - margin) d = createVector(this.vel.x, -this.maxSpeed);
+    if (d) {
+      d.setMag(this.maxSpeed);
+      let s = p5.Vector.sub(d, this.vel);
+      s.limit(this.maxForce);
+      return s;
+    }
+    return createVector(0, 0);
+  }
+
+  avoid(obstacles) {
+    let ahead = this.vel.copy().setMag(70).add(this.pos);
+    let ahead2 = this.vel.copy().setMag(35).add(this.pos);
+    let threat = null;
+    let minD = Infinity;
+    for (let obs of obstacles) {
+      let d1 = p5.Vector.dist(ahead, obs.pos);
+      let d2 = p5.Vector.dist(ahead2, obs.pos);
+      let d3 = p5.Vector.dist(this.pos, obs.pos);
+      if ((d1 < obs.r || d2 < obs.r || d3 < obs.r) && d3 < minD) {
+        minD = d3;
+        threat = obs;
+      }
+    }
+    if (threat) {
+      let a = p5.Vector.sub(ahead, threat.pos);
+      a.setMag(this.maxSpeed);
+      a.sub(this.vel);
+      a.limit(this.maxForce * 3);
+      return a;
+    }
+    return createVector(0, 0);
+  }
+
+  // ============================================
+  // Physique
+  // ============================================
+  applyForce(f) { this.acc.add(f); }
 
   update() {
-    // on ajoute l'accélération à la vitesse. L'accélération est un incrément de vitesse
-    // (accélératiion = dérivée de la vitesse)
-    this.vel.add(this.acc);
-    // on contraint la vitesse à la valeur maxSpeed
-    this.vel.limit(this.maxSpeed);
-    // on ajoute la vitesse à la position. La vitesse est un incrément de position, 
-    // (la vitesse est la dérivée de la position)
-    this.pos.add(this.vel);
+    if (this.speedBoostTimer > 0) {
+      this.speedBoostTimer--;
+      this.maxSpeed = this.baseMaxSpeed * 1.7;
+    } else {
+      this.maxSpeed = this.baseMaxSpeed;
+    }
 
-    // on remet l'accélération à zéro
-    this.acc.set(0, 0);
+    this.vel.add(this.acc);
+    this.vel.limit(this.maxSpeed);
+    this.pos.add(this.vel);
+    this.acc.mult(0);
+
+    this.trail.push(this.pos.copy());
+    if (this.trail.length > 20) this.trail.shift();
   }
 
-  // On dessine le véhicule
+  edges() {
+    if (this.pos.x > width) this.pos.x = 0;
+    if (this.pos.x < 0) this.pos.x = width;
+    if (this.pos.y > height) this.pos.y = 0;
+    if (this.pos.y < 0) this.pos.y = height;
+  }
+
+  // ============================================
+  // Affichage avec traînée néon
+  // ============================================
   show() {
-    // formes fil de fer en blanc
-    stroke(255);
-    // épaisseur du trait = 2
-    strokeWeight(2);
-
-    // formes pleines en blanc
-    fill(255);
-
-    // sauvegarde du contexte graphique (couleur pleine, fil de fer, épaisseur du trait, 
-    // position et rotation du repère de référence)
     push();
-    // on déplace le repère de référence.
+    noFill();
+    for (let i = 0; i < this.trail.length; i++) {
+      let t = this.trail[i];
+      let alpha = map(i, 0, this.trail.length, 0, 120);
+      let w = map(i, 0, this.trail.length, 1, 8);
+      stroke(red(this.color), green(this.color), blue(this.color), alpha);
+      strokeWeight(w);
+      point(t.x, t.y);
+    }
+    pop();
+
+    push();
     translate(this.pos.x, this.pos.y);
-    // et on le tourne. heading() renvoie l'angle du vecteur vitesse (c'est l'angle du véhicule)
     rotate(this.vel.heading());
 
-    // Dessin d'un véhicule sous la forme d'un triangle. Comme s'il était droit, avec le 0, 0 en haut à gauche
-    triangle(-this.r, -this.r / 2, -this.r, this.r / 2, this.r, 0);
-    // Que fait cette ligne ?
-    //this.edges();
+    noStroke();
+    fill(red(this.color), green(this.color), blue(this.color), 40);
+    circle(0, 0, this.r * 4);
 
-    // draw velocity vector
+    fill(20, 20, 40);
+    stroke(this.color);
+    strokeWeight(2.5);
+    triangle(
+      this.r * 1.8, 0,
+      -this.r, -this.r * 0.9,
+      -this.r, this.r * 0.9
+    );
+
+    noStroke();
+    let reactIntensity = this.speedBoostTimer > 0 ? 1.5 : 1;
+    fill(0, 220, 255, 200);
+    triangle(
+      -this.r * 1.1, -3 * reactIntensity,
+      -this.r * 1.1, 3 * reactIntensity,
+      -this.r * (2.2 + random(6)) * reactIntensity, 0
+    );
+
+    fill(255, 255, 255, 200);
+    circle(this.r * 0.5, 0, 5);
+
     pop();
-    this.drawVector(this.pos, this.vel.copy().mult(10));
   }
-
-  drawVector(pos, v) {
-    push();
-    // Dessin du vecteur depuis pos comme origne
-    strokeWeight(3);
-    stroke("red");
-    line(pos.x, pos.y, pos.x + v.x, pos.y + v.y);
-    // dessine une petite fleche au bout du vecteur vitesse
-    let arrowSize = 5;
-    translate(pos.x + v.x , pos.y + v.y);
-    rotate(v.heading());
-    translate(-arrowSize / 2, 0);
-    triangle(0, arrowSize / 2, 0, -arrowSize / 2, arrowSize, 0);
-    pop();
-  }
-
-  // que fait cette méthode ?
-  edges() {
-    if (this.pos.x > width + this.r) {
-      this.pos.x = -this.r;
-    } else if (this.pos.x < -this.r) {
-      this.pos.x = width + this.r;
-    }
-    if (this.pos.y > height + this.r) {
-      this.pos.y = -this.r;
-    } else if (this.pos.y < -this.r) {
-      this.pos.y = height + this.r;
-    }
-  }
-}
-
-// draw an arrow for a vector at a given base position
-function drawArrow(base, vec, myColor) {
-  push();
-  stroke(myColor);
-  strokeWeight(3);
-  fill(myColor);
-  translate(base.x, base.y);
-  line(0, 0, vec.x, vec.y);
-  rotate(vec.heading());
-  let arrowSize = 7;
-  translate(vec.mag() - arrowSize, 0);
-  triangle(0, arrowSize / 2, 0, -arrowSize / 2, arrowSize, 0);
-  pop();
 }

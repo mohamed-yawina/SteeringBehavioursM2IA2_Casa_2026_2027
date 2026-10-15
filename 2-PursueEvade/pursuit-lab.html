@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090e19">
+  <meta name="description" content="Laboratoire interactif pour étudier Seek, Pursuit, Flee et Evade.">
+  <title>Pursuit &amp; Evade Scientific Lab — TD2</title>
+  <link rel="stylesheet" href="lab.css">
+  <script src="libraries/p5.min.js"></script>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="index.html"><span class="brand-mark">P</span><span><strong>Pursuit &amp; Evade</strong><small>SCIENTIFIC LAB · TD2</small></span></a>
+      <nav><a href="index.html">Accueil</a><a href="predator-prey.html">Predator &amp; Prey</a></nav>
+      <div class="transport"><button id="pause-button" class="quiet">Pause</button><button id="resume-button" class="primary">Reprendre</button><button id="step-button" class="quiet">Pas suivant</button><button id="reset-button" class="quiet">Reset</button></div>
+    </header>
+    <div class="layout">
+      <section class="stage-column">
+        <div class="stage-heading"><div><p class="eyebrow">LABORATOIRE DE COMPORTEMENTS</p><h1>Voir l’intention derrière le mouvement.</h1><p>La locomotion reste celle de <code>Vehicle</code>. Changez l’objectif ou la prédiction et observez la force.</p></div>
+          <div class="metrics"><div><span>FPS</span><strong id="fps-value">—</strong></div><div><span>FRAME</span><strong id="frame-value">0</strong></div><div><span>CAPTURES</span><strong id="capture-value">0</strong></div></div>
+        </div>
+        <div class="sim-frame"><div id="simulation-canvas" aria-label="Canvas du laboratoire"></div><div class="canvas-legend"><span><i class="dot hunter"></i>Poursuivant</span><span><i class="dot prey"></i>Cible</span><span><i class="dash future"></i>Position prédite</span></div></div>
+        <section class="science-panel"><div class="science-head"><div><p class="eyebrow">MESURES DU VÉHICULE SÉLECTIONNÉ</p><h2>Vecteurs et écart à la cible</h2></div><span id="selected-agent">Agent : poursuivant</span></div>
+          <p class="equation">steering = desiredVelocity − currentVelocity</p>
+          <div class="vector-legend"><span><i class="line velocity"></i>Vitesse</span><span><i class="line desired"></i>Vitesse souhaitée</span><span><i class="line force"></i>Force steering</span><span class="distance">Distance <strong id="distance-value">—</strong></span></div><p class="scale-note">Échelle de dessin : vitesses ×8, force steering ×35. Les directions et valeurs proviennent du calcul courant.</p>
+          <div class="science-stats"><span>Prédiction <strong id="prediction-value">—</strong></span><span>Distance moyenne <strong id="mean-distance">—</strong></span><span>Dernière capture <strong id="capture-time">—</strong></span></div>
+        </section>
+      </section>
+      <aside class="sidebar" aria-label="Paramètres de simulation">
+        <div class="panel-title"><div><p class="eyebrow">CONFIGURATION</p><h2>Expérience</h2></div></div>
+        <label for="scenario-select">Scénario</label><select id="scenario-select"><option value="single">Agent unique</option><option value="chase">Chat et souris</option><option value="bouncing">Balles rebondissantes</option><option value="compare-pursuit">Comparaison Seek / Pursuit</option><option value="compare-evade">Comparaison Flee / Evade</option></select>
+        <label for="behavior-select">Comportement de l’agent</label><select id="behavior-select"><option value="seek">Seek</option><option value="pursuit" selected>Pursuit</option><option value="flee">Flee</option><option value="evade">Evade</option></select>
+        <div class="control"><div class="range-label"><label for="prediction-slider">Prédiction</label><output id="prediction-output">10 frames</output></div><input id="prediction-slider" type="range" min="2" max="30" value="10"><div class="range-hint"><span>2</span><span>30 frames</span></div></div>
+        <div class="control"><div class="range-label"><label for="speed-slider">Vitesse max. agent</label><output id="speed-output">7.0</output></div><input id="speed-slider" type="range" min="1" max="12" step="0.5" value="7"></div>
+        <div class="control"><div class="range-label"><label for="force-slider">Force max. agent</label><output id="force-output">0.60</output></div><input id="force-slider" type="range" min="0.05" max="1.5" step="0.05" value="0.6"></div>
+        <div class="control"><div class="range-label"><label for="prey-speed-slider">Vitesse max. cible</label><output id="prey-speed-output">3.0</output></div><input id="prey-speed-slider" type="range" min="0.5" max="8" step="0.5" value="3"></div>
+        <div class="control"><div class="range-label"><label for="prey-force-slider">Force max. cible</label><output id="prey-force-output">0.35</output></div><input id="prey-force-slider" type="range" min="0.05" max="1" step="0.05" value="0.35"></div>
+        <div class="control"><div class="range-label"><label for="vision-slider">Rayon de perception</label><output id="vision-output">200 px</output></div><input id="vision-slider" type="range" min="30" max="360" step="10" value="200"></div>
+        <div class="control"><div class="range-label"><label for="sim-speed-slider">Vitesse simulation</label><output id="sim-speed-output">1×</output></div><input id="sim-speed-slider" type="range" min="1" max="4" value="1"></div>
+        <div class="toggles"><label><input id="vectors-toggle" type="checkbox" checked> Vecteurs</label><label><input id="prediction-toggle" type="checkbox" checked> Point prédit</label><label><input id="trails-toggle" type="checkbox" checked> Trajectoires</label><label><input id="vision-toggle" type="checkbox" checked> Champ de vision</label></div>
+        <button id="export-button" class="export">Exporter les mesures CSV</button>
+        <div class="scenario-note"><strong>Expérience reproductible</strong><p>Les comparaisons réinitialisent les agents avec les mêmes positions et vitesses relatives. Les distances sont mesurées à chaque pas de simulation.</p></div>
+        <div class="sidebar-foot">p5.js local · modèle de steering de Reynolds</div>
+      </aside>
+    </div>
+  </main>
+  <script src="vehicle.js"></script>
+  <script src="target-selection.js"></script>
+  <script src="target.js"></script>
+  <script src="bouncingBall.js"></script>
+  <script src="pursuit-agent.js"></script>
+  <script src="lab-renderer.js"></script>
+  <script src="pursuit-lab.js"></script>
+  <script src="lab-sketch.js"></script>
+</body>
+</html>

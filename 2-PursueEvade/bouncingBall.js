@@ -1,39 +1,36 @@
+// Bouncing-ball exercise entity. Target owns behavior and shared locomotion.
 class BouncingBall extends Target {
-    constructor(x, y) {
-      super(x, y);
-      this.r = 10;
+  constructor(x, y, speed = 4) {
+    super(x, y, 'basic');
+    this.r = 10;
+    this.maxSpeed = speed;
+    this.baseMaxSpeed = speed;
+    this.maxForce = 0.35;
+    this.color = color(80, 190, 255);
+    this.vel = p5.Vector.random2D().mult(speed);
+  }
+
+  update(pursuers = [], options = {}) {
+    super.update(pursuers, options);
+    this.testeCollisionAvecBordsDuCanvas();
+  }
+
+  testeCollisionAvecBordsDuCanvas() {
+    if (this.pos.x + this.r >= width) {
+      this.pos.x = width - this.r;
+      if (this.vel.x > 0) this.vel.x = -this.vel.x;
     }
-
-    update() {
-        // tient compte des comportements (forces appliquées)
-        super.update();
-
-        // teste la collision avec les bords du canvas
-        this.testeCollisionAvecBordsDuCanvas();
+    if (this.pos.x - this.r <= 0) {
+      this.pos.x = this.r;
+      if (this.vel.x < 0) this.vel.x = -this.vel.x;
     }
-
-    testeCollisionAvecBordsDuCanvas() {
-
-        // si on atteint le bord droit, on rebondit
-        if(this.pos.x + this.r >= width){
-            // on se remet au point de contact
-            this.pos.x = width - this.r;
-            this.vel.x = -this.vel.x;
-        }
-
-        if(this.pos.x - this.r  <= 0) {
-            this.pos.x = this.r;
-            this.vel.x = -this.vel.x;
-        }
-
-        if(this.pos.y + this.r >= height){
-            this.pos.y = height - this.r;
-            this.vel.y = -this.vel.y;
-        }
-
-        if(this.pos.y - this.r  <= 0) {
-            this.pos.y = this.r;
-            this.vel.y = -this.vel.y;
-        }
+    if (this.pos.y + this.r >= height) {
+      this.pos.y = height - this.r;
+      if (this.vel.y > 0) this.vel.y = -this.vel.y;
+    }
+    if (this.pos.y - this.r <= 0) {
+      this.pos.y = this.r;
+      if (this.vel.y < 0) this.vel.y = -this.vel.y;
     }
   }
+}

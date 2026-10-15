@@ -251,6 +251,6 @@ Les tests des règles de gestion doivent rester reproductibles. Les tests de loc
 
 Ne sont pas inclus : flee, pursue, arrival, collisions entre véhicules, séparation/flocking, obstacles, cibles multiples ou autonomes, réglages individuels, trajectoires toroidales optimales et refonte du pas de temps.
 
-Cette proposition respecte les frontières de [l’architecture](../ARCHITECTURE.md) et les [consignes du dépôt](../AGENTS.md). Le modèle de steering reste celui discuté dans l’[analyse de `1-Seek`](ANALYSE.md) et dans l’article de Reynolds fourni au dépôt.
+Cette proposition respecte les frontières de [l’architecture](../ARCHITECTURE.md) et les [consignes du dépôt](../AGENTS.md). Le modèle de steering reste celui discuté dans l’analyse historique (archivée hors du dépôt) et dans l’article de Reynolds fourni au dépôt.
 
 **Historique :** cette spécification a d’abord été livrée seule, sans modification du code. Après approbation, les fonctionnalités ont été implémentées dans `sketch.js`, `population.js` et `mouseTarget.js`, avec adaptation de `index.html` et `style.css`, tests dans `tests/population.test.mjs` et documentation dans `README.md`. `vehicle.js` et `target.js` restent inchangés.
