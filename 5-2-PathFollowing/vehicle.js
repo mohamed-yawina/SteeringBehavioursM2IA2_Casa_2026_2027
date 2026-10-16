@@ -7,17 +7,18 @@
 // Path Following: https://editor.p5js.org/codingtrain/sketches/dqM054vBV
 // Complex Path: https://editor.p5js.org/codingtrain/sketches/2FFzvxwVt
 
-// on v1 qui part de pos et va vers a,
-// on a v2 qui part pos et va vers b
-// renvoie le point b projeté sur v1
+// Project point a onto the infinite line from pos toward b; null if undefined.
 function findProjection(pos, a, b) {
+  const finite = point => point && Number.isFinite(point.x) && Number.isFinite(point.y);
+  if (![pos, a, b].every(finite)) return null;
   let v1 = p5.Vector.sub(a, pos);
   let v2 = p5.Vector.sub(b, pos);
+  if (![v1, v2].every(finite) || v2.mag() === 0 || !Number.isFinite(v2.mag())) return null;
   v2.normalize();
   let sp = v1.dot(v2);
   v2.mult(sp);
   v2.add(pos);
-  return v2;
+  return finite(v2) ? v2 : null;
 }
 
 class Vehicle {
@@ -28,42 +29,51 @@ class Vehicle {
     this.maxSpeed = 6;
     this.maxForce = 0.1;
     this.r = 16;
+    this.predictionSteps = 20;
+    this.followDiagnostics = null;
   }
 
   follow(path) {
-    // Path following algorithm here!!
-
-    // Step 1 calculate future position
-    let future = this.vel.copy();
-    // dans 20 frames d'animation
-    future.mult(20);
-    future.add(this.pos);
-
-    // on le dessine en rouge
-    fill(255, 0, 0);
-    noStroke();
-    circle(future.x, future.y, 16);
-
-    // Step 2 Is future on path?
-    // On calcule la projection perpendiculaire du point "futur" sur le chemin
-    let target = findProjection(path.start, future, path.end);
-
-    // on le dessine en vert
-    fill("green");
-    noStroke();
-    circle(target.x, target.y, 16);
-
-    // on regarde si la distance entre le point futur et le point projeté
-    // est inférieure à la demi largeur du chemin.
-    // Si oui, on efait rien, le vehicule est sur la route,
-    // si non on fait seek vers le point projeté, pour rapprocher
-    // le véhicule de la route
-    let d = p5.Vector.dist(future, target);
-    if (d > path.radius) {
-      return this.seek(target);
-    } else {
-      return createVector(0, 0);
+    const finite = point => point && Number.isFinite(point.x) && Number.isFinite(point.y);
+    const validInputs = [this.pos, this.vel, path?.start, path?.end].every(finite) &&
+      Number.isFinite(path?.radius) && path.radius >= 0 &&
+      Number.isFinite(this.predictionSteps) && this.predictionSteps >= 0 &&
+      Number.isFinite(this.maxSpeed) && this.maxSpeed >= 0 && Number.isFinite(this.maxForce) && this.maxForce >= 0;
+    let future = null, target = null, distance = null, active = false;
+    let force = createVector(0, 0), status = 'invalid';
+    if (validInputs) {
+      future = this.vel.copy();
+      future.mult(this.predictionSteps);
+      future.add(this.pos);
+      target = findProjection(path.start, future, path.end);
+      status = target ? 'defined' : finite(future) && path.start.x === path.end.x && path.start.y === path.end.y ? 'undefined' : 'invalid';
+      if (target) {
+        distance = p5.Vector.dist(future, target);
+        if (Number.isFinite(distance)) {
+          active = distance > path.radius;
+          if (active) force = this.seek(target);
+          if (!finite(force)) { force = createVector(0, 0); status = 'invalid'; active = false; }
+        } else { status = 'invalid'; target = null; distance = null; }
+      }
     }
+    this.followDiagnostics = {
+      status, active,
+      origin: finite(this.pos) ? this.pos.copy() : null,
+      velocity: finite(this.vel) ? this.vel.copy() : null,
+      start: finite(path?.start) ? path.start.copy() : null,
+      end: finite(path?.end) ? path.end.copy() : null,
+      future: finite(future) ? future.copy() : null,
+      target: target ? target.copy() : null,
+      distance, radius: validInputs ? path.radius : null,
+      predictionSteps: validInputs ? this.predictionSteps : null, force: force.copy()
+    };
+    return force;
+  }
+
+  copyFollowDiagnostics() {
+    if (!this.followDiagnostics) return null;
+    return Object.fromEntries(Object.entries(this.followDiagnostics).map(([key, value]) =>
+      [key, value && typeof value.copy === 'function' ? value.copy() : value]));
   }
 
   seek(target, arrival = false) {

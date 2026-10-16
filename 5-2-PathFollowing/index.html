@@ -1,20 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Sketch</title>
-
-    <link rel="stylesheet" type="text/css" href="style.css">
-
-    <script src="libraries/p5.min.js"></script>
-    <script src="libraries/p5.sound.min.js"></script>
-    <script src="path.js"></script>
-    <script src="vehicle.js"></script>
-    <script src="sketch.js"></script>
-  </head>
-  <body>
-    <!-- Pas besoin de déclarer un canvas pour dessiner en P5.js -->
-  </body>
-</html>
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Path Following Lab — TD5.2</title><link rel="stylesheet" href="style.css">
+<script defer src="libraries/p5.min.js"></script>
+<script defer src="vehicle.js"></script><script defer src="path.js"></script>
+<script defer src="path-controller.js"></script><script defer src="path-renderer.js"></script><script defer src="path-ui.js"></script><script defer src="sketch.js"></script>
+</head>
+<body><main class="app">
+<header><div><p class="eyebrow">MASTER MIAGE IA2 / STEERING BEHAVIORS / TD 05.2</p><h1>Anticiper.<br><span>Retrouver le chemin.</span></h1><p class="intro">De la projection orthogonale à une correction locale par Seek.</p></div><div class="actions"><button id="pause">Pause</button><button id="resume">Reprendre</button><button id="step">Un pas</button><button id="reset" class="primary">Reset</button></div></header>
+<div class="workspace"><section class="scene-card"><div class="scene-heading"><span>PATH FOLLOWING LAB</span><strong id="simulation-status" role="status">Simulation en cours</strong></div><div id="canvas-host"></div>
+<div class="legend"><span class="white">Vitesse ×12</span><span class="orange">Futur F</span><span class="gold">Distance FH</span><span class="mint">H / force ×350</span><span class="violet">Comparaison : anticipation 20</span></div>
+<p class="hint">Glissez A ou B. Au clavier, sélectionnez une extrémité puis donnez le focus au canvas : flèches (Maj ×10). Le cercle du véhicule identifie son groupe. Les points et vecteurs décrivent le dernier calcul, avant intégration et éventuel rebouclage.</p></section>
+<aside class="card"><p class="eyebrow">EXPÉRIMENTER</p><h2>Une règle, quatre paramètres.</h2>
+<label for="scenario">Scénario</label><select id="scenario"><option value="reference">Référence du sketch fourni</option><option value="inside">Dans le corridor</option><option value="threshold">Au seuil : d = 40</option><option value="outside">Hors du corridor</option><option value="oblique">Chemin oblique</option><option value="stopped">Vitesse nulle, dans le corridor</option><option value="zero">Chemin nul</option></select>
+<label for="prediction">Anticipation (pas) <output id="prediction-value">20</output></label><input id="prediction" type="range" min="0" max="60" step="1" value="20">
+<label for="radius">Rayon du corridor (px) <output id="radius-value">40</output></label><input id="radius" type="range" min="0" max="150" step="1" value="40">
+<label for="maxSpeed">maxSpeed (px/pas) <output id="maxSpeed-value">6</output></label><input id="maxSpeed" type="range" min="0" max="12" step=".1" value="6">
+<label for="maxForce">maxForce (px/pas²) <output id="maxForce-value">0.1</output></label><input id="maxForce" type="range" min="0" max="1" step=".01" value=".1">
+<div class="toggles"><label><input type="checkbox" id="compare"> Comparer anticipation 0 / 20</label><label><input type="checkbox" id="showDiagnostics" checked> Géométrie et vecteurs</label><label><input type="checkbox" id="showTrails" checked> Trajectoires</label><label><input type="checkbox" id="mousePath"> B suit la hauteur du pointeur</label></div>
+<label for="endpoint">Extrémité au clavier / en cas de superposition</label><select id="endpoint"><option value="start">A — départ</option><option value="end" selected>B — direction</option></select>
+<p class="hint">En comparaison, les deux agents repartent du même état ; seule l’anticipation diffère. Reset conserve vos paramètres et recharge le scénario. « Au seuil » correspond au rayon initial de 40 px.</p></aside></div>
+<section class="explanation"><p class="eyebrow">COMPRENDRE LA DÉCISION</p><h2>Corriger seulement si le futur sort du corridor.</h2>
+<div class="formula"><span>F = position + vitesse × anticipation</span><span>H = projection de F sur (AB)</span><span>d = ‖F − H‖</span><span>si d &gt; rayon : Seek(H), sinon : 0</span></div>
+<p>La droite pointillée est infinie ; le segment AB indique sa direction, pas une limite de déplacement. Le rayon est la demi-largeur du corridor. À d = rayon, la correction est inactive. Seek calcule une vitesse désirée vers H, soustrait la vitesse courante et limite la force à maxForce. L’anticipation est exprimée en pas, pas en pixels : un véhicule plus rapide regarde plus loin.</p>
+<p class="hint">Sans correction, le véhicule conserve sa vitesse ; s’il est immobile dans le corridor, il ne démarre pas tout seul. Un chemin nul rend la projection indéfinie et produit une force nulle. Une modification de géométrie ou de paramètre efface les diagnostics jusqu’au prochain pas : aucun aperçu n’est présenté comme un calcul réellement appliqué.</p>
+</section><div id="diagnostics" class="diagnostics"></div>
+<footer><span>Daniel Shiffman / The Coding Train · The Nature of Code</span><span><a href="https://youtu.be/LrnR6dc2IfM">Origine de la démonstration</a> · <a href="README.md">Documentation</a></span></footer>
+</main></body></html>
