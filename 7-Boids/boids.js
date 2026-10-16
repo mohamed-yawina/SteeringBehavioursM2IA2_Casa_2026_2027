@@ -3,18 +3,13 @@
 // https://thecodingtrain.com/CodingChallenges/124-flocking-boids.html
 // https://youtu.be/mhjuuHl6qHM
 
-class Boid {
+class Boid extends Vehicle {
   static debug = false;
   constructor(x, y, image) {
-
-    this.pos = createVector(x, y);
+    super(x, y, { maxSpeed: 5, maxForce: 0.2, r: 6 });
 
     this.vel = p5.Vector.random2D();
     this.vel.setMag(random(2, 4));
-    this.acc = createVector();
-    this.maxForce = 0.2;
-    this.maxSpeed = 5;
-    this.r = 6;
 
     // si le boid est une image
     if (image !== undefined) {
@@ -464,17 +459,6 @@ class Boid {
     return vehiculeLePlusProche;
   }
 
-
-  applyForce(force) {
-    this.acc.add(force);
-  }
-
-  update() {
-    this.pos.add(this.vel);
-    this.vel.add(this.acc);
-    this.vel.limit(this.maxSpeed);
-    this.acc.mult(0);
-  }
 
   show() {
     if (this.image !== undefined) {

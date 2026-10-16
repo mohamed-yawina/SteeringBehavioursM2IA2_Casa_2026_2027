@@ -1,7 +1,6 @@
-class Obstacle {
+class Obstacle extends Vehicle {
   constructor(x, y, r, couleur) {
-    this.pos = createVector(x, y);
-    this.r = r;
+    super(x, y, { r, isStatic: true });
     this.color = couleur;
   }
 
