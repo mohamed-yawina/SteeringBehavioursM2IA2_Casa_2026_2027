@@ -23,15 +23,14 @@ class SnakePathFollowing extends Snake {
   }
 
   move(path, neighbors) {
-    this.head.applyForce(this.head.follow(path).mult(this.followWeight));
-    this.head.applyForce(this.head.separate(neighbors).mult(this.separationWeight));
+    this.head.composeForces({follow:this.head.follow(path), separation:this.head.separate(neighbors)},
+      {follow:this.followWeight, separation:this.separationWeight});
     this.head.update();
     for (let index = 1; index < this.anneaux.length; index++) {
       const ring = this.anneaux[index];
       const previous = this.anneaux[index - 1];
-      ring.applyForce(ring.arrive(previous.pos, this.ringSpacing));
-      // Le corps connecté du même serpent ne se repousse pas lui-même.
-      ring.applyForce(ring.separate(neighbors).mult(this.separationWeight));
+      ring.composeForces({arrive:ring.arrive(previous.pos,this.ringSpacing), separation:ring.separate(neighbors)},
+        {arrive:1, separation:this.separationWeight});
       ring.update();
     }
   }

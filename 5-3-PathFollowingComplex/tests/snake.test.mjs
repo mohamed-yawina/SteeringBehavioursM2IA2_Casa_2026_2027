@@ -63,10 +63,10 @@ test('follow et séparation pondérés avant une seule intégration par segment'
   snake.head.follow = () => new Vector(1, 0);
   snake.head.separate = () => new Vector(0, 1);
   let integrated = 0;
-  snake.head.update = () => { assert.equal(snake.head.acc.x, 2); assert.equal(snake.head.acc.y, 3); integrated++; };
+  snake.head.update = () => { assert.ok(Math.abs(snake.head.acc.x - 2 / Math.sqrt(13) * snake.head.maxForce) < 1e-12); assert.ok(Math.abs(snake.head.acc.y - 3 / Math.sqrt(13) * snake.head.maxForce) < 1e-12); integrated++; };
   for (const ring of snake.anneaux.slice(1)) {
     ring.arrive = () => new Vector(1, 0); ring.separate = () => new Vector(0, 1);
-    ring.update = () => { assert.equal(ring.acc.x, 1); assert.equal(ring.acc.y, 3); integrated++; };
+    ring.update = () => { assert.ok(Math.abs(ring.acc.x - ring.maxForce / Math.sqrt(10)) < 1e-12); assert.ok(Math.abs(ring.acc.y - 3 * ring.maxForce / Math.sqrt(10)) < 1e-12); integrated++; };
   }
   snake.move({}, []); assert.equal(integrated, 3);
 });

@@ -1,41 +1,36 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Sketch</title>
-
-    <link rel="stylesheet" type="text/css" href="style.css">
-
-    <script src="libraries/p5.min.js"></script>
-    <script src="libraries/p5.sound.min.js"></script>
-    <script src="path.js"></script>
-    <script src="vehicle.js"></script>
-    <script src="snakeSegment.js"></script>
-    <script src="snake.js"></script>
-    <script src="snakePathFollowing.js"></script>
-    <script src="sketch.js"></script>
-  </head>
-  <body>
-    <header id="controls">
-      <label for="snake-follow">Poids follow du serpent</label>
-      <input id="snake-follow" type="range" min="0" max="5" step="0.1" value="2">
-      <output id="snake-follow-value" for="snake-follow">2.0</output>
-      <label for="snake-separation">Poids séparation du serpent</label>
-      <input id="snake-separation" type="range" min="0" max="5" step="0.1" value="1.2">
-      <output id="snake-separation-value" for="snake-separation">1.2</output>
-      <label for="circuit-width">Largeur du circuit</label>
-      <input id="circuit-width" type="range" min="10" max="100" step="1" value="20">
-      <output id="circuit-width-value" for="circuit-width">20 px</output>
-      <label for="snake-spacing">Distance entre anneaux</label>
-      <input id="snake-spacing" type="range" min="5" max="80" step="1" value="20">
-      <output id="snake-spacing-value" for="snake-spacing">20 px</output>
-      <label for="snake-size">Taille des serpents</label>
-      <input id="snake-size" type="range" min="8" max="60" step="1" value="22">
-      <output id="snake-size-value" for="snake-size">22 px</output>
-      <span>T : ajouter un serpent au pointeur · D : debug · Glisser dans le canvas : ajouter des véhicules</span>
-      <output id="snake-count" aria-live="polite">1 serpent</output>
-    </header>
-  </body>
-</html>
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Complex Path Following · Laboratoire</title><link rel="stylesheet" href="style.css">
+<script defer src="libraries/p5.min.js"></script>
+<script defer src="vehicle.js"></script><script defer src="path.js"></script>
+<script defer src="snakeSegment.js"></script><script defer src="snake.js"></script>
+<script defer src="snakePathFollowing.js"></script><script defer src="lab-scenarios.js"></script>
+<script defer src="lab-controller.js"></script><script defer src="lab-renderer.js"></script>
+<script defer src="lab-ui.js"></script><script defer src="sketch.js"></script></head>
+<body><header><span>STEERING LAB / TD5-3</span><h1>Lire le chemin. Anticiper le virage.</h1>
+<p>Une projection par segment, une cible de correction, un budget de force.</p></header>
+<main><section class="scene"><div class="toolbar">
+<label for="scenario">Scénario</label><select id="scenario"><option value="complex">Circuit complexe</option><option value="line">Ligne fermée aller-retour</option><option value="turn">Virage serré</option><option value="crossing">Croisement</option><option value="degenerate">Segment dégénéré</option></select>
+<button id="pause">Pause</button><button id="step">Pas suivant</button><button id="reset">Reset</button><span id="state" role="status"></span>
+</div><div id="canvas-host" aria-label="Simulation interactive du suivi de chemin"></div>
+<div class="legend"><span class="blue">● F / vitesse ×15</span><span class="cyan">● H / distance FH</span><span class="purple">● T / suivi</span><span class="orange">↗ séparation</span><span class="pink">↗ Wander</span><span class="green">↗ résultante</span><span>Forces pondérées ×70 · origine Oₙ avant intégration</span></div>
+<div class="toolbar"><label><input id="details" type="checkbox" checked> Détails du dernier pas</label><label><input id="edit" type="checkbox"> Éditer les sommets (met en pause)</label><output id="snake-count">0 serpent</output></div>
+<article><h2>Trois points à distinguer</h2><p><b>F</b> est devant le véhicule, à une distance fixe. <b>H</b> est le candidat retenu sur le circuit. <b>T</b> avance dans la direction du segment. Seek vise T uniquement si FH dépasse strictement le rayon.</p>
+<p>Le calcul historique projette sur une droite, puis remplace une projection extérieure par B et utilise la direction suivante. Ce traitement est conservé : ce n'est pas un bornage classique au segment.</p>
+<p><b>Expérimenter :</b> mettez en pause, choisissez un agent, faites un pas. Augmentez l'anticipation puis observez le segment choisi. Au croisement, les distances égales favorisent le premier segment.</p>
+<p><b>T</b> : serpent au pointeur · <b>d</b> : détails · <b>s</b> : véhicule rapide · <b>w</b> : Wander. Glisser sur le canvas ajoute des véhicules ; en édition, glisser un sommet déplace le chemin. Cliquer un agent le sélectionne.</p>
+<p>Masquer les détails ne désactive aucun comportement. La séparation peut agir même quand la correction de suivi est inactive. Le corps du serpent utilise Arrive ; Wander concerne les véhicules ordinaires.</p></article></section>
+<aside><label for="agent">Agent observé</label><select id="agent"></select><h2>Paramètres</h2><label for="anticipationDistance">Anticipation spatiale (px)<output id="anticipationDistance-value">25</output></label><input id="anticipationDistance" type="range" min="0" max="150" step="1" value="25">
+<label for="targetAdvance">Avance de cible (px)<output id="targetAdvance-value">25</output></label><input id="targetAdvance" type="range" min="0" max="150" step="1" value="25">
+<label for="maxSpeed">Vitesse max (px/pas)<output id="maxSpeed-value">3</output></label><input id="maxSpeed" type="range" min="0" max="12" step="0.1" value="3">
+<label for="maxForce">Force max (px/pas², masse 1)<output id="maxForce-value">0.3</output></label><input id="maxForce" type="range" min="0" max="3" step="0.01" value="0.3">
+<label for="followPathWeight">Poids suivi · agent sélectionné<output id="followPathWeight-value">2</output></label><input id="followPathWeight" type="range" min="0" max="5" step="0.1" value="2">
+<label for="separateWeight">Poids séparation · agent sélectionné<output id="separateWeight-value">1.2</output></label><input id="separateWeight" type="range" min="0" max="5" step="0.1" value="1.2">
+<label for="wanderWeight">Poids Wander · véhicule sélectionné<output id="wanderWeight-value">0</output></label><input id="wanderWeight" type="range" min="0" max="5" step="0.1" value="0">
+<label for="snake-follow">Poids suivi · tous serpents<output id="snake-follow-value">2</output></label><input id="snake-follow" type="range" min="0" max="5" step="0.1" value="2">
+<label for="snake-separation">Poids séparation · tous serpents<output id="snake-separation-value">1.2</output></label><input id="snake-separation" type="range" min="0" max="5" step="0.1" value="1.2">
+<label for="circuit-width">Rayon corridor / demi-largeur (px)<output id="circuit-width-value">20</output></label><input id="circuit-width" type="range" min="0" max="100" step="1" value="20">
+<label for="snake-spacing">Espacement anneaux (px)<output id="snake-spacing-value">20</output></label><input id="snake-spacing" type="range" min="5" max="80" step="1" value="20">
+<label for="snake-size">Diamètre visuel serpent (px)<output id="snake-size-value">22</output></label><input id="snake-size" type="range" min="8" max="60" step="1" value="22">
+<h2>Décision physique</h2><pre id="diagnostics" aria-live="off"></pre><p>Les réglages agent concernent le véhicule ou la tête sélectionnée. Les réglages « tous serpents » s'appliquent au groupe et aux créations suivantes. Reset rétablit les agents du scénario ; le rayon et les réglages du groupe sont conservés.</p></aside></main>
+<footer>Daniel Shiffman / The Coding Train · The Nature of Code · Craig Reynolds · p5.js local</footer></body></html>

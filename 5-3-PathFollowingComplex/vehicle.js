@@ -22,6 +22,11 @@ class Vehicle {
     this.acc = createVector(0, 0);
     this.vel = createVector(this.maxSpeed, 0);
     this.couleur = "black";
+    this.anticipationDistance = 25;
+    this.targetAdvance = 25;
+    this.followDiagnostics = null;
+    this.forceDiagnostics = null;
+    this.wanderDiagnostics = null;
 
     // Poids pour les force des différents comportements
     this.wanderWeight = 0;
@@ -32,7 +37,7 @@ class Vehicle {
      this.distanceCercle = 100;
      this.wanderRadius = 40;
      this.wanderTheta = PI/2;
-     this.displaceRange = random(-0.3, 0.3);
+     this.displaceRange = ms === 0 && mf === 0 ? 0 : random(-0.3, 0.3);
  
      // trainée derrière les véhicules
      this.pathMaxLength = 20;
@@ -42,22 +47,39 @@ class Vehicle {
   // Implémente deux comportements : suivi de chemin complexe et séparation
   // que l'on verra plus tard
   applyBehaviors(vehicles, path) {
-    // Suivi de chemin, le résultat est la force f
-    let f = this.follow(path);
-    // separation des autres véhicules, le resultat est la force s
-    let s = this.separate(vehicles);
-    let w = this.wander();
-
-    // On fait une somme pondérée des deux forces
-    f.mult(this.followPathWeight);
-    s.mult(this.separateWeight); // essayez zéro ici !!!!
-    w.mult(this.wanderWeight);
-
-    // On applique les forces au véhicule
-    this.applyForce(f);
-    this.applyForce(s);
-    this.applyForce(w);
+    const follow = this.follow(path), separation = this.separate(vehicles);
+    if (this.wanderWeight === 0) this.wanderDiagnostics = null;
+    const wander = this.wanderWeight === 0 ? createVector(0, 0) : this.wander();
+    this.composeForces({ follow, separation, wander },
+      { follow: this.followPathWeight, separation: this.separateWeight, wander: this.wanderWeight });
   }
+
+  // Composition only: locomotion remains in applyForce/update.
+  composeForces(forces, weights) {
+    const weighted = {}, total = createVector(0, 0);
+    for (const [name, force] of Object.entries(forces)) {
+      weighted[name] = force.copy().mult(Number.isFinite(weights[name]) ? weights[name] : 0);
+      total.add(weighted[name]);
+    }
+    const unclamped = total.copy();
+    total.limit(this.maxForce);
+    this.forceDiagnostics = { origin: this.pos.copy(), velocity: this.vel.copy(),
+      individual: forces, weighted, unclamped, total: total.copy() };
+    this.forceDiagnostics = this.copyDiagnostic(this.forceDiagnostics);
+    this.applyForce(total);
+  }
+
+  copyDiagnostic(value) {
+    if (value && typeof value.copy === 'function') return value.copy();
+    if (Array.isArray(value)) return value.map(item => this.copyDiagnostic(item));
+    if (value && typeof value === 'object') return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [key, this.copyDiagnostic(item)]));
+    return value;
+  }
+
+  copyFollowDiagnostics() { return this.copyDiagnostic(this.followDiagnostics); }
+  copyForceDiagnostics() { return this.copyDiagnostic(this.forceDiagnostics); }
+  copyWanderDiagnostics() { return this.copyDiagnostic(this.wanderDiagnostics); }
 
   applyForce(force) {
     // On pourrait ajouter une masse au véhicule ici, rappel : 
@@ -77,100 +99,55 @@ class Vehicle {
   // This function implements Craig Reynolds' path following algorithm
   // http://www.red3d.com/cwr/steer/PathFollow.html
   follow(path) {
-    // Position du véhicule dans 25 frames
-    let predict = this.vel.copy();
+    const finite = p => p && Number.isFinite(p.x) && Number.isFinite(p.y);
+    const zero = () => createVector(0, 0);
+    const diagnostic = { status: 'invalid', origin: finite(this.pos) ? this.pos.copy() : null,
+      velocity: finite(this.vel) ? this.vel.copy() : null, future: null, normal: null,
+      target: null, distance: null, radius: path?.radius, active: false,
+      selectedIndex: null, candidates: [], force: zero() };
+    this.followDiagnostics = diagnostic;
+    if (!finite(this.pos) || !finite(this.vel) || !Array.isArray(path?.points) ||
+        !Array.from(path.points).every(finite) || !Number.isFinite(path.radius) || path.radius < 0 ||
+        !Number.isFinite(this.anticipationDistance) || this.anticipationDistance < 0 ||
+        !Number.isFinite(this.targetAdvance) || this.targetAdvance < 0 ||
+        !Number.isFinite(this.maxSpeed) || this.maxSpeed < 0 ||
+        !Number.isFinite(this.maxForce) || this.maxForce < 0) return zero();
+    const predict = this.vel.copy();
     predict.normalize();
-    predict.mult(25);
-    let predictpos = p5.Vector.add(this.pos, predict);
-
-    // On cherche la projection sur le chemin.
-    // Comme le chemin est composé de plusieurs segments, 
-    // on cherche la projection sur chaque segment
-    // et on gardera la plus proche comme étant la bonne
-
-    let normal = null;
-    let target = null;
-    let worldRecord = 1000000; // distance max difficile à battre :-) 
-    // (on cherche la plus petite distance)
-
-    // On parcourt les points du chemin
+    predict.mult(this.anticipationDistance);
+    const future = p5.Vector.add(this.pos, predict);
+    if (!finite(future)) return zero();
+    diagnostic.future = future.copy();
+    let record = Infinity;
     for (let i = 0; i < path.points.length; i++) {
-      // segment courant a
-      // segment suivant b, si a est le dernier segment, 
-      // b devient le premier segment
-      let a = path.points[i];
-      let b = path.points[(i + 1) % path.points.length]; // le chemin boucle. On utilise un modulo
-
-      // Calcul du point projecté sur le segment
-      let normalPoint = findProjection(predictpos, a, b);
-
-      // Cas particulier où le point est en dehors du segment
-      // dir = le vecteur qui correspond au segment
-      let dir = p5.Vector.sub(b, a);
-      // si c'est le cas, on prendra le point b comme point normal
-      //if (da + db > line.mag()+1) {
-      if (
-        normalPoint.x < min(a.x, b.x) ||
-        normalPoint.x > max(a.x, b.x) ||
-        normalPoint.y < min(a.y, b.y) ||
-        normalPoint.y > max(a.y, b.y)
-      ) {
-        normalPoint = b.copy();
-        // Si on est vraiment à la fin, alors on prend a et b du segment suivant
-        a = path.points[(i + 1) % path.points.length];
-        b = path.points[(i + 2) % path.points.length];
-        dir = p5.Vector.sub(b, a);
+      let a = path.points[i], b = path.points[(i + 1) % path.points.length];
+      let normal = findProjection(future, a, b);
+      if (!normal) { diagnostic.candidates.push({ index: i, status: 'undefined', start: a.copy(), end: b.copy() }); continue; }
+      const projection = normal.copy();
+      let dir = p5.Vector.sub(b, a), fallback = false;
+      if (normal.x < min(a.x,b.x) || normal.x > max(a.x,b.x) ||
+          normal.y < min(a.y,b.y) || normal.y > max(a.y,b.y)) {
+        normal = b.copy(); fallback = true;
+        a = path.points[(i+1) % path.points.length]; b = path.points[(i+2) % path.points.length];
+        dir = p5.Vector.sub(b,a);
       }
-
-      // A quelle distance est le point prédit du chemin, est-il sur la route ?
-      let d = p5.Vector.dist(predictpos, normalPoint);
-      // Est-ce que d est vraiment le plus petit, rappellez-vous qu'on calcule d pour tous les segments
-      if (d < worldRecord) {
-        // oui, d est plus petit que la précédente distance mesurée,
-        // on garde ce point comme étant le plus proche du chemin
-        worldRecord = d;
-        normal = normalPoint;
-
-        // On va regarder un peu plus loin devant le point projeté sur le segment
-        // On normalise le vecteur directeur du segment, et on lui donne une longueur de 25
-        // et on ajoute ce vecteur au point projeté
-        dir.normalize();
-        // ce 25 pourrait changer en fonction de la vitesse du véhicule, plus il va vite, plus on regarde loin
-        dir.mult(25);
-        // On ajoute ce vecteur au point projeté pour avoir un point plus loin sur le segment
-        target = normal.copy();
-        target.add(dir);
+      const distance = p5.Vector.dist(future, normal);
+      dir.normalize(); dir.mult(this.targetAdvance);
+      const target = normal.copy(); target.add(dir);
+      if (!Number.isFinite(distance) || !finite(target)) continue;
+      diagnostic.candidates.push({index:i,status:'defined',projection,normal:normal.copy(),
+        target:target.copy(),distance,fallback});
+      if (distance < record) {
+        record = distance; diagnostic.selectedIndex = i;
+        diagnostic.normal = normal.copy(); diagnostic.target = target.copy();
       }
     }
-
-    // dessin des infos de debug
-    if (debug) {
-      // future position devant le vaisseau
-      stroke(0);
-      fill(0);
-      line(this.pos.x, this.pos.y, predictpos.x, predictpos.y);
-      ellipse(predictpos.x, predictpos.y, 4, 4);
-
-      // Point projeté
-      stroke(0);
-      fill(0);
-      ellipse(normal.x, normal.y, 4, 4);
-      // Cible que l'on cherche à atteindre (va de la position du vaisseau à la position projetée)
-      line(predictpos.x, predictpos.y, target.x, target.y);
-
-      if (worldRecord > path.radius) fill(255, 0, 0);
-      noStroke();
-      ellipse(target.x, target.y, 8, 8);
-    }
-
-    // Si la distance entre le point projeté et le point normal est plus grande que le rayon du chemin
-    // alors on cherche à se rapprocher du point normal
-    // sinon on renvoie un vecteur nul (force nulle, on continue dans la direction actuelle)
-    if (worldRecord > path.radius) {
-      return this.seek(target);
-    } else {
-      return createVector(0, 0);
-    }
+    if (diagnostic.selectedIndex === null) { diagnostic.status = 'undefined'; return zero(); }
+    diagnostic.status = 'defined'; diagnostic.distance = record;
+    diagnostic.active = record > path.radius;
+    const force = diagnostic.active ? this.seek(diagnostic.target) : zero();
+    diagnostic.force = force.copy();
+    return force;
   }
 
   // Comportement Separation : on garde ses distances par rapport aux voisins
@@ -214,23 +191,7 @@ class Vehicle {
     let wanderPoint = this.vel.copy();
     wanderPoint.setMag(this.distanceCercle);
     wanderPoint.add(this.pos);
-
-    if (Vehicle.debug) {
-      // on le dessine sous la forme d'une petit cercle rouge
-      fill(255, 0, 0);
-      noStroke();
-      circle(wanderPoint.x, wanderPoint.y, 8);
-
-      // Cercle autour du point
-      noFill();
-      stroke(0);
-      circle(wanderPoint.x, wanderPoint.y, this.wanderRadius * 2);
-
-      // on dessine une ligne qui relie le vaisseau à ce point
-      // c'est la ligne blanche en face du vaisseau
-      line(this.pos.x, this.pos.y, wanderPoint.x, wanderPoint.y);
-    }
-
+    const center = wanderPoint.copy();
     // On va s'occuper de calculer le point vert SUR LE CERCLE
     // il fait un angle wanderTheta avec le centre du cercle
     // l'angle final par rapport à l'axe des X c'est l'angle du vaisseau
@@ -242,17 +203,7 @@ class Vehicle {
 
     // maintenant wanderPoint c'est un point sur le cercle
     wanderPoint.add(x, y);
-
-    if (Vehicle.debug) {
-      // on le dessine sous la forme d'un cercle vert
-      fill(0, 255, 0);
-      noStroke();
-      circle(wanderPoint.x, wanderPoint.y, 16);
-
-      // on dessine le vecteur desiredSpeed qui va du vaisseau au point vert
-      stroke(0);
-      line(this.pos.x, this.pos.y, wanderPoint.x, wanderPoint.y);
-    }
+    const target = wanderPoint.copy();
     // On a donc la vitesse désirée que l'on cherche qui est le vecteur
     // allant du vaisseau au cercle vert. On le calcule :
     // ci-dessous, steer c'est la desiredSpeed directement !
@@ -263,6 +214,8 @@ class Vehicle {
     let steer = wanderPoint.sub(this.pos);
 
     steer.setMag(this.maxForce);
+    this.wanderDiagnostics = { origin: this.pos.copy(), center, target,
+      radius: this.wanderRadius, force: steer.copy() };
     
 
     // On déplace le point vert sur le cerlcle (en radians)
@@ -330,16 +283,15 @@ class Vehicle {
   }
 }
 
-// A function to get the normal point from a point (p) to a line segment (a-b)
+// Orthogonal projection of p onto the infinite line through a and b.
 // This function could be optimized to make fewer new Vector objects
 function findProjection(p, a, b) {
-  // Vector from a to p
-  let ap = p5.Vector.sub(p, a);
-  // Vector from a to b
-  let ab = p5.Vector.sub(b, a);
-  ab.normalize(); // Normalize the line
-  // Project vector "diff" onto line by using the dot product
+  const finite = v => v && Number.isFinite(v.x) && Number.isFinite(v.y);
+  if (![p,a,b].every(finite)) return null;
+  let ap = p5.Vector.sub(p,a), ab = p5.Vector.sub(b,a);
+  if (!finite(ap) || !finite(ab) || ab.mag() === 0 || !Number.isFinite(ab.mag())) return null;
+  ab.normalize();
   ab.mult(ap.dot(ab));
-  let normalPoint = p5.Vector.add(a, ab);
-  return normalPoint;
+  const normal = p5.Vector.add(a,ab);
+  return finite(normal) ? normal : null;
 }

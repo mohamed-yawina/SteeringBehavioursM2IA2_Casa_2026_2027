@@ -1,12 +1,1 @@
-html, body {
-  margin: 0;
-  padding: 0;
-}
-
-canvas {
-  display: block;
-}
-
-#controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
-  padding: 12px; background: #20252d; color: white; font: 15px system-ui, sans-serif; }
-#controls output { min-width: 32px; }
+*{box-sizing:border-box}body{margin:0;background:#e8edf4;color:#152238;font:15px/1.55 system-ui,sans-serif}header{padding:28px 4vw;background:#101e34;color:#fff}header span{font-size:12px;letter-spacing:.15em;color:#8bd5d6}h1{font-size:clamp(24px,3vw,38px);margin:8px 0}header p{margin:0;color:#c1cede}main{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:20px;padding:24px}section,aside{min-width:0}.scene,aside{background:white;border:1px solid #d3dce8;border-radius:12px;overflow:hidden}aside{padding:20px}h2{font-size:17px}label{display:block;font-weight:600;font-size:13px;margin-top:12px}label output{float:right;color:#475569}input[type=range]{width:100%;accent-color:#2563eb}input:disabled{opacity:.35}button,select{font:inherit;padding:7px 10px;border:1px solid #b8c5d5;border-radius:6px;background:#fff;color:#152238}button{cursor:pointer}button:hover{background:#e0edff}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #2563eb;outline-offset:3px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:12px 16px;background:#f8fafc}.toolbar label{margin:0}#canvas-host canvas{display:block;width:100%!important;height:auto!important;touch-action:none}#canvas-host{background:#f1f5f9}.legend{display:flex;gap:14px;flex-wrap:wrap;padding:12px 16px;font-size:12px;font-weight:600;border-top:1px solid #d3dce8}.blue{color:#2563eb}.cyan{color:#087c91}.purple{color:#9333ea}.orange{color:#a65f00}.green{color:#047857}.pink{color:#be185d}article{padding:4px 20px 16px}pre{font:13px/1.7 ui-monospace,monospace;white-space:pre-wrap;background:#edf3f9;padding:12px;border-radius:8px}footer{padding:0 24px 24px;color:#526278;font-size:12px}#state{font-size:12px;font-weight:600}aside p{font-size:12px;color:#526278}@media(max-width:950px){main{grid-template-columns:1fr;padding:12px}aside{display:block}header{padding:20px}aside input[type=range]{max-width:100%}}

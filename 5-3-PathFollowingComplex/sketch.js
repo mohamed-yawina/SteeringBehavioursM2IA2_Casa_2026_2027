@@ -26,40 +26,17 @@ let snakeSpacing = 20;
 let snakeSize = 22;
 
 function setup() {
-  createCanvas(1200, 800);
-  // la fonction suivante créer un chemin composé de plusieurs points
-  newPath();
-
-  // On crée n véhicules placés aléatoirement sur le canvas
-  const nbVehicules = 1;
-
-  for (let i = 0; i < nbVehicules; i++) {
-    newVehicle(random(width), random(height));
-  }
-  newSnake(path.points[0].x, path.points[0].y);
-  bindSnakeControls();
+  createCanvas(1200,800).parent('canvas-host');
+  frameRate(60); debug=true;
+  bindSnakeControls(); LabController.reset(); LabUI.bind();
 }
 
 function draw() {
-  background(240);
-  // Affichage du chemin
-  path.display();
-
-  const allSegments = snakes.flatMap(snake => snake.anneaux);
-  const neighbors = [...vehicles, ...allSegments];
-  for (let v of vehicles) {
-    // On applique les comportements pour suivre le chemin
-    // Comme on utilise ici plusieurs comportements, notamment un comportement qui 
-    // dépend des autres véhicules, on passe en paramètre le tableau des véhicules 
-    // et le chemin
-    v.applyBehaviors(neighbors, path);
-    // on a regroupé update, draw etc. dans une méthode run (update, borders, display, etc.)
-    v.run();
-  }
-  for (const snake of snakes) {
-    snake.move(path, neighborsForSnake(snake, neighbors));
-    snake.show();
-  }
+  LabController.step();
+  background('#f1f5f9'); path.display();
+  for(const v of vehicles)v.render();
+  for(const snake of snakes)snake.show();
+  LabRenderer.draw(); LabUI.update();
 }
 
 function neighborsForSnake(snake, allNeighbors) {
@@ -76,6 +53,7 @@ function newSnake(x, y) {
   snake.setSize(snakeSize);
   snakes.push(snake);
   document.getElementById('snake-count').value = `${snakes.length} serpent${snakes.length > 1 ? 's' : ''}`;
+  if(typeof LabUI !== "undefined")LabUI.refreshAgents();
   return snake;
 }
 
@@ -98,6 +76,8 @@ function bindSnakeControls() {
     document.getElementById('circuit-width-value').value = `${circuitWidth.toFixed(0)} px`;
     document.getElementById('snake-spacing-value').value = `${snakeSpacing.toFixed(0)} px`;
     document.getElementById('snake-size-value').value = `${snakeSize.toFixed(0)} px`;
+    if (typeof LabController !== 'undefined') LabController.invalidate();
+    if (typeof LabUI !== 'undefined') LabUI.sync();
   };
   for (const id of ['snake-follow', 'snake-separation', 'circuit-width', 'snake-spacing', 'snake-size']) {
     document.getElementById(id).addEventListener('input', synchronize);
@@ -143,10 +123,13 @@ function newPath() {
 }
 
 function newVehicle(x, y) {
+  const selected = typeof LabController !== 'undefined' ? LabController.selected() : null;
   let maxspeed = random(1, 3);
   let maxforce = 0.3;
   let v = new Vehicle(x, y, maxspeed, maxforce);
   vehicles.push(v);
+  if (selected) LabController.selectedIndex = LabController.agents().indexOf(selected);
+  if(typeof LabUI !== "undefined")LabUI.refreshAgents();
   return v;
 }
 
@@ -156,12 +139,15 @@ function keyPressed(event) {
     if (!event?.repeat) newSnake(constrain(mouseX, 0, width), constrain(mouseY, 0, height));
   } else if (key == "d") {
     debug = !debug;
-    Vehicle.debug = debug;
+    const checkbox=document.getElementById("details");if(checkbox)checkbox.checked=debug;
+    Vehicle.debug = false;
   } else if(key == "s") {
     let v = newVehicle(mouseX, mouseY);
-    v.maxspeed = 10;
+    v.maxSpeed = 10;
     v.couleur = "red"
+    if (typeof LabUI !== 'undefined') LabUI.sync();
   } else if (key == "w") {
+    const selected = typeof LabController !== 'undefined' ? LabController.selected() : null;
     // on cree un véhicule wander
     let v = new Vehicle(mouseX, mouseY, 2, 0.25);
     v.wanderWeight = 1;
@@ -170,9 +156,25 @@ function keyPressed(event) {
     v.r = 30;
     v.couleur = "lightgreen";
     vehicles.push(v);
+    if (selected) LabController.selectedIndex = LabController.agents().indexOf(selected);
+    if (typeof LabUI !== 'undefined') LabUI.refreshAgents();
   }
 }
 
-function mouseDragged() {
+let draggedVertex = -1;
+function mousePressed(event) {
+  if(event?.target?.tagName !== 'CANVAS')return;
+  if(LabController.editing){
+    LabController.paused=true;
+    draggedVertex=path.points.findIndex(p=>Math.hypot(p.x-mouseX,p.y-mouseY)<16);
+  }else{
+    const index=LabController.agents().findIndex(a=>Math.hypot(a.pos.x-mouseX,a.pos.y-mouseY)<20);
+    if(index>=0){LabController.select(index);LabUI.refreshAgents();}
+  }
+}
+function mouseReleased(){draggedVertex=-1;}
+function mouseDragged(event) {
+  if(event?.target && event.target.tagName!=='CANVAS')return;
+  if(LabController.editing){LabController.moveVertex(draggedVertex,mouseX,mouseY);return false;}
   if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) newVehicle(mouseX, mouseY);
 }

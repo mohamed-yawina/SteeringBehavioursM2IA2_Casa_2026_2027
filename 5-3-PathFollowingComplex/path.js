@@ -1,5 +1,6 @@
-class Path {
+class Path extends Vehicle {
   constructor() {
+    super(0, 0, 0, 0);
     // Rayon arbitraire de 20 (c'est la demi-largeur de la route)
     // Un chemin a un rayon qui définit la zone ou le véhicule doit rester
     this.radius = 20;
