@@ -50,6 +50,15 @@ test('huit scénarios et reset reproductible avec états initiaux explicites',()
   assert.equal(run(),run());assert.equal(c.steps,5);
  }
 });
+test('Flee, Pursue et Evade restent dormants dans les huit scénarios actifs',()=>{
+ const e=lab(),c=e.LabController;
+ for(const name of Object.keys(e.LabScenarios)){
+  c.reset(name);c.followMouse=false;c.paused=false;
+  for(const v of vm.runInContext('vehicules',e.scope))for(const method of ['flee','pursue','evade'])
+   v[method]=()=>assert.fail(name+' a invoqué '+method+' dans le scénario actif');
+  for(let step=0;step<3;step++)assert.equal(c.step(),true);
+ }
+});
 test('reset restaure géométrie, cible, paramètres et sélection du scénario',()=>{
  const e=lab(),c=e.LabController;c.reset('lateral');c.setParameter('maxSpeed',7);
  c.paused=true;c.editing=true;c.selectObstacle(0);c.editObstacle(0,700,500,5);

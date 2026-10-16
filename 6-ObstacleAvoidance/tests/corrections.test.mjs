@@ -53,6 +53,59 @@ test('Separate corrigé: formule exacte, force limitée, aucune mutation',()=>{
  point(xy(f),xy(expected));bounded(f,.2);assert.equal(e.warnings.length,0);
  assert.equal(JSON.stringify([v.pos,v.vel,v.acc,other.pos,other.vel]),before);
 });
+test('Flee: direction opposée puis desiredVelocity - velocity, sans mutation',()=>{
+ const e=corrected(),v=vehicle(e,[100,100],[0,3]),target=new e.Vector(200,100);
+ const before=JSON.stringify([v.pos,v.vel,target]);
+ const expected=new e.Vector(-1,0).mult(v.maxSpeed).sub(v.vel).limit(v.maxForce);
+ const force=v.flee(target);point(xy(force),xy(expected));bounded(force,v.maxForce);
+ assert.equal(JSON.stringify([v.pos,v.vel,target]),before);
+});
+test('Flee: direction nulle freine, maxSpeed et maxForce zéro restent bornés',()=>{
+ const e=corrected(),v=vehicle(e,[100,100],[0,3]);
+ point(xy(v.flee(v.pos.copy())),[0,-v.maxForce]);
+ v.maxSpeed=0;point(xy(v.flee(new e.Vector(200,100))),[0,-v.maxForce]);
+ v.maxForce=0;point(xy(v.flee(new e.Vector(200,100))),[0,0]);
+ v.maxForce=.2;v.vel.set(0,0);point(xy(v.flee(v.pos.copy())),[0,0]);
+});
+test('Flee: états ou cibles invalides retournent une force finie nulle',()=>{
+ const e=corrected(),v=vehicle(e),target=new e.Vector(200,100);
+ for(const bad of [null,{}, {x:NaN,y:1},{x:Infinity,y:1}])
+  point(xy(v.flee(bad)),[0,0]);
+ v.maxSpeed=Infinity;assert.deepEqual(xy(v.flee(target)),[0,0]);
+});
+test('Pursue: conserve la prédiction à dix pas et ne dessine pas pendant le calcul',()=>{
+ const e=corrected(),v=vehicle(e,[100,100],[1,2]),target=vehicle(e,[200,300],[.5,-1]);
+ const before=JSON.stringify([v.pos,v.vel,target.pos,target.vel]);
+ e.graphics.length=0;
+ const desired=new e.Vector(205,290).sub(v.pos).setMag(v.maxSpeed);
+ const expected=desired.sub(v.vel).limit(v.maxForce),force=v.pursue(target);
+ point(xy(force),xy(expected));bounded(force,v.maxForce);assert.equal(e.graphics.length,0);
+ assert.equal(JSON.stringify([v.pos,v.vel,target.pos,target.vel]),before);
+});
+test('Pursue: entrée invalide et dépassement de la prédiction ne propagent pas de valeur non finie',()=>{
+ const e=corrected(),v=vehicle(e),target=vehicle(e);
+ for(const bad of [null,{}, {pos:new e.Vector(NaN,0),vel:new e.Vector(1,0)},
+  {pos:new e.Vector(1e308,1e308),vel:new e.Vector(1e308,1e308)}])
+  bounded(v.pursue(bad),v.maxForce);
+ target.pos.set(Infinity,0);point(xy(v.pursue(target)),[0,0]);
+});
+test('Evade: éloignement de la position prédite puis desiredVelocity - velocity',()=>{
+ const e=corrected(),v=vehicle(e,[100,100],[0,3]),target=vehicle(e,[200,100],[1,0]);
+ const before=JSON.stringify([v.pos,v.vel,target.pos,target.vel]);
+ const predicted=new e.Vector(210,100),desired=new e.Vector(-1,0).mult(v.maxSpeed);
+ const expected=desired.sub(v.vel).limit(v.maxForce),force=v.evade(target);
+ point(xy(force),xy(expected));bounded(force,v.maxForce);
+ assert.equal(JSON.stringify([v.pos,v.vel,target.pos,target.vel]),before);assert.equal(e.graphics.length,0);
+});
+test('Evade: direction prédite nulle freine; limites nulles et entrées invalides sont sûres',()=>{
+ const e=corrected(),v=vehicle(e,[100,100],[0,3]),target=vehicle(e,[100,100],[0,0]);
+ point(xy(v.evade(target)),[0,-v.maxForce]);
+ v.maxSpeed=0;point(xy(v.evade(vehicle(e,[200,100],[1,0]))),[0,-v.maxForce]);
+ v.maxForce=0;point(xy(v.evade(target)),[0,0]);
+ v.maxForce=.2;v.vel.set(0,0);point(xy(v.evade(target)),[0,0]);
+ for(const bad of [null,{}, {pos:new e.Vector(1,2),vel:{x:NaN,y:0}}])
+  point(xy(v.evade(bad)),[0,0]);
+});
 test('Separate corrigé: voisins éloignés, superposés, nuls et invalides',()=>{
  const e=corrected(),v=vehicle(e);
  for(const neighbors of [[],[v],[vehicle(e,[600,400])],[vehicle(e,[100,100])],[null,{}],null])

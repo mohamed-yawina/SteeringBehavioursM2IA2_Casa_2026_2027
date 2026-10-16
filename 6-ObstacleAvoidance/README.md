@@ -89,6 +89,29 @@ Seek, applyForce, update et edges ne sont pas modifiées.
 La boucle p5 vise 60 FPS : ce TD n'introduit pas de pas fixe indépendant du FPS.
 edges n'est pas appelée automatiquement.
 
+## Méthodes auxiliaires Pursue / Evade / Flee
+
+Les scénarios actifs du laboratoire n'appellent que Arrive, Avoid, Separate et
+Boundaries. Flee, Pursue et Evade sont des méthodes auxiliaires dormantes, testées
+directement pour éviter qu'une réutilisation future hérite d'une formule incorrecte.
+
+Flee choisit la direction `position - cible`, construit `desiredVelocity` à
+`maxSpeed`, puis retourne `limit(desiredVelocity - velocity, maxForce)`. Evade
+conserve la prédiction historique `cible.position + cible.velocity × 10`, puis
+applique ce même calcul dans la direction opposée à la cible prédite. Ces méthodes
+ne renversent plus une force Seek ou Pursue entière : cela évite d'inverser aussi
+la correction liée à une vitesse latérale.
+
+Si la direction opposée est nulle, elle produit une vitesse désirée nulle et le
+steering freine la vitesse courante, limité par `maxForce`. Avec `maxSpeed = 0`,
+le freinage suit la même règle ; avec `maxForce = 0`, la force retournée est nulle.
+Les cibles, états et prédictions non finis donnent une force nulle.
+
+Pursue garde son calcul de prédiction et de Seek, mais ne dessine plus pendant le
+calcul. Aucun rendu de marqueur de prédiction n'est ajouté ailleurs. Cela ne change
+pas les scénarios actifs, qui n'appellent aucune de ces trois méthodes. La physique
+Avoid active, sa détection historique et ses diagnostics restent inchangés.
+
 ## Contrôles
 
 - Pause / Reprendre, ou Espace hors d'un champ de formulaire.

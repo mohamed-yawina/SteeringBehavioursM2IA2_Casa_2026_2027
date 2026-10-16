@@ -74,7 +74,33 @@ dans show à partir des décisions mémorisées. La flèche jaune d'évitement r
 la force brute réellement retournée, avec une échelle visuelle ×100, depuis la
 position du pas avant intégration. Le trait épais reste un repère historique,
 pas une preuve de détection continue. Aucun panneau pédagogique n'est ajouté ici.
-Les méthodes auxiliaires non actives, notamment avoidCorrige et pursue, sont conservées.
+Les méthodes auxiliaires non actives, notamment avoidCorrige, sont conservées.
+
+## Correction ciblée Flee / Pursue / Evade
+
+Flee, Pursue et Evade ne sont pas appelés par les huit scénarios actifs. Leur
+correction n'altère donc pas les trajectoires de référence actives.
+
+- Flee construit la direction `position - cible`, la vitesse désirée à `maxSpeed`,
+  puis calcule `limit(desiredVelocity - velocity, maxForce)`. Il n'inverse plus
+  la force Seek, car cette inversion inversait aussi la compensation de vitesse.
+- Evade conserve la prédiction `cible.position + cible.velocity × 10`, puis calcule
+  le steering opposé à cette position future. Il n'inverse plus le résultat de
+  Pursue.
+- Direction opposée nulle : vitesse désirée nulle, donc freinage `-velocity`
+  plafonné à `maxForce`. Ce choix suit le calcul existant de Seek pour un vecteur
+  cible nul ; il est couvert comme contrat explicite de ces méthodes.
+- maxSpeed/maxForce nuls conservent leurs effets physiques ; état, cible ou
+  prédiction non finis produisent une force finie nulle. Les vecteurs d'entrée ne
+  sont pas mutés.
+- Pursue conserve son anticipation à dix pas et son calcul Seek, mais n'appelle
+  plus `fill()` ni `circle()`. Le calcul ne produit aucun rendu. Le marqueur vert
+  historique n'est pas redessiné ailleurs.
+
+Les tests directs de ces auxiliaires sont distincts des tests historiques figés.
+Un test des huit scénarios remplace Flee/Pursue/Evade par des sentinelles qui
+échouent si un scénario actif les appelle. Les références historiques et corrigées
+de l'évitement ne sont pas modifiées.
 
 Obstacle hérite de Vehicle, garde son rayon et son rendu, sans force ni intégration.
 Target est extrait dans target.js et représente réellement le curseur rouge de

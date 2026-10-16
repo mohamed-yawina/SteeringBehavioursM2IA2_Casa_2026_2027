@@ -403,28 +403,35 @@ class Vehicle {
     return force;
   }
 
-  // inverse de seek !
+  // Fuite directionnelle : viser l'opposé de la cible, puis compenser la vitesse.
   flee(target) {
-    return this.seek(target).mult(-1);
+    if (!this.validPhysics() || !finitePoint(target)) return createVector(0,0);
+    const desired = p5.Vector.sub(this.pos, target);
+    if (!finitePoint(desired) || !Number.isFinite(desired.mag())) return createVector(0,0);
+    desired.setMag(this.maxSpeed);
+    const steering = desired.sub(this.vel);
+    if (!finitePoint(steering) || !Number.isFinite(steering.mag())) return createVector(0,0);
+    return steering.limit(this.maxForce);
   }
 
   /* Poursuite d'un point devant la target !
      cette methode renvoie la force à appliquer au véhicule
   */
   pursue(vehicle) {
+    if (!this.validPhysics() || !finitePoint(vehicle?.pos) || !finitePoint(vehicle?.vel)) return createVector(0,0);
     let target = vehicle.pos.copy();
     let prediction = vehicle.vel.copy();
     prediction.mult(10);
     target.add(prediction);
-    fill(0, 255, 0);
-    circle(target.x, target.y, 16);
+    if (!finitePoint(target)) return createVector(0,0);
     return this.seek(target);
   }
 
   evade(vehicle) {
-    let pursuit = this.pursue(vehicle);
-    pursuit.mult(-1);
-    return pursuit;
+    if (!this.validPhysics() || !finitePoint(vehicle?.pos) || !finitePoint(vehicle?.vel)) return createVector(0,0);
+    const predicted = vehicle.pos.copy().add(vehicle.vel.copy().mult(10));
+    if (!finitePoint(predicted)) return createVector(0,0);
+    return this.flee(predicted);
   }
 
   // Comportement Separation : on garde ses distances par rapport aux voisins
