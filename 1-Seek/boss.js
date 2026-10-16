@@ -37,9 +37,9 @@ class Boss extends Vehicle {
 
     // --- Phase d'entrée ---
     if (this.entering) {
-      const nextY = Math.min(this.pos.y + 2, this.targetY);
-      this.moveAlongScriptedPath(this.pos.x, nextY);
-      if (nextY >= this.targetY) {
+      const entryTarget = createVector(width / 2, this.targetY);
+      this.steerToward(entryTarget, 80);
+      if (p5.Vector.dist(this.pos, entryTarget) <= 2 && this.vel.mag() <= 0.25) {
         this.entering = false;
       }
       return;
@@ -47,9 +47,9 @@ class Boss extends Vehicle {
 
     // --- Détermine la phase actuelle ---
     let healthRatio = this.health / this.maxHealth;
-    if (healthRatio > 0.66) this.phase = 1;
-    else if (healthRatio > 0.33) this.phase = 2;
-    else this.phase = 3;
+    const nextPhase = healthRatio > 0.66 ? 1 : healthRatio > 0.33 ? 2 : 3;
+    if (nextPhase === 3 && this.phase !== 3) this.holdPosition = this.pos.copy();
+    this.phase = nextPhase;
 
     // --- Comportement selon la phase ---
     if (this.phase === 1) {
@@ -66,9 +66,10 @@ class Boss extends Vehicle {
   updatePhase1(player) {
     this.shootTimer++;
 
-    let dx = (player.pos.x - this.pos.x) * 0.005;
-    const nextX = constrain(this.pos.x + dx, this.r + 50, width - this.r - 50);
-    this.moveAlongScriptedPath(nextX, this.pos.y);
+    const targetX = constrain(player.pos.x, this.r + 50, width - this.r - 50);
+    // At maxSpeed 6, radius 1200 preserves the old 0.005 proportional response
+    // away from the margins, while acceleration now remains force-limited.
+    this.steerToward(createVector(targetX, this.targetY), 1200);
 
     if (this.shootTimer >= 60) {
       this.shootSpread(player, 3, 0.3);
@@ -86,7 +87,8 @@ class Boss extends Vehicle {
     let centerY = height / 2 - 50;
     const nextX = centerX + cos(angle) * radius;
     const nextY = centerY + sin(angle) * radius * 0.5;
-    this.moveAlongScriptedPath(nextX, nextY);
+    // The target follows the ellipse; the boss follows it reactively with Seek.
+    this.steerToward(createVector(nextX, nextY));
 
     if (this.shootTimer >= 8) {
       this.spiralAngle += 0.4;
@@ -102,13 +104,11 @@ class Boss extends Vehicle {
     this.shootTimer++;
 
     if (this.moveTimer >= 120) {
-      // Téléportation scénarisée conservée : elle ne représente pas une force.
-      this.pos.set(random(this.r + 50, width - this.r - 50), random(this.r + 50, height / 2));
-      this.vel.set(0, 0);
-      this.acc.set(0, 0);
-      createExplosion(this.pos.x, this.pos.y, color(200, 40, 100), 20);
+      this.teleportForPhaseThree();
       this.moveTimer = 0;
     }
+
+    this.steerToward(this.holdPosition || this.pos.copy(), 80);
 
     if (this.shootTimer >= 25) {
       let dir = p5.Vector.sub(player.pos, this.pos).normalize();
@@ -128,13 +128,20 @@ class Boss extends Vehicle {
     }
   }
 
-  // Convertit le déplacement scénarisé du boss en vitesse/accélération
-  // puis délègue l'intégration à Vehicle, sans modifier la trajectoire du TD.
-  moveAlongScriptedPath(x, y) {
-    const desiredVelocity = p5.Vector.sub(createVector(x, y), this.pos);
-    this.maxSpeed = Math.max(6, desiredVelocity.mag());
-    this.applyForce(p5.Vector.sub(desiredVelocity, this.vel));
+  // One inherited steering calculation and one inherited integration per live step.
+  steerToward(target, slowRadius) {
+    const force = slowRadius === undefined ? this.seek(target) : this.arrive(target, slowRadius);
+    this.applyForce(force.limit(this.maxForce));
     super.update();
+  }
+
+  // Explicit gameplay relocation, separate from steering. Keep its original cadence.
+  teleportForPhaseThree() {
+    this.pos.set(random(this.r + 50, width - this.r - 50), random(this.r + 50, height / 2));
+    this.vel.set(0, 0);
+    this.acc.set(0, 0);
+    this.holdPosition = this.pos.copy();
+    createExplosion(this.pos.x, this.pos.y, color(200, 40, 100), 20);
   }
 
   shootSpread(player, count, spreadAngle) {

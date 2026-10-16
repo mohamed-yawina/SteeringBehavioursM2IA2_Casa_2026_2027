@@ -24,7 +24,8 @@ class LabVehicle extends Vehicle {
     const desired = distance > 0 ? toward.setMag(this.maxSpeed) : createVector(0, 0);
     if (behavior === 'flee') desired.mult(-1);
     const currentVelocity = this.vel.copy();
-    const steering = p5.Vector.sub(desired, currentVelocity).limit(this.maxForce);
+    // The inherited behavior is the physical source of truth; desired is diagnostic only.
+    const steering = behavior === 'flee' ? super.flee(targetPosition) : super.seek(targetPosition);
     this.vectors = { desired: desired.copy(), velocity: currentVelocity, steering: steering.copy(), distance, origin: this.pos.copy(), target: targetPosition, visible: true };
     return steering;
   }

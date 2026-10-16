@@ -80,21 +80,43 @@ test('reference Projectile preserves linear and homing trajectories, trail, coll
   assert.equal(homing.trail[0].x, 10);
 });
 
-test('reference Boss entry and phase one/two paths keep their frame-based positions', () => {
-  const { classes: { Boss } } = loadEntities();
+test('Boss entry completes and phases one/two use bounded reactive steering', () => {
+  const { classes: { Boss, Vehicle } } = loadEntities();
   const boss = new Boss();
-  boss.update({ pos: new Vector(600, 200) });
-  near(boss.pos.x, 400); near(boss.pos.y, -98);
+  const player = { pos: new Vector(600, 200) };
+  let integrations = 0, forces = 0;
+  const integrate = Vehicle.prototype.update;
+  Vehicle.prototype.update = function () { integrations++; return integrate.call(this); };
+  const apply = boss.applyForce.bind(boss);
+  boss.applyForce = force => {
+    assert.ok(force.mag() <= boss.maxForce + 1e-12);
+    forces++; apply(force);
+  };
+  for (let i = 0; i < 600 && boss.entering; i++) {
+    boss.update(player);
+    assert.equal(boss.maxSpeed, 6);
+    assert.ok(boss.vel.mag() <= 6 + 1e-12);
+  }
+  assert.equal(boss.entering, false, 'entry must terminate without position snapping');
+  assert.ok(Vector.dist(boss.pos, new Vector(400, 200)) <= 2);
+  assert.equal(integrations, forces);
 
   boss.entering = false; boss.pos.set(400, 200); boss.health = 1000;
+  boss.vel.set(0, 0);
   boss.update({ pos: new Vector(800, 200) });
-  near(boss.pos.x, 402); near(boss.pos.y, 200); assert.equal(boss.phase, 1);
+  near(boss.pos.x, 400.4); near(boss.pos.y, 200); assert.equal(boss.phase, 1);
 
   boss.health = 500; boss.moveTimer = 0; boss.shootTimer = 0;
+  const before = boss.pos.copy();
+  const expectedTarget = new Vector(400 + Math.cos(0.02) * 150, 250 + Math.sin(0.02) * 75);
+  const expectedForce = boss.seek(expectedTarget);
+  const expectedVelocity = boss.vel.copy().add(expectedForce).limit(boss.maxSpeed);
   boss.update({ pos: new Vector(800, 200) });
-  near(boss.pos.x, 400 + Math.cos(0.02) * 150);
-  near(boss.pos.y, 250 + Math.sin(0.02) * 75);
+  near(boss.pos.x, before.x + expectedVelocity.x);
+  near(boss.pos.y, before.y + expectedVelocity.y);
+  assert.ok(Vector.dist(boss.pos, expectedTarget) > 1, 'ellipse is a target, not an imposed position');
   assert.equal(boss.phase, 2);
+  assert.equal(integrations, forces);
 });
 
 test('reference Boss phase three relocates on schedule and creates its explosion', () => {
@@ -157,4 +179,87 @@ test('Swarm Attack loads Obstacle after Vehicle and before sketch instantiation'
   const obstacleIndex = html.indexOf('src="obstacle.js"');
   const sketchIndex = html.indexOf('src="sketch.js"');
   assert.ok(vehicleIndex >= 0 && vehicleIndex < obstacleIndex && obstacleIndex < sketchIndex);
+});
+
+test('player composition locally caps avoidance before combining and caps the total without integrating', () => {
+  const { context } = loadEntities();
+  const sketch = readFileSync(new URL('../sketch.js', import.meta.url), 'utf8');
+  vm.runInContext(sketch, context);
+  const compose = vm.runInContext('calculatePlayerSteering', context);
+  const targets = new Vector(70, 80), obstacles = [];
+  const agent = {
+    maxForce: 0.4,
+    arrive(target, radius) { assert.equal(target, targets); assert.equal(radius, 100); return new Vector(.4, 0); },
+    avoid(items) { assert.equal(items, obstacles); return new Vector(0, 1.2); },
+    boundaries(margin) { assert.equal(margin, 80); return new Vector(0, 0); },
+    applyForce() { assert.fail('composition must only return its force'); },
+    update() { assert.fail('composition must not integrate'); }
+  };
+  let force = compose(agent, targets, obstacles);
+  near(force.mag(), .4); near(force.x, .4 / Math.sqrt(2)); near(force.y, force.x);
+  agent.avoid = () => new Vector(-1.2, 0);
+  force = compose(agent, targets, obstacles); near(force.mag(), 0);
+  agent.maxForce = 0;
+  force = compose(agent, targets, obstacles); near(force.mag(), 0);
+  assert.equal((sketch.match(/player\.applyForce\(/g) || []).length, 1, 'single player force application in active challenge');
+});
+
+test('player real steering remains finite and capped near obstacles and borders with speed boosts', () => {
+  const { context, classes: { Vehicle, Obstacle } } = loadEntities();
+  vm.runInContext(readFileSync(new URL('../sketch.js', import.meta.url), 'utf8'), context);
+  const compose = vm.runInContext('calculatePlayerSteering', context);
+  const agent = new Vehicle(20, 20); agent.vel.set(1, 0);
+  for (const speed of [6, 9.6]) {
+    agent.maxSpeed = speed;
+    for (const target of [agent.pos.copy(), new Vector(700, 500)]) {
+      for (const obstacles of [[], [new Obstacle(80, 20, 40)]]) {
+        const before = agent.pos.copy();
+        const force = compose(agent, target, obstacles);
+        assert.ok(Number.isFinite(force.x) && Number.isFinite(force.y));
+        assert.ok(force.mag() <= agent.maxForce + 1e-12);
+        assert.deepEqual([agent.pos.x, agent.pos.y], [before.x, before.y]);
+      }
+    }
+  }
+});
+
+test('boss keeps attack thresholds and patterns in all three phases', () => {
+  const { context, classes: { Boss } } = loadEntities();
+  const boss = new Boss(); boss.entering = false; boss.pos.set(400, 200);
+  const player = { pos: new Vector(600, 300) };
+  const shots = () => vm.runInContext('projectiles', context);
+  boss.shootTimer = 58;
+  boss.update(player); assert.equal(shots().length, 0);
+  boss.update(player); assert.equal(shots().length, 3); assert.equal(boss.shootTimer, 0);
+  boss.health = 660; boss.shootTimer = 6;
+  boss.update(player); assert.equal(boss.phase, 2); assert.equal(shots().length, 3);
+  boss.update(player); assert.equal(shots().length, 4); assert.equal(boss.shootTimer, 0);
+  near(shots()[3].vel.mag(), 5); near(boss.spiralAngle, .4);
+  boss.health = 330; boss.shootTimer = 23; boss.moveTimer = 118;
+  boss.update(player); assert.equal(boss.phase, 3); assert.equal(shots().length, 4);
+  boss.update(player); assert.equal(shots().length, 6); assert.equal(boss.moveTimer, 0);
+  assert.equal(context.particles.length, 20);
+  near(shots()[4].vel.mag(), 7); near(shots()[5].vel.mag(), 7);
+  assert.deepEqual([boss.pos.x, boss.pos.y, boss.vel.mag(), boss.acc.mag()], [400, 215, 0, 0]);
+});
+
+test('boss maintains force/speed limits and integrates once per live step across phase transitions', () => {
+  const { classes: { Boss, Vehicle } } = loadEntities();
+  const boss = new Boss(); boss.entering = false; boss.pos.set(400, 200);
+  let updates = 0, applications = 0;
+  const integrate = Vehicle.prototype.update;
+  Vehicle.prototype.update = function () { updates++; return integrate.call(this); };
+  const apply = boss.applyForce.bind(boss);
+  boss.applyForce = force => { applications++; assert.ok(force.mag() <= .4 + 1e-12); apply(force); };
+  for (let i = 0; i < 360; i++) {
+    boss.health = i < 60 ? 1000 : i < 240 ? 500 : 100;
+    boss.update({ pos: new Vector(i % 2 ? 780 : 20, 200) });
+    assert.equal(boss.maxSpeed, 6);
+    assert.ok(boss.vel.mag() <= 6 + 1e-12);
+    assert.ok(Number.isFinite(boss.pos.x) && Number.isFinite(boss.pos.y));
+    near(boss.acc.mag(), 0);
+    assert.equal(updates, i + 1); assert.equal(applications, i + 1);
+  }
+  boss.takeDamage(1000); boss.update({ pos: new Vector(0, 0) });
+  assert.equal(updates, 360); assert.equal(boss.isDead, true);
 });

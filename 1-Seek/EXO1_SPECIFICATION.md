@@ -1,5 +1,7 @@
 # EXO 1 — Population de véhicules, rebouclage et réapparition
 
+> Document historique de la démonstration initiale, conservé pour traçabilité. Il ne constitue pas un énoncé officiel de Swarm Attack ou Steering Lab. Certains fichiers, bornes et résultats ci-dessous décrivent un ancien état ; consulter README.md pour les applications actuelles et leur validation.
+
 **Projet :** `SteeringBehavioursM2IA2_2026_2027` — dossier `1-Seek`.
 **Date :** 12 octobre 2026.
 **Statut :** spécification approuvée et implémentée le 12 octobre 2026. Voir [README.md](README.md) pour l’utilisation et les tests.

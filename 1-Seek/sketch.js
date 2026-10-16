@@ -74,6 +74,15 @@ function resetGame() {
   }
 }
 
+// Keep the supplied Vehicle unchanged: cap its stronger avoidance locally,
+// then cap the complete composition before its single application.
+function calculatePlayerSteering(agent, target, sceneObstacles) {
+  const force = agent.arrive(target, 100);
+  force.add(agent.avoid(sceneObstacles).limit(agent.maxForce));
+  force.add(agent.boundaries(80));
+  return force.limit(agent.maxForce);
+}
+
 function draw() {
   // Met à jour la musique (avance dans les notes)
   if (musicPlayer) musicPlayer.update();
@@ -165,9 +174,7 @@ function draw() {
   }
 
   let mouseTarget = createVector(mouseX, mouseY);
-  player.applyForce(player.arrive(mouseTarget, 100));
-  player.applyForce(player.avoid(obstacles));
-  player.applyForce(player.boundaries(80));
+  player.applyForce(calculatePlayerSteering(player, mouseTarget, obstacles));
 
   player.updatePowerUps();
   player.update();

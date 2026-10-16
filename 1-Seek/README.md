@@ -51,6 +51,27 @@ Les vecteurs sont échantillonnés ensemble avant l’intégration : vitesse cou
 
 Les deux pages sont des documents distincts : chacune charge ses scripts applicatifs et n’exécute pas le code de l’autre. Elles réutilisent `vehicle.js`, sans le modifier dans cette livraison. Les classes du laboratoire fixent leurs paramètres après `super(x, y)` afin de ne pas dépendre de la signature étendue par options dans la version locale de `Vehicle`. `LabTarget` redéfinit son rendu et sa mise à jour autonome tout en déléguant l’intégration à `Vehicle.update()`.
 
+### Pilotage et composition
+
+`LabVehicle.calculateSteering()` délègue le calcul physique à `super.seek()` ou `super.flee()`. Les vitesses désirées recalculées pour les flèches sont uniquement des diagnostics ; la force affichée est une copie de celle effectivement retournée par Vehicle. Flee reste inactif au-delà du rayon de perception et actif à son seuil inclusif. À distance nulle, le comportement hérité freine la vitesse résiduelle.
+
+Dans Swarm Attack, `calculatePlayerSteering()` compose Arrive, évitement et bordures. Le résultat d'évitement est limité localement à `player.maxForce`, puis la somme complète est limitée à cette même valeur avant un unique `applyForce()`. La locomotion reste celle de Vehicle. L'évitement fourni dans `vehicle.js` conserve son plafond historique de `3 × maxForce` : il n'a pas été modifié et son résultat brut ne respecte donc pas la limite individuelle stricte. Le contrôleur du joueur corrige cette limite à l'utilisation.
+
+Le boss conserve ses trois phases et attaques :
+
+- entrée par Arrive vers le point d'entrée, terminée à une distance ≤ 2 pixels et une vitesse ≤ 0,25 pixel/frame ;
+- phase 1 : Arrive vers une position horizontale liée au joueur, avec un rayon de ralentissement de 1200 pixels pour conserver une réponse progressive ; tirs toutes les 60 mises à jour de cette phase ;
+- phase 2 : Seek vers une cible qui parcourt l'ellipse historique ; tirs en spirale toutes les 8 mises à jour ;
+- phase 3 : maintien réactif autour d'un point, tirs doubles toutes les 25 mises à jour et téléportation toutes les 120 mises à jour du compteur de déplacement partagé avec la phase 2.
+
+Chaque pas vivant applique au plus `maxForce`, puis délègue une seule intégration à Vehicle. La vitesse maximale du boss reste 6 pixels/frame. Le boss ne rejoint plus exactement les points imposés de l'ancienne animation : l'entrée et la trajectoire ont changé pour respecter l'accélération bornée. La cible elliptique est prédéfinie, mais le déplacement du boss résulte de Seek. Les seuils de santé, compteurs partagés, projectiles et animations sont conservés ; l'équilibre de difficulté reste à apprécier dans Chrome.
+
+### Exceptions de gameplay
+
+La téléportation de phase 3 est une action exceptionnelle explicite (`teleportForPhaseThree()`), avec remise à zéro de vitesse/accélération et explosion ; ce n'est pas un steering. Les réapparitions du laboratoire, les rebouclages, les rebonds et la cible pilotée par la souris restent également des règles de scène ou des entrées utilisateur. `LabTarget` conserve ses impulsions aléatoires bornées et son intégration héritée : cette dérive auxiliaire n'est pas présentée comme un Wander de Reynolds.
+
+`EXO1_SPECIFICATION.md` décrit une démonstration historique de population. Ses noms de fichiers, limites et résultats datés ne décrivent pas les deux applications actuelles et ne constituent pas leur énoncé officiel.
+
 ## Lancement
 
 Les deux applications chargent p5.js et, pour Swarm Attack, p5.sound depuis les bibliothèques locales fournies dans `libraries/`.
@@ -88,7 +109,9 @@ node --test tests/*.test.mjs
 
 La suite inclut les tests de population et rebouclage historiques, ainsi que ceux du laboratoire : limites des forces, Seek/Flee, arrivée/réapparition, cible autonome, vecteurs cohérents, sliders, scénarios et contrôles. L’adaptateur historique fournit les fonctions p5 attendues par la version locale de `Vehicle`; les tests vérifient les fonctions de steering et de locomotion existantes sans injecter `applyBehaviors()` ou `edges()` dans la classe de base.
 
-Dernière exécution pendant la finalisation : **21 tests réussis, 0 échec** avec `node --test tests/*.test.mjs`.
+Dernière exécution après correction architecturale : **35 tests réussis, 0 échec** avec `node --test tests/*.test.mjs`.
+
+La suite vérifie aussi la délégation effective du laboratoire, les diagnostics défensifs, les limites de perception, la composition du joueur avec les vrais comportements, les forces/vitesses du boss, la fin d'entrée, les transitions de santé et les seuils d'attaque. Le test des anciennes positions imposées du boss a été remplacé par le contrat de pilotage réactif, sans tolérance élargie. Le double à constructeur simple du laboratoire réutilise désormais les vrais comportements fournis.
 
 ## Améliorations personnelles
 

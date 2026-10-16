@@ -32,12 +32,10 @@ function setup(courseVehicle = false) {
     Event: class { constructor(type) { this.type = type; } },
   });
   if (courseVehicle) {
-    vm.runInContext(`class Vehicle {
-      constructor(x, y) { this.pos = createVector(x, y); this.vel = createVector(0, 0); this.acc = createVector(0, 0); this.maxSpeed = 4; this.maxForce = 0.1; this.r = 16; }
-      applyForce(force) { this.acc.add(force); }
-      update() { this.vel.add(this.acc).limit(this.maxSpeed); this.pos.add(this.vel); this.acc.mult(0); }
-      show() {}
-    }`, context);
+    // A two-argument constructor must still expose the supplied steering contract.
+    const reference = readFileSync(new URL('../vehicle.js', import.meta.url), 'utf8');
+    vm.runInContext(reference.replace('class Vehicle {', 'class ReferenceVehicle {'), context);
+    vm.runInContext('class Vehicle extends ReferenceVehicle { constructor(x, y) { super(x, y); } }', context);
   } else {
     vm.runInContext(readFileSync(new URL('../vehicle.js', import.meta.url), 'utf8'), context);
   }
@@ -194,4 +192,41 @@ test('cible autonome ne reçoit au plus qu’une demande de réapparition par fr
   assert.equal(respawnRequests, 1);
   assert.ok(controller.agents.every(agent => agent.vel.mag() === 0));
   assert.ok(controller.agents.every(agent => agent.trail.length === 0));
+});
+
+test('LabVehicle delegates Seek/Flee to Vehicle and snapshots the actual returned force', () => {
+  const { Vehicle, LabVehicle } = setup();
+  const agent = new LabVehicle(10, 20); agent.vel.set(1, 0);
+  const target = new Vector(110, 20);
+  for (const behavior of ['seek', 'flee']) {
+    let calls = 0; const inherited = Vehicle.prototype[behavior];
+    Vehicle.prototype[behavior] = function (goal) { calls++; return inherited.call(this, goal); };
+    const force = agent.calculateSteering(target, behavior, 100);
+    assert.equal(calls, 1, 'distance equal to perception radius remains active');
+    assert.deepEqual([force.x, force.y], [agent.vectors.steering.x, agent.vectors.steering.y]);
+    assert.deepEqual([agent.vectors.origin.x, agent.vectors.origin.y], [10, 20]);
+    if (behavior === 'flee') {
+      const idle = agent.calculateSteering(new Vector(110.001, 20), behavior, 100);
+      assert.equal(calls, 1, 'outside radius must not call inherited Flee');
+      assert.equal(idle.mag(), 0);
+    }
+    Vehicle.prototype[behavior] = inherited;
+  }
+  assert.deepEqual([target.x, target.y], [110, 20]);
+});
+
+test('inherited laboratory steering brakes at zero distance and keeps independent diagnostics', () => {
+  const { LabVehicle } = setup();
+  for (const behavior of ['seek', 'flee']) {
+    const agent = new LabVehicle(30, 40); agent.vel.set(1, -2);
+    const goal = new Vector(30, 40);
+    const force = agent.calculateSteering(goal, behavior);
+    assert.ok(force.x < 0 && force.y > 0);
+    assert.ok(Math.abs(force.mag() - agent.maxForce) < 1e-12);
+    assert.equal(agent.vectors.desired.mag(), 0);
+    const snapshot = [agent.vectors.steering.x, agent.vectors.steering.y];
+    force.set(100, 200); goal.set(-1, -1);
+    assert.deepEqual([agent.vectors.steering.x, agent.vectors.steering.y], snapshot);
+    assert.deepEqual([agent.vectors.target.x, agent.vectors.target.y], [30, 40]);
+  }
 });
