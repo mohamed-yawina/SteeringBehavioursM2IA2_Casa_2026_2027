@@ -49,16 +49,25 @@ distance_min < rayon_obstacle + largeurZoneEvitementDevantVaisseau.
 La marge historique vaut 24 pixels (r/2). L'égalité exacte ne déclenche rien.
 Le rayon du véhicule n'est pas ajouté une seconde fois.
 
-En cas de détection :
-Avoid = setMag(Q-C, maxForce/2).
-Sinon : force nulle.
+En cas de détection, la force Avoid suit désormais la formule de steering :
 
-**Cette force directe conserve volontairement un écart avec la formule générale
-steering = desiredVelocity - currentVelocity.** Ne pas présenter cet écart comme
-corrigé. Aucun remplacement par avoidCorrige ni test continu n'est actif.
+```text
+direction = Q - C
+desiredVelocity = normalize(direction) × maxSpeed
+steering = limit(desiredVelocity - velocity, maxForce / 2)
+```
 
-La détection peut être vraie avec force nulle si Q=C ou maxForce=0.
-Aucune règle arbitraire de choix gauche/droite n'est ajoutée.
+Le budget individuel conserve la moitié de `maxForce`, comme dans la limite
+d'intensité historique. Le steering s'oppose donc à la vitesse courante lorsque
+celle-ci ne correspond pas à la direction désirée. Il est ensuite pondéré puis
+composé avec les autres forces ; la résultante reste plafonnée globalement à
+`maxForce`.
+
+Si `Q = C`, la direction est nulle et la vitesse désirée vaut `(0,0)`. Le véhicule
+en mouvement reçoit un freinage borné à `maxForce / 2`; à vitesse nulle la force
+reste nulle. Le diagnostic conserve `detected=true` et la raison géométrique
+`coincident-sample`. Si `maxForce=0`, aucune force ne peut être produite. Aucun
+choix gauche/droite n'est inventé.
 
 ## Composition et unités
 
@@ -115,7 +124,7 @@ pas restaurée lors d'une édition ultérieure. Le rayon reste en pixels logique
 |---|---|
 | Démonstration historique | Arrive vers la souris, un obstacle central, départ immobile |
 | Aucun obstacle | Avoid nulle sans exception |
-| Obstacle frontal | Détection avec direction longitudinale ou nulle |
+| Obstacle frontal | Détection ; lorsque l'échantillon coïncide avec le centre, le steering freine le véhicule |
 | Obstacle latéral | Répulsion latérale |
 | Deux obstacles symétriques | Départage par ordre du tableau |
 | Menace masquée | Centre proche non menaçant cachant une menace plus éloignée |
@@ -189,8 +198,11 @@ vitesse n'est effectué lors du redimensionnement de la fenêtre.
   sur mobile ; vérifier le rendu, le tactile et la correspondance du pointeur.
 - Les références reference-trajectories.json, historical-sources.json et
   corrected-trajectories.json restent intactes et sont contrôlées par SHA-256.
-- La suite actuelle contient 50 tests historiques, 29 tests de correction et 26 tests
-  du laboratoire, soit 105 tests. Les références numériques conservent la tolérance 1e-12.
+- La suite actuelle contient 50 tests historiques, 31 tests de correction et 26 tests
+  du laboratoire, soit 107 tests.
+  Les références historiques restent intactes ; Avoid corrigé possède une fixture
+  séparée dans `tests/corrected-avoid-trajectories.json`. Les nombres sont comparés
+  à 1e-12.
 - Aucune nouvelle validation Chrome n'est revendiquée.
 
 ## Référence

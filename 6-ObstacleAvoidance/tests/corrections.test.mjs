@@ -7,6 +7,45 @@ const corrected=()=>load(2027,{historical:false});
 const near=(a,b)=>assert.ok(Number.isFinite(a)&&Math.abs(a-b)<=1e-12,`${a} != ${b}`);
 const point=(a,b)=>a.forEach((n,i)=>near(n,b[i]));
 const bounded=(v,limit)=>{assert.ok(Number.isFinite(v.x)&&Number.isFinite(v.y));assert.ok(v.mag()<=limit+1e-12);};
+function expectedAvoidSteering(v,d){
+ const Vector=v.pos.constructor;
+ if(!d.detected)return new Vector(0,0);
+ const desired=new Vector(d.sample.x-d.center.x,d.sample.y-d.center.y)
+  .normalize().mult(v.maxSpeed);
+ return desired.sub(v.vel).limit(v.maxForce/2);
+}
+function correctedAvoidTrajectory(kind){
+ const e=corrected(),V=e.Vector;
+ const full=kind==='full';
+ const agents=full?[vehicle(e,[100,100],[1,0]),vehicle(e,[110,104],[.5,0])]:[vehicle(e,[100,100],[1,0])];
+ const configurations={
+  avoid:{arrive:0,avoid:1,separate:0,boundaries:0},
+  'arrive-avoid':{arrive:.2,avoid:3,separate:0,boundaries:0},
+  full:{arrive:.2,avoid:3,separate:.2,boundaries:3}
+ };
+ for(const a of agents)a.behaviorWeights={...configurations[kind]};
+ e.setVehicles(agents);
+ const list=obstacles(e,[[130,105,10],[350,250,30]]),target=new V(300,100),frames=[];
+ for(let step=0;step<5;step++){
+  const frame=[];
+  for(const a of agents){
+   a.diagnosticStep=step+1;a.applyBehaviors(target,list);
+   a.update();frame.push([...xy(a.pos),...xy(a.vel)]);
+  }
+  frames.push(frame);
+ }
+ return frames;
+}
+function compareNumericTree(actual,expected,path='root'){
+ if(typeof expected==='number'){near(actual,expected);return;}
+ if(Array.isArray(expected)){assert.equal(actual.length,expected.length,path);expected.forEach((v,i)=>compareNumericTree(actual[i],v,path+'.'+i));return;}
+ if(expected&&typeof expected==='object'){
+  assert.deepEqual(Object.keys(actual),Object.keys(expected),path);
+  for(const key of Object.keys(expected))compareNumericTree(actual[key],expected[key],path+'.'+key);
+  return;
+ }
+ assert.equal(actual,expected,path);
+}
 test('Separate corrigé: formule exacte, force limitée, aucune mutation',()=>{
  const e=corrected(),v=vehicle(e),other=vehicle(e,[110,100]);
  const before=JSON.stringify([v.pos,v.vel,v.acc,other.pos,other.vel]);
@@ -89,7 +128,7 @@ test('Diagnostics composition: forces brutes, pondérées et total exacts, copie
  const next=v.copyForceDiagnostics();assert.notEqual(next.raw.avoid.x,999);assert.notEqual(next.weighted.arrive.y,999);
  assert.notEqual(next.total.x,999);assert.notEqual(next.origin.x,999);
 });
-test('Avoid corrigé: cas valides identiques au code historique, limites conservées',()=>{
+test('Avoid corrigé: détection historique intacte, force conforme et bornée',()=>{
  const cases=[
   [[130,105,5]],[[130,100,10]],[[120,100,10]],[[110,100,10]],[[90,100,5]],
   [[120,110,5],[120,90,5]],[[120,90,5],[120,110,5]],[[130,129,5]],[[130,128.999999,5]],
@@ -98,8 +137,8 @@ test('Avoid corrigé: cas valides identiques au code historique, limites conserv
  for(const points of cases){
   const old=load(),e=corrected(),a=vehicle(old),b=vehicle(e);
   const historical=observeAvoid(old,a,obstacles(old,points)),actual=observeAvoid(e,b,obstacles(e,points));
-  point(xy(actual.force),xy(historical.force));assert.equal(actual.observation.detected,historical.observation.detected);
-  assert.equal(actual.observation.selectedIndex,historical.observation.selectedIndex);
+  assert.deepEqual(actual.observation,historical.observation);
+  point(xy(actual.force),xy(expectedAvoidSteering(b,b.copyAvoidDiagnostics())));
   bounded(actual.force,.1);
  }
 });
@@ -107,9 +146,10 @@ test('Avoid corrigé: X Q15 Q30, échantillon et seuil exacts, sans calcul graph
  const e=corrected(),v=vehicle(e),list=obstacles(e,[[115,105,10]]);
  e.Vehicle.debug=true;e.graphics.length=0;const f=v.avoid(list),d=v.copyAvoidDiagnostics();
  assert.equal(e.graphics.length,0);point(xy(d.origin),[100,100]);point(xy(d.q15),[115,100]);point(xy(d.q30),[130,100]);
- assert.equal(d.sampleName,'Q15');point(xy(d.sample),[115,100]);assert.equal(d.threshold,34);assert.equal(d.detected,true);point(xy(d.force),xy(f));
+ assert.equal(d.sampleName,'Q15');point(xy(d.sample),[115,100]);assert.equal(d.threshold,34);assert.equal(d.detected,true);
+ point(xy(d.force),xy(f));point(xy(f),xy(expectedAvoidSteering(v,d)));
  d.q15.x=999;d.distances.q15=999;d.force.y=999;d.center.x=999;
- const next=v.copyAvoidDiagnostics();near(next.q15.x,115);near(next.distances.q15,5);near(next.center.x,115);near(next.force.y,-.1);
+ const next=v.copyAvoidDiagnostics();near(next.q15.x,115);near(next.distances.q15,5);near(next.center.x,115);near(next.force.y,f.y);
 });
 test('Avoid corrigé: liste vide ou invalide sans exception',()=>{
  const e=corrected(),v=vehicle(e);
@@ -121,7 +161,8 @@ test('Avoid corrigé: filtre NaN Infinity rayon invalide et conserve ordre des v
  const e=corrected(),v=vehicle(e),valid=new e.Obstacle(130,105,10);
  for(const value of [NaN,Infinity,-Infinity]){
   const invalid=new e.Obstacle(120,100,10);invalid.pos.x=value;
-  point(xy(v.avoid([invalid,valid])),[0,-.1]);assert.equal(v.copyAvoidDiagnostics().selectedIndex,1);
+  const force=v.avoid([invalid,valid]);point(xy(force),xy(expectedAvoidSteering(v,v.copyAvoidDiagnostics())));
+  assert.equal(v.copyAvoidDiagnostics().selectedIndex,1);
   assert.deepEqual(Array.from(v.copyAvoidDiagnostics().rejected),[0]);
  }
  for(const radius of [NaN,Infinity,-1]){
@@ -138,13 +179,14 @@ test('Avoid historique préservé: menace masquée, trou entre échantillons et 
  const e=corrected(),v=vehicle(e,[100,100],[4,0]);
  assert.equal(v.avoid(obstacles(e,[[100,140,1],[220,105,10]])).mag(),0);
  assert.equal(v.avoid(obstacles(e,[[130,100,1]])).mag(),0);
- v.vel.set(1,0);assert.equal(v.avoid(obstacles(e,[[130,100,10]])).mag(),0);assert.equal(v.copyAvoidDiagnostics().detected,true);
+ v.vel.set(1,0);point(xy(v.avoid(obstacles(e,[[130,100,10]]))),[-.1,0]);
+ assert.equal(v.copyAvoidDiagnostics().detected,true);assert.equal(v.copyAvoidDiagnostics().reason,'coincident-sample');
  v.vel.set(0,0);assert.equal(v.avoid(obstacles(e,[[100,100,100]])).mag(),0);assert.equal(v.copyAvoidDiagnostics().detected,true);
 });
 test('Avoid corrigé: limites nulles et état non fini sans force invalide',()=>{
  const e=corrected(),v=vehicle(e),list=obstacles(e,[[130,105,10]]);
  v.maxForce=0;assert.equal(v.avoid(list).mag(),0);v.maxForce=.2;v.maxSpeed=0;
- point(xy(v.avoid(list)),[0,-.1]);v.vel.x=Infinity;assert.equal(v.avoid(list).mag(),0);
+ point(xy(v.avoid(list)),[-.1,0]);v.vel.x=Infinity;assert.equal(v.avoid(list).mag(),0);
  assert.equal(v.copyAvoidDiagnostics().status,'invalid');
 });
 test('Non-mutation: calcul et application préservent cible, obstacles, voisins et contributions',()=>{
@@ -202,14 +244,20 @@ test('Constructeur préservé hors horizons autorisés; Seek applyForce update e
   assert.equal(actual,method(frozen,name));
  }
 });
-test('Références préservées: Arrive, Avoid, combinaison isolée et bordure axiale à 1e-12',()=>{
- for(const kind of ['arrive','avoid','arrive-avoid','boundaries']){
+test('Références préservées: Arrive et bordure axiale à 1e-12',()=>{
+ for(const kind of ['arrive','boundaries']){
   const before=runTrajectory(kind),after=runTrajectory(kind,{historical:false});
   for(let step=0;step<5;step++){
    point(after[step][0].after.position,before[step][0].after.position);
    point(after[step][0].after.velocity,before[step][0].after.velocity);
    for(const name of Object.keys(before[step][0].individual))point(after[step][0].individual[name],before[step][0].individual[name]);
   }
+ }
+});
+test('Trajectoires modifiées: Arrive + Avoid et composition complète',()=>{
+ for(const kind of ['arrive-avoid','full']){
+  const before=runTrajectory(kind),after=runTrajectory(kind,{historical:false});
+  assert.notDeepEqual(after.map(frame=>frame[0].after.position),before.map(frame=>frame[0].after.position));
  }
 });
 test('Trajectoires modifiées: Separate et composition complète, résultat reproductible',()=>{
@@ -249,5 +297,14 @@ test('Attentes corrigées séparées: six scénarios numériques figés à 1e-12
    assert.deepEqual(Object.keys(actual),Object.keys(expected));for(const k of Object.keys(expected))compare(actual[k],expected[k]);return;
   }assert.equal(actual,expected);
  };
- for(const [kind,expected] of Object.entries(fixtures.scenarios))compare(runTrajectory(kind,{historical:false}),expected);
+ for(const [kind,expected] of Object.entries(fixtures.scenarios)){
+  if(['avoid','arrive-avoid','full'].includes(kind))continue; // Baselines immuables de la phase 2.
+  compare(runTrajectory(kind,{historical:false}),expected);
+ }
+});
+test('Nouvelles trajectoires Avoid corrigées: seul, Arrive+Avoid et composition complète',()=>{
+ const fixtures=JSON.parse(readFileSync(new URL('./corrected-avoid-trajectories.json',import.meta.url),'utf8'));
+ assert.deepEqual(Object.keys(fixtures.scenarios).sort(),['arrive-avoid','avoid','full']);
+ for(const [kind,expected] of Object.entries(fixtures.scenarios))
+  compareNumericTree(correctedAvoidTrajectory(kind),expected,kind);
 });

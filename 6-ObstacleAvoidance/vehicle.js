@@ -149,11 +149,17 @@ class Vehicle {
     d.minDistance=distance;d.detected=distance<threshold;
     d.reason=d.detected?'detected':'outside-threshold';
     if (!d.detected) return zero();
-    const force=p5.Vector.sub(point,obstacle.pos);
-    force.setMag(this.maxForce/2); // Historical direct force, intentionally NOT desired - velocity.
+    const direction=p5.Vector.sub(point,obstacle.pos);
+    const coincident=direction.mag()===0;
+    const desiredVelocity=direction.copy();
+    desiredVelocity.normalize();
+    desiredVelocity.mult(this.maxSpeed);
+    const force=p5.Vector.sub(desiredVelocity,this.vel);
+    force.limit(this.maxForce/2);
     if(!finitePoint(force)) {d.status='invalid';d.detected=false;return zero();}
     d.force=force.copy();
-    if(d.detected&&force.mag()===0)d.reason=this.maxForce===0?'zero-force-budget':'coincident-sample';
+    if(coincident)d.reason='coincident-sample';
+    else if(force.mag()===0&&this.maxForce===0)d.reason='zero-force-budget';
     return force;
   }
 

@@ -257,3 +257,31 @@ Les scénarios isolés non concernés doivent rester identiques à 1e-12.
 
 Toute modification de vehicle.js nécessite une autorisation explicite ultérieure.
 Cette phase ne modifie ni ce fichier, ni les scripts, ni les bibliothèques.
+
+## Contrat final de Avoid
+
+La correction ultérieure conserve strictement la détection ci-dessus : `X`,
+`Q15 = X + 15V`, `Q30 = X + 30V`, classement par distance du centre à X, ordre
+des obstacles et départages, choix Q30/Q15/X, puis seuil strict rayon + marge.
+Elle remplace uniquement la force calculée après une détection :
+
+```text
+direction = selectedSample - obstacleCenter
+desiredVelocity = normalize(direction) * maxSpeed
+steering = limit(desiredVelocity - velocity, maxForce / 2)
+```
+
+`maxForce / 2` est le budget individuel explicite ; la somme pondérée reste
+plafonnée par `applyBehaviors()` à `maxForce`. Si la direction est nulle,
+`desiredVelocity` vaut zéro : le véhicule freine dans le budget individuel, ou
+retourne zéro s'il est déjà immobile. La détection reste vraie et le diagnostic
+géométrique conserve `reason: coincident-sample`.
+
+`reference-trajectories.json`, `historical-sources.json` et
+`corrected-trajectories.json` restent des références immuables : elles documentent
+respectivement l'application historique et la correction de phase 2. Les attentes
+post-steering sont distinctes dans `corrected-avoid-trajectories.json` pour Avoid
+seul, Arrive + Avoid avec le plafond global, et la composition complète à deux agents.
+Les tests historiques continuent d'exécuter les sources figées ; les tests du code
+courant comparent la géométrie à l'historique, mais vérifient séparément la nouvelle
+force et les trajectoires corrigées. Aucun test ne régénère les références.

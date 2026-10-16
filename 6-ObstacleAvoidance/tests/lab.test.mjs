@@ -58,11 +58,14 @@ test('reset restaure géométrie, cible, paramètres et sélection du scénario'
  assert.equal(c.steps,0);assert.equal(c.selectedObstacle,-1);assert.equal(c.selectedVehicle,0);
  assert.equal(c.reset('missing'),false);
 });
-test('phénomènes pédagogiques: frontal nul, menace masquée, trou, symétrie',()=>{
+test('phénomènes pédagogiques: freinage frontal coïncident, menace masquée, trou, symétrie',()=>{
  const e=lab(),c=e.LabController;
  for(const name of ['frontal','masked','gap','symmetric']){
   c.reset(name);c.requestStep();c.step();const d=c.selected().copyAvoidDiagnostics();
-  if(name==='frontal'){assert.equal(d.detected,true);assert.equal(d.reason,'coincident-sample');assert.equal(d.force.mag(),0);}
+  if(name==='frontal'){
+   assert.equal(d.detected,true);assert.equal(d.reason,'coincident-sample');
+   near(d.force.x,-.1);near(d.force.y,0);assert.ok(d.force.mag()>0);
+  }
   if(name==='masked'){assert.equal(d.selectedIndex,0);assert.equal(d.detected,false);}
   if(name==='gap')assert.equal(d.detected,false);
   if(name==='symmetric'){assert.equal(d.selectedIndex,0);assert.equal(d.detected,true);}
