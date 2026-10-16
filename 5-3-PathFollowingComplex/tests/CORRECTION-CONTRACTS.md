@@ -62,7 +62,7 @@ Scénarios : vehicle-follow, vehicle-separation, snake-follow, snake-separation,
 | vehicle.js follow | boucle fermée, anticipation spatiale, repli sur B, départage premier ; dessin inclus | préserver algorithme valide et ordre mathématique ; séparer dessin ; copies défensives de tous candidats et décision ; Infinity pour le minimum ; aucun candidat valide => force nulle/statut explicite | anticipation25, avance25, extrémités, sélection, égalité, seuil strict, vitesse nulle, absence de mutation | valide inchangé ; grandes distances cessent de lever une exception |
 | vehicle.js follow, géométrie dégénérée | vide => exception ; un point et doublons traités comme points | ignorer segments nuls ; moins de deux points distincts ou aucun segment valide => projection indéfinie et force nulle ; invalidité explicite | vide, un point, doublons seuls ou mêlés à des segments valides, NaN/Infinity | changement intentionnel des cas dégénérés uniquement |
 | vehicle.js applyBehaviors | 3 applications, somme pondérée non plafonnée | contributions calculées sur copies, somme limitée à maxForce, une application ; diagnostics individuels et total | convergentes/opposées/nulles, limite globale, une intégration ; ne pas muter les contributions | changement attendu quand la somme dépasse maxForce |
-| vehicle.js wander (décision séparée) | force de direction directe ; theta et RNG évoluent même poids nul | séparer rendu ; conserver d'abord la formule historique ; arbitrer explicitement l'écart avec desiredVelocity-currentVelocity | référence Wander avec graine, absence de dessin dans calcul | reformuler la force changerait volontairement la trajectoire et exige une décision distincte |
+| vehicle.js wander | Ancien comportement : force directe vers `wanderPoint`, de norme `maxForce`, sans soustraire la vitesse | `desiredVelocity = normalize(wanderPoint - position) × maxSpeed`, puis `steering = limit(desiredVelocity - velocity, maxForce)` ; direction cible nulle => vitesse désirée nulle et freinage borné | tests de formule, limites nulles, freinage, non-mutation, RNG inchangé ; trajectoire conforme figée séparément | changement intentionnel de la trajectoire Wander |
 | vehicle.js applyBehaviors, poids nul | Wander est évalué sans contribution physique | recommander d'abord de conserver les tirages pour isoler le plafonnement ; suppression ultérieure seulement sous contrat RNG explicite | test du nombre de tirages, références Wander ; comparaison entre agents | supprimer les tirages modifie la suite globale et les activations ultérieures |
 | snakePathFollowing.js move | 2 forces par anneau non plafonnées ; mise à jour séquentielle | composer sur copies et limiter selon maxForce propre à chaque anneau ; une application, une intégration | tous anneaux, héritage, exclusion voisinage, limites et espacement ; ne pas synchroniser artificiellement les anneaux | attendu lorsque total dépasse la limite ; conserver Arrive et l'ordre tête puis corps |
 | path.js constructeur | entité visible indépendante de Vehicle | Path extends Vehicle, super avec arguments finis et limites nulles ; aucune intégration, force ni steering ; points inchangés | instanceof, pos/vel/acc finis, immobilité après étapes ; édition des sommets seulement sur interaction | agents inchangés |
@@ -87,3 +87,17 @@ Les tests historiques comptant 3/2 appels applyForce et celui préexistant de so
 non bornée devront évoluer vers un appel total, tout en conservant les assertions
 sur chaque contribution et l'unique intégration. Aucun changement Seek/update/edges
 n'est nécessaire au premier lot. Validation Chrome encore à réaliser après implémentation.
+
+## Décision et référence Wander corrigée
+
+La décision utilisateur ultérieure remplace le contrat historique de `wander()` :
+seule sa formule de force est modifiée afin de respecter le steering désiré moins
+vitesse courante. La construction de la cible, les paramètres géométriques, la
+consommation et l'ordre des tirages aléatoires restent identiques. À cible confondue
+avec la position, la vitesse désirée est nulle et la force freine le véhicule dans
+la limite de `maxForce`.
+
+`reference-trajectories.json` reste immuable et contient toujours la trajectoire
+Wander historique. Les tests courants ne la traitent plus comme résultat attendu du
+code corrigé. La nouvelle trajectoire à cinq pas et tolérance absolue `1e-12` est
+figée dans `corrected-wander-trajectories.json` ; les tests ne régénèrent pas ce fichier.

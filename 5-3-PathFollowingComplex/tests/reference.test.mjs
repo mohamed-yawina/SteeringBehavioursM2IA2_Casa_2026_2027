@@ -116,6 +116,7 @@ test('reference: RNG reproductible non constant et dependant de la graine',()=>{
 });
 const fixtures=JSON.parse(readFileSync(new URL('./reference-trajectories.json',import.meta.url),'utf8'));
 for(const [kind,expected] of Object.entries(fixtures)){
+  if(kind==='wander') continue; // L'ancienne trajectoire reste un témoin historique immuable.
   test('trajectoire historique 5 pas: '+kind,()=>{
     const actual=trajectory(kind);assert.equal(actual.length,5);
     for(let i=0;i<5;i++){assert.equal(actual[i].length,expected[i].length);
@@ -126,6 +127,42 @@ for(const [kind,expected] of Object.entries(fixtures)){
     assert.deepEqual(trajectory(kind),actual);
   });
 }
+const correctedWander=JSON.parse(readFileSync(new URL('./corrected-wander-trajectories.json',import.meta.url),'utf8'));
+test('trajectoire Wander conforme 5 pas: référence corrigée distincte',()=>{
+  const actual=trajectory('wander');assert.equal(actual.length,correctedWander.length);
+  for(let i=0;i<actual.length;i++)for(let j=0;j<actual[i].length;j++)for(let k=0;k<6;k++)
+    close(actual[i][j][k],correctedWander[i][j][k]);
+  assert.deepEqual(trajectory('wander'),actual);
+});
+test('Wander: steering desired moins vitesse, limites et non-mutation',()=>{
+  for(const [velocity,maxSpeed,maxForce] of [[[1,0],3,.3],[[0,0],3,.3],[[1,0],0,.3],[[1,0],3,0]]){
+    const e=load(),v=new e.Vehicle(30,30,maxSpeed,maxForce);
+    v.vel.set(...velocity);v.wanderTheta=.37;v.displaceRange=0;
+    const position=v.pos.copy(),currentVelocity=v.vel.copy();
+    const targetDirection=v.vel.copy().setMag(v.distanceCercle);
+    targetDirection.add(v.pos);
+    const theta=v.wanderTheta+v.vel.heading();
+    targetDirection.add(v.wanderRadius*Math.cos(theta),v.wanderRadius*Math.sin(theta));
+    const expected=targetDirection.copy().sub(v.pos).normalize().mult(maxSpeed)
+      .sub(currentVelocity).limit(maxForce);
+    const randomBefore=e.randomCalls(),force=v.wander();
+    assert.ok(Math.abs(force.x-expected.x)<=1e-12);
+    assert.ok(Math.abs(force.y-expected.y)<=1e-12);
+    assert.ok(Number.isFinite(force.x)&&Number.isFinite(force.y));
+    assert.ok(force.mag()<=maxForce+1e-15);
+    assert.equal(e.randomCalls(),randomBefore+1);
+    assert.deepEqual([v.pos.x,v.pos.y],[position.x,position.y]);
+    assert.deepEqual([v.vel.x,v.vel.y],[currentVelocity.x,currentVelocity.y]);
+    const d=v.copyWanderDiagnostics();
+    assert.ok(Math.abs(d.force.x-force.x)<=1e-12&&Math.abs(d.force.y-force.y)<=1e-12);
+  }
+});
+test('Wander: direction cible nulle produit un freinage borné',()=>{
+  const e=load(),v=new e.Vehicle(30,30,3,.25);
+  v.vel.set(2,0);v.distanceCercle=0;v.wanderRadius=0;v.displaceRange=0;
+  const force=v.wander();point([force.x,force.y],[-.25,0]);
+  assert.ok(force.mag()<=v.maxForce+1e-15);
+});
 test('corrige: force totale de la tete bornee',()=>{
   const e=load(),s=new e.SnakePathFollowing(30,30,3);s.separationWeight=0;
   let total;const update=s.head.update.bind(s.head);

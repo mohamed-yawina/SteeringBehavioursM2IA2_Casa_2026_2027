@@ -204,16 +204,12 @@ class Vehicle {
     // maintenant wanderPoint c'est un point sur le cercle
     wanderPoint.add(x, y);
     const target = wanderPoint.copy();
-    // On a donc la vitesse désirée que l'on cherche qui est le vecteur
-    // allant du vaisseau au cercle vert. On le calcule :
-    // ci-dessous, steer c'est la desiredSpeed directement !
-    // Voir l'article de Craig Reynolds, Daniel Shiffman s'est trompé
-    // dans sa vidéo, on ne calcule pas la formule classique
-    // force = desiredSpeed - vitesseCourante, mais ici on a directement
-    // force = desiredSpeed
-    let steer = wanderPoint.sub(this.pos);
-
-    steer.setMag(this.maxForce);
+    // Wander fournit un objectif local ; le pilotage reste un steering classique.
+    const desiredVelocity = wanderPoint.copy().sub(this.pos);
+    desiredVelocity.normalize();
+    desiredVelocity.mult(this.maxSpeed);
+    const steer = desiredVelocity.sub(this.vel);
+    steer.limit(this.maxForce);
     this.wanderDiagnostics = { origin: this.pos.copy(), center, target,
       radius: this.wanderRadius, force: steer.copy() };
     

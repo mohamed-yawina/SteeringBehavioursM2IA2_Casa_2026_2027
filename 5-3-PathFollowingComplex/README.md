@@ -80,11 +80,18 @@ force/accélération en pixels/pas² pour une masse de 1 ; poids sans unité.
 La boucle p5 vise 60 images/s et exécute un pas par draw actif.
 Il ne s'agit pas d'une simulation indépendante du FPS ni d'un accumulateur temporel.
 
-Wander conserve explicitement sa formule historique de force directionnelle
-directe, qui ne soustrait pas la vitesse courante. Cette exception autorisée reste
-un écart à la formule directionnelle générale du dépôt. Aucun rendu n'est effectué
-dans Wander. À poids nul, il n'est plus calculé : aucun tirage ni changement de theta.
-Cela modifie volontairement la séquence aléatoire globale et les activations ultérieures.
+Wander construit toujours le même point cible local sur le cercle et conserve les mêmes
+angles et tirages aléatoires. Sa force suit maintenant la règle de steering commune :
+
+```text
+desiredVelocity = normalize(wanderPoint - position) × maxSpeed
+steering = limit(desiredVelocity - velocity, maxForce)
+```
+
+Si le vecteur vers la cible est nul, la vitesse désirée vaut zéro et le steering
+freine la vitesse courante, dans la limite de `maxForce`. Le diagnostic Wander
+enregistre la force réellement calculée. À poids nul, `wander()` reste omis : il
+n'y a aucun tirage ni changement de theta à cette étape.
 Les paramètres d'un Path statique ne provoquent pas de tirage constructeur.
 
 ## Serpents et voisinage
@@ -181,8 +188,11 @@ une nouvelle photographie ; les anciennes données sont invalidées.
 ## Tests et non-régression
 
 reference-trajectories.json reste intact : cinq pas, chaque anneau, six composantes,
-tolérance absolue 1e-12. Véhicule suivi seul, serpent suivi seul et Wander isolé
-préservent ces références. Véhicule et serpent avec séparation changent lorsque
+tolérance absolue 1e-12. Les références historiques des comportements non concernés
+restent inchangées. La référence Wander de ce fichier décrit l'ancienne force directe
+et demeure un témoin historique ; la nouvelle trajectoire conforme est conservée
+séparément dans `tests/corrected-wander-trajectories.json`. Wander change parce que
+sa force soustrait désormais la vitesse courante. Véhicule et serpent avec séparation changent lorsque
 la résultante atteint le plafond ; leurs nouvelles attentes sont séparées dans
 corrected-expectations.mjs et vérifiées aussi par un oracle de composition pas à pas.
 Le harness utilise un double vectoriel et un RNG injecté non constant ; il ne
@@ -203,7 +213,8 @@ Les comptes d'application passent intentionnellement de trois/deux à une.
 - Canvas logique fixe 1200 × 800, redimensionné visuellement par CSS : les distances
   physiques restent dans cet espace, même sur mobile.
 - Pas d'indépendance au FPS ; un pas suit le rendu p5, sauf pause.
-- Wander reste la variante historique explicitement autorisée.
+- La nouvelle force Wander suit le steering désiré moins vitesse courante ; sa
+  trajectoire diffère de la référence historique conservée.
 - Les données finies dépassant la capacité numérique peuvent être déclarées invalides.
 - Validation visuelle, pointeur tactile et lisibilité mobile à confirmer dans Chrome.
 
