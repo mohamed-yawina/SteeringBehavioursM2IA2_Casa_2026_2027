@@ -75,7 +75,7 @@ const UI = {
     });
     this.bind('palette', 'change', event => { Game.settings.palette = event.target.value; this.applyPalette(); });
     this.bind('selectedAgent', 'input', event => {
-      Game.selectedAgentIndex = Math.max(0, Math.min(Game.vehicles.length - 1, Number(event.target.value) || 0));
+      Game.selectAgent(Number(event.target.value) || 0);
     });
 
     this.bind('textInput', 'input', event => {
@@ -153,16 +153,18 @@ const UI = {
     if (seekDistance) seekDistance.textContent = seekGroup ? `${seekGroup.distance.toFixed(1)} px` : '—';
     if (arriveDistance) arriveDistance.textContent = arriveGroup ? `${arriveGroup.distance.toFixed(1)} px` : '—';
 
+    const diagnosticVehicles = Game.comparisonActive ? Game.comparisonGroups.flatMap(group => group.vehicles) : vehicles;
     const selector = $('selectedAgent');
     if (selector) {
-      selector.max = String(Math.max(0, vehicles.length - 1));
-      Game.selectedAgentIndex = Math.max(0, Math.min(Game.selectedAgentIndex, vehicles.length - 1));
+      selector.max = String(Math.max(0, diagnosticVehicles.length - 1));
+      Game.selectedAgentIndex = Math.max(0, Math.min(Game.selectedAgentIndex, diagnosticVehicles.length - 1));
       selector.value = String(Game.selectedAgentIndex);
     }
     const indexLabel = $('selectedAgentVal');
-    if (indexLabel) indexLabel.textContent = vehicles.length ? String(Game.selectedAgentIndex + 1) : '—';
+    if (indexLabel) indexLabel.textContent = diagnosticVehicles.length ? String(Game.selectedAgentIndex + 1) : '—';
     const diagnostic = Game.diagnosticScratch;
-    const selected = vehicles[Game.selectedAgentIndex];
+    const selected = diagnosticVehicles[Game.selectedAgentIndex];
+    diagnostic.valid = false;
     if (selected) selected.copySteeringDiagnosticsTo(diagnostic);
     const valid = !!selected && diagnostic.valid;
     const formatVector = vector => `(${vector.x.toFixed(2)}, ${vector.y.toFixed(2)})`;
@@ -172,11 +174,13 @@ const UI = {
     const currentVectorNode = $('currentVector');
     const desiredVectorNode = $('desiredVector');
     const steeringVectorNode = $('steeringVector');
+    const totalVectorNode = $('totalSteeringVector');
     if (distanceNode) distanceNode.textContent = valid ? `${diagnostic.distance.toFixed(1)} px` : '—';
     if (desiredSpeedNode) desiredSpeedNode.textContent = valid ? diagnostic.desiredSpeed.toFixed(2) : '—';
     if (effectiveSpeedNode) effectiveSpeedNode.textContent = valid ? diagnostic.effectiveSpeed.toFixed(2) : '—';
     if (currentVectorNode) currentVectorNode.textContent = valid ? formatVector(diagnostic.currentVelocity) : '—';
     if (desiredVectorNode) desiredVectorNode.textContent = valid ? formatVector(diagnostic.desiredVelocity) : '—';
     if (steeringVectorNode) steeringVectorNode.textContent = valid ? formatVector(diagnostic.steering) : '—';
+    if (totalVectorNode) totalVectorNode.textContent = valid && selected.appliedSteering ? formatVector(selected.appliedSteering.total) : '—';
   }
 };

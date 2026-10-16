@@ -101,6 +101,7 @@ const Game = {
     this.randomState = this.simulationSeed;
     this.vehicles = [];
     this.selectedAgentIndex = 0;
+    this.diagnosticScratch.valid = false;
     ParticleSystem.clear();
     this.metrics = [];
     this.tick = 0;
@@ -182,6 +183,7 @@ const Game = {
       v.setTargetPoint(p);
       v.index = i;
       v.resetSteeringDiagnostics();
+      v.appliedSteering = null;
     }
     UI.applyPalette();
   },
@@ -440,6 +442,7 @@ const Game = {
           ? vehicle.seek(target)
           : vehicle.arrive(target, settings.slowRadius, settings.stopDistance);
         vehicle.lastSteering = force;
+        this.recordAppliedSteering(vehicle, force);
         vehicle.applyForce(force);
         vehicle.update();
       }
@@ -451,6 +454,7 @@ const Game = {
 
   drawComparison() {
     const ctx = this.ctx;
+    const inspected = this.comparisonGroups.flatMap(g => g.vehicles)[this.selectedAgentIndex];
     const halfWidth = this.width / 2;
     const targetX = Math.max(0, Math.min(halfWidth, (this.mouseX ?? this.width / 2) / this.width * halfWidth));
     const targetY = this.mouseY ?? this.height / 2;
@@ -468,10 +472,8 @@ const Game = {
       for (let y = 0; y < this.height; y += 50) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(halfWidth, y); ctx.stroke(); }
       ctx.strokeStyle = 'rgba(255,209,102,.28)'; ctx.setLineDash([7, 6]); ctx.beginPath(); ctx.arc(targetX, targetY, settings.slowRadius, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
       for (const vehicle of group.vehicles) {
-        vehicle.show(ctx, { showTrail: this.settings.showTrails, showVelocity: this.settings.showVelocity });
-        if (this.settings.showSteering && vehicle.lastSteering) {
-          ctx.strokeStyle = '#72dfd0'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(vehicle.pos.x, vehicle.pos.y); ctx.lineTo(vehicle.pos.x + vehicle.lastSteering.x * 45, vehicle.pos.y + vehicle.lastSteering.y * 45); ctx.stroke();
-        }
+        vehicle.show(ctx, { showTrail: this.settings.showTrails, showVelocity: false });
+        this.drawAgentSteering(vehicle, vehicle === inspected);
       }
       ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(targetX, targetY, 6, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#e6f0f7'; ctx.font = '700 13px system-ui'; ctx.fillText(group.behavior === 'seek' ? 'SEEK' : 'ARRIVE', 14, 22);
@@ -506,12 +508,12 @@ const Game = {
         const force = this.settings.mode === 'seek'
           ? v.seek(this.target.pos)
           : v.arrive(this.target.pos, s.slowRadius, s.stopDistance);
-        v.lastSteering = force;
-        v.applyForce(force);
-
-        // Évite les bords
+        v.lastSteering = force.copy();
         const bounds = { x: 0, y: 0, w: this.width, h: this.height };
-        v.applyForce(v.boundaries(bounds, 60));
+        const boundaryForce = v.boundaries(bounds, 60);
+        const totalForce = force.copy().add(boundaryForce).limit(v.maxForce);
+        this.recordAppliedSteering(v, totalForce);
+        v.applyForce(totalForce);
 
         // Physique héritée
         v.update();
@@ -544,8 +546,43 @@ const Game = {
       }
     }
 
+    // Other modes keep their existing single behavior, without added boundaries.
+    if (this.settings.mode !== 'arrive' && this.settings.mode !== 'seek') {
+      for (const v of this.vehicles) this.recordAppliedSteering(v, v.lastSteering);
+    }
+
     // Particules
     ParticleSystem.update();
+  },
+
+  recordAppliedSteering(vehicle, totalForce) {
+    const d = vehicle.copySteeringDiagnosticsTo({});
+    vehicle.appliedSteering = d.valid && totalForce ? {
+      origin: new p5.Vector(d.position.x, d.position.y),
+      velocity: new p5.Vector(d.currentVelocity.x, d.currentVelocity.y),
+      desired: new p5.Vector(d.desiredVelocity.x, d.desiredVelocity.y),
+      primary: new p5.Vector(d.steering.x, d.steering.y),
+      total: totalForce.copy()
+    } : null;
+  },
+
+  selectAgent(index) {
+    const count = this.comparisonActive ? this.comparisonGroups.reduce((n, g) => n + g.vehicles.length, 0) : this.vehicles.length;
+    this.selectedAgentIndex = Math.max(0, Math.min(count - 1, index));
+    this.diagnosticScratch.valid = false;
+  },
+
+  drawAgentSteering(vehicle, selected) {
+    const d = vehicle.appliedSteering;
+    if (!d) return;
+    if (this.settings.showVelocity) {
+      this.drawDiagnosticVector(d.origin, d.velocity, '#ffffff', 6);
+      if (selected) this.drawDiagnosticVector(d.origin, d.desired, '#ffd166', 6);
+    }
+    if (this.settings.showSteering) {
+      this.drawDiagnosticVector(d.origin, d.total, '#ff6c9b', 45);
+      if (selected) this.drawDiagnosticVector(d.origin, d.primary, '#72dfd0', 45);
+    }
   },
 
   // ============================================
@@ -614,30 +651,9 @@ const Game = {
     for (const v of this.vehicles) {
       v.show(ctx, {
         showTrail: this.settings.showTrails,
-        showVelocity: this.settings.showVelocity
+        showVelocity: false
       });
-      if (this.settings.showSteering && v.lastSteering) {
-        ctx.strokeStyle = '#72dfd0';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(v.pos.x, v.pos.y);
-        ctx.lineTo(v.pos.x + v.lastSteering.x * 45, v.pos.y + v.lastSteering.y * 45);
-        ctx.stroke();
-      }
-    }
-
-    // Ces vecteurs reprennent l'instant du calcul de steering (avant locomotion).
-    const selected = this.vehicles[this.selectedAgentIndex];
-    const diagnostics = this.diagnosticScratch;
-    if (selected && selected.copySteeringDiagnosticsTo(diagnostics).valid &&
-        (diagnostics.behavior === 'arrive' || diagnostics.behavior === 'seek')) {
-      if (this.settings.showVelocity) {
-        this.drawDiagnosticVector(diagnostics.position, diagnostics.currentVelocity, '#ffffff', 6);
-        this.drawDiagnosticVector(diagnostics.position, diagnostics.desiredVelocity, '#ffd166', 6);
-      }
-      if (this.settings.showSteering) {
-        this.drawDiagnosticVector(diagnostics.position, diagnostics.steering, '#72dfd0', 45);
-      }
+      this.drawAgentSteering(v, v === this.vehicles[this.selectedAgentIndex]);
     }
 
     // Cible

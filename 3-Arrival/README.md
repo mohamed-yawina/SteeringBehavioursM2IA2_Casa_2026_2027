@@ -2,6 +2,26 @@
 
 Projet du TD3 de Steering Behaviors (Master 2 MIAGE IA2). Le dossier propose trois usages de l’arrivée : laboratoire scientifique, challenge de formations et composition de texte. Les anciens modes Arrive, Snake et Texte sont conservés et lancés depuis des pages dédiées.
 
+## Correction de composition et diagnostics
+
+Validation actuelle : **41 tests Node réussis, 0 échec**, contre 33 avant correction. Les huit contrôles Chrome cités plus bas sont historiques ; aucune nouvelle validation Chrome n'a été effectuée pendant cette intervention.
+
+Dans les modes ordinaires Seek et Arrive, le contrôleur calcule séparément la force principale et les bordures, additionne sur une copie et plafonne la somme à maxForce avant un unique applyForce() et une seule intégration. Les comparateurs, formations et agents de texte conservent leurs règles : aucune force de bordure ne leur est ajoutée. Les trajectoires près des bords peuvent changer avec ce plafonnement.
+
+lastSteering et les diagnostics hérités conservent la force principale. appliedSteering mémorise des copies de l'origine, des vitesses et de la force totale appliquée. Tous les vecteurs partent de la position du calcul avant intégration : vitesse blanche (×6), vitesse désirée jaune pour l'agent inspecté (×6), force principale verte pour cet agent (×45), force totale rose (×45). Deux forces égales peuvent se superposer. Le rendu ne recalcule aucune force ; le léger décalage avec le corps après déplacement est intentionnel.
+
+Le panneau distingue les deux forces. Les unités sont les pixels CSS, les pixels par pas pour les vitesses et les pixels par pas au carré pour les forces, avec masse implicite unitaire et pas de 1/60 seconde. À distance exactement nulle, Seek et Arrive retournent une force nulle, même avec une vitesse résiduelle : ce cas ne garantit pas un arrêt instantané.
+
+La sélection lit le dernier calcul de l'agent choisi. En comparaison, les indices parcourent le groupe Seek puis le groupe Arrive. La pause conserve le dernier calcul ; reset, changement de mode et réaffectation des cibles texte invalident les anciens instantanés. Avant le premier calcul, les champs affichent des tirets.
+
+Les nouveaux tests couvrent forces convergentes/opposées/nulles, plafonnement, application et intégration uniques, copies défensives, origines de rendu, pause/reprise, sélection, reset, changements de mode, comparateurs et texte. Les tests existants restent présents.
+
+### Anomalies protégées restant ouvertes
+
+Aucun vehicle.js n'a été modifié. Le constructeur conserve `options.maxSpeed || 6` et `options.maxForce || 0.4` : zéro et null utilisent les défauts ; les valeurs négatives ou infinies ne sont pas validées. Certaines sous-classes ont aussi des replis par `||`. L'interface conserve ses bornes positives.
+
+Le diagnostic de flee() conserve le libellé erroné 'arrive' dans les deux branches. Ces anomalies restent non corrigées faute d'autorisation spécifique. La cible souris reste une entrée cinématique, distincte du steering des agents.
+
 ## Objectifs pédagogiques
 
 - Comprendre comment Arrive adapte la vitesse désirée à la distance de la cible.

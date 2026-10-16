@@ -260,3 +260,115 @@ test('comparison cohorts apply their distinct steering rules under the same targ
   assert.equal(arrive.vehicles[0].vel.x, -3);
   assert.notEqual(seek.distance, arrive.distance);
 });
+
+for (const mode of ['seek', 'arrive']) {
+  test(`${mode} composes converging, opposing and null boundary forces with one capped application`, async () => {
+    for (const [bx, by] of [[.4, 0], [-.4, 0], [0, .4], [0, 0]]) {
+      const { Game, context } = await loadGame({ settings: { maxSpeed: 6, maxForce: .4, agentCount: 1 } });
+      Game.setMode(mode); const v = Game.vehicles[0];
+      v.pos.set(320, 200); v.vel.set(0, 0); Game.mouseX = 600; Game.mouseY = 200;
+      let applications = 0, integrations = 0, applied;
+      const apply = v.applyForce.bind(v), integrate = v.update.bind(v);
+      v.boundaries = () => new TestP5Vector(bx, by);
+      v.applyForce = f => { applications++; applied = f.copy(); apply(f); };
+      v.update = () => { integrations++; integrate(); };
+      Game.update();
+      const expected = new TestP5Vector(.4 + bx, by).limit(.4);
+      assert.equal(applications, 1); assert.equal(integrations, 1);
+      assert.ok(Math.hypot(applied.x, applied.y) <= .4 + 1e-12);
+      for (const key of ['x', 'y']) assert.ok(Math.abs(applied[key] - expected[key]) <= 1e-12);
+      assert.equal(v.lastSteering.x, .4); assert.equal(v.lastSteering.y, 0);
+      const d = v.copySteeringDiagnosticsTo({});
+      assert.equal(d.steering.x, .4);
+      assert.equal(v.appliedSteering.primary.x, .4);
+      assert.equal(v.appliedSteering.origin.x, 320);
+      assert.equal(v.pos.x, 320 + applied.x);
+      applied.set(99, 99); v.lastSteering.set(-99, -99);
+      assert.ok(Math.abs(v.appliedSteering.total.x - expected.x) <= 1e-12);
+      assert.equal(v.appliedSteering.primary.x, .4);
+    }
+  });
+}
+
+test('rendered vectors use the pre-integration snapshot exactly once and never recalculate forces', async () => {
+  const { Game } = await loadGame({ settings: { maxForce: .4, agentCount: 1 } });
+  Game.setMode('seek'); const v = Game.vehicles[0]; v.pos.set(30, 30); v.vel.set(1, 0);
+  Game.update(); const sample = v.appliedSteering;
+  const calls = []; Game.drawDiagnosticVector = (origin, vector, color, scale) => calls.push({ origin, vector, color, scale });
+  Game.settings.showVelocity = true; Game.settings.showSteering = true;
+  v.seek = v.arrive = v.boundaries = () => { throw Error('render must not steer'); };
+  Game.drawAgentSteering(v, true);
+  assert.equal(calls.length, 4);
+  assert.ok(calls.every(call => call.origin === sample.origin));
+  assert.equal(sample.origin.x, 30); assert.notEqual(sample.origin.x, v.pos.x);
+  assert.equal(calls.filter(c => c.vector === sample.primary).length, 1);
+  assert.equal(calls.filter(c => c.vector === sample.total).length, 1);
+  calls.length = 0; Game.drawAgentSteering(v, false); assert.equal(calls.length, 2);
+});
+
+test('diagnostics survive pause, switch selection without borrowing another agent, and clear on reset/mode', async () => {
+  const { Game } = await loadGame({ settings: { agentCount: 2 } });
+  Game.setMode('arrive'); Game.update();
+  const first = Game.vehicles[0].appliedSteering, second = Game.vehicles[1].appliedSteering;
+  assert.notEqual(first, second);
+  Game.togglePause(true); Game.draw = () => {}; Game.updateMeasurements = () => {};
+  Game.loop(100); assert.equal(Game.vehicles[0].appliedSteering, first);
+  Game.diagnosticScratch.valid = true; Game.selectAgent(1);
+  assert.equal(Game.diagnosticScratch.valid, false);
+  assert.equal(Game.vehicles[Game.selectedAgentIndex].appliedSteering, second);
+  Game.togglePause(false); Game.update(); assert.notEqual(Game.vehicles[1].appliedSteering, second);
+  Game.reset(); assert.ok(Game.vehicles.every(v => !v.appliedSteering));
+  assert.equal(Game.diagnosticScratch.valid, false);
+  Game.update(); Game.setMode('seek'); assert.ok(Game.vehicles.every(v => !v.appliedSteering));
+});
+
+test('comparison and formation keep their original single-force rules without added boundaries', async () => {
+  const { Game } = await loadGame({ settings: { agentCount: 3 } });
+  Game.setMode('snake');
+  Game.vehicles.forEach(v => { v.boundaries = () => { throw Error('new boundary in formation'); }; });
+  Game.update(); assert.ok(Game.vehicles.every(v => v.appliedSteering));
+  Game.setMode('arrive'); Game.toggleComparison(true);
+  Game.comparisonGroups.forEach(g => g.vehicles.forEach(v => { v.boundaries = () => { throw Error('new comparison boundary'); }; }));
+  Game.update();
+  for (const g of Game.comparisonGroups) for (const v of g.vehicles) {
+    assert.equal(v.appliedSteering.primary.x, v.appliedSteering.total.x);
+    assert.equal(v.appliedSteering.primary.y, v.appliedSteering.total.y);
+  }
+});
+
+test('real UI reads separate primary and applied forces and clears empty selection', async () => {
+  const { Game, context } = await loadGame({ settings: { agentCount: 1, maxForce: .4 } });
+  Game.setMode('seek'); Game.vehicles[0].pos.set(10, 10); Game.update();
+  const nodes = Object.fromEntries(['steeringVector', 'totalSteeringVector', 'selectedAgent'].map(id => [id, { textContent: '' }]));
+  context.document.getElementById = id => nodes[id] || null;
+  vm.runInContext(`${await read('js/ui.js')}\nglobalThis.RealUI = UI;`, context);
+  context.RealUI.updateStats(Game.vehicles, 0, 0, 60, NaN, 0);
+  const f = Game.vehicles[0].appliedSteering;
+  const format = v => `(${v.x.toFixed(2)}, ${v.y.toFixed(2)})`;
+  assert.equal(nodes.steeringVector.textContent, format(f.primary));
+  assert.equal(nodes.totalSteeringVector.textContent, format(f.total));
+  Game.clearAll(); context.RealUI.updateStats(Game.vehicles, 0, 0, 60, NaN, 0);
+  assert.equal(nodes.totalSteeringVector.textContent, '—');
+  assert.equal(nodes.steeringVector.textContent, '—');
+});
+
+test('text retargeting clears applied snapshots and keeps the inherited no-boundary behavior', async () => {
+  const { Game } = await loadGame({ settings: { agentCount: 10 } });
+  Game.settings.mode = 'text'; Game.rebuildTextVehicles('IA');
+  Game.vehicles.forEach(v => { v.boundaries = () => { throw Error('new text boundary'); }; });
+  Game.update(); assert.ok(Game.vehicles.every(v => v.appliedSteering));
+  Game.rebuildTextVehicles('AI'); assert.ok(Game.vehicles.every(v => !v.appliedSteering));
+});
+
+test('comparison selection diagnostics refer to the chosen cohort rather than hidden normal agents', async () => {
+  const { Game, context } = await loadGame({ settings: { agentCount: 1 } });
+  Game.setMode('arrive'); Game.update(); Game.toggleComparison(true); Game.update();
+  const nodes = Object.fromEntries(['steeringVector', 'totalSteeringVector', 'selectedAgent'].map(id => [id, {}]));
+  context.document.getElementById = id => nodes[id] || null;
+  vm.runInContext(`${await read('js/ui.js')}\nglobalThis.RealUI = UI;`, context);
+  Game.selectAgent(1);
+  context.RealUI.updateStats(Game.vehicles, 0, 0, 60, NaN, 0);
+  assert.equal(nodes.selectedAgent.max, '1');
+  const force = Game.comparisonGroups[1].vehicles[0].appliedSteering.total;
+  assert.equal(nodes.totalSteeringVector.textContent, `(${force.x.toFixed(2)}, ${force.y.toFixed(2)})`);
+});
