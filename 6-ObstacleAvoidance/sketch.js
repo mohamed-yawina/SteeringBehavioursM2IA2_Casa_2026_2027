@@ -1,69 +1,45 @@
-let pursuer1, pursuer2;
-let target;
-let obstacles = [];
-let vehicules = [];
-
-function setup() {
-  createCanvas(windowWidth, windowHeight);
-  pursuer1 = new Vehicle(100, 100);
-  pursuer2 = new Vehicle(random(width), random(height));
-
-  vehicules.push(pursuer1);
-  //vehicules.push(pursuer2);
-
-  // On cree un obstace au milieu de l'écran
-  // un cercle de rayon 100px
-  // TODO
-  obstacles.push(new Obstacle(width / 2, height / 2, 100, "green"));
+// TD6 — local p5 loop. Physical behavior lives exclusively in Vehicle.
+let pursuer1,pursuer2,target;
+let obstacles=[],vehicules=[];
+let draggedObstacle=-1;
+function setup(){
+  const canvas=createCanvas(1200,800);if(canvas?.parent)canvas.parent('canvas-host');
+  frameRate(60);LabController.reset();LabUI.bind();
 }
-
-function draw() {
-  // changer le dernier param (< 100) pour effets de trainée
-  background(0, 0, 0, 100);
-
-  target = createVector(mouseX, mouseY);
-
-  // Dessin de la cible qui suit la souris
-  // Dessine un cercle de rayon 32px à la position de la souris
-  fill(255, 0, 0);
-  noStroke();
-  circle(target.x, target.y, 32);
-
-  // dessin des obstacles
-  // TODO
-  obstacles.forEach(o => {
-    o.show();
-  })
-
-  vehicules.forEach(v => {
-    // pursuer = le véhicule poursuiveur, il vise un point devant la cible
-    v.applyBehaviors(target, obstacles, vehicules);
-
-    // déplacement et dessin du véhicule et de la target
-    v.update();
-    v.show();
-  });
+function draw(){
+  LabController.step();
+  background(8,18,34);
+  target.show();
+  for(const o of obstacles)if(validObstacle(o))o.show();
+  for(const v of vehicules)if(v.validPhysics()){v.drawPath();v.drawVehicle();}
+  LabRenderer.draw();LabUI.update();
 }
-
-function mousePressed() {
-  // TODO : ajouter un obstacle de taille aléatoire à la position de la souris
-  obstacles.push(new Obstacle(mouseX, mouseY, random(20, 100), "green"));
-}
-
-function keyPressed() {
-  if (key == "v") {
-    vehicules.push(new Vehicle(random(width), random(height)));
+function canvasEvent(event){return !event?.target||event.target.tagName==='CANVAS';}
+function mousePressed(event){
+  if(!canvasEvent(event)||mouseX<0||mouseX>width||mouseY<0||mouseY>height)return;
+  if(event?.shiftKey){
+    const index=vehicules.findIndex(v=>Math.hypot(v.pos.x-mouseX,v.pos.y-mouseY)<25);
+    if(index>=0)LabController.selectVehicle(index);
+    LabUI.sync();return;
   }
-  if (key == "d") {
-    Vehicle.debug = !Vehicle.debug;
-  } else if (key == "f") {
-    // on crée 10 véhicules à des position random espacées de 50px
-    // en x = 20, y = hauteur du  canvas sur deux
-    for (let i = 0; i < 10; i++) {
-      let v = new Vehicle(20, 300 )
-      // vitesse aléatoire
-      v.vel = new p5.Vector(random(1, 5), random(1, 5));
-      vehicules.push(v);
-    }
-  }
+  if(LabController.editing){
+    LabController.paused=true;
+    const hit=obstacles.findIndex(o=>Math.hypot(o.pos.x-mouseX,o.pos.y-mouseY)<=Math.max(o.r,12));
+    draggedObstacle=hit;if(hit>=0)LabController.selectObstacle(hit);
+  }else LabController.addObstacle(mouseX,mouseY,random(20,100));
+  LabUI.sync();
+}
+function mouseDragged(event){
+  if(!canvasEvent(event)||draggedObstacle<0||!LabController.editing)return;
+  const o=obstacles[draggedObstacle];
+  LabController.editObstacle(draggedObstacle,constrain(mouseX,0,width),constrain(mouseY,0,height),o.r);
+  LabUI.sync();return false;
+}
+function mouseReleased(){draggedObstacle=-1;}
+function keyPressed(event){
+  if(typeof document!=='undefined'&&document.activeElement?.matches('input,select,textarea,button'))return;
+  if(key==='v')LabController.addVehicle(random(width),random(height));
+  if(key==='d'){Vehicle.debug=!Vehicle.debug;LabController.details=Vehicle.debug;LabUI.sync();}
+  else if(key==='f')for(let i=0;i<10;i++)LabController.addVehicle(20,300,[random(1,5),random(1,5)]);
+  else if(key===' '){LabController.paused=!LabController.paused;return false;}
 }

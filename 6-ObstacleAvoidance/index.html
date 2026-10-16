@@ -1,20 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Sketch</title>
-
-    <link rel="stylesheet" type="text/css" href="style.css">
-
-    <script src="libraries/p5.min.js"></script>
-    <script src="libraries/p5.sound.min.js"></script>
-    <script src="obstacle.js"></script>
-    <script src="vehicle.js"></script>
-    <script src="sketch.js"></script>
-  </head>
-  <body>
-    <!-- Pas besoin de déclarer un canvas pour dessiner en P5.js -->
-  </body>
-</html>
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Obstacle Avoidance · Laboratoire TD6</title><link rel="stylesheet" href="style.css">
+<script defer src="libraries/p5.min.js"></script><script defer src="libraries/p5.sound.min.js"></script>
+<script defer src="vehicle.js"></script><script defer src="obstacle.js"></script><script defer src="target.js"></script>
+<script defer src="lab-scenarios.js"></script><script defer src="lab-controller.js"></script>
+<script defer src="lab-renderer.js"></script><script defer src="lab-ui.js"></script><script defer src="sketch.js"></script>
+</head><body>
+<header><div class="eyebrow">STEERING BEHAVIORS / TD6</div><h1>Voir la menace. Comprendre la force.</h1>
+<p>Obstacle Avoidance · Trois échantillons, une décision locale, un budget de force.</p></header>
+<main><section class="scene">
+<div class="toolbar"><label for="scenario">Scénario</label><select id="scenario"></select>
+<button id="pause">Pause</button><button id="step">Pas unique</button><button id="reset">Reset</button>
+<span id="state" role="status"></span></div>
+<p id="goal" class="goal"></p><div id="canvas-host" aria-label="Simulation interactive, espace logique 1200 par 800"></div>
+<div class="legend"><span class="x">● Xₙ / vitesse ×12</span><span class="short">● Qc · horizon court</span>
+<span class="avoid">● Ql / Avoid</span><span class="arrive">↗ Arrive</span><span class="short">↗ Separate</span>
+<span class="boundary">↗ Boundaries</span><span class="total">↗ Résultante</span></div>
+<p class="caption">Flèches de forces <b>pondérées ×150</b>, depuis Xₙ avant intégration. Anneau blanc : position après intégration.
+Les pointillés relient des repères : ils ne représentent aucune détection continue. Cercle orange : obstacle retenu ; cercle pointillé : rayon + marge des points testés.</p>
+<div class="toolbar"><label><input id="details" type="checkbox"> Diagnostics visuels</label>
+<label><input id="edit" type="checkbox"> Éditer les obstacles (en pause)</label>
+<label><input id="mouse-target" type="checkbox" checked> Cible à la souris</label></div>
+<article><h2>Ce que teste réellement le véhicule</h2>
+<p>Qc = X + h<sub>court</sub>V et Ql = X + h<sub>long</sub>V. Le centre le plus proche de X est choisi <b>avant</b> le test de menace.
+La plus petite des trois distances depuis X, Qc et Ql est comparée strictement à <b>rayon + marge</b>.</p>
+<p>La force historique est dirigée de C vers l’échantillon retenu, de norme maxForce/2. Elle peut être nulle malgré une détection.
+Elle n’utilise pas la formule générale « vitesse désirée − vitesse actuelle » : cette particularité est conservée.</p>
+<h2>Explorer en trois gestes</h2><ol><li>Choisir un scénario, puis mettre en pause.</li><li>Faire un pas et lire le point retenu, la distance et les forces.</li><li>Changer un horizon ou une limite, puis refaire un pas. Reset restaure les paramètres et la géométrie du scénario.</li></ol>
+<p><kbd>v</kbd> : véhicule · <kbd>f</kbd> : dix véhicules au point historique (20,300) · <kbd>d</kbd> : diagnostics · <kbd>Espace</kbd> : pause.
+Clic normal : obstacle. En édition : sélectionner puis glisser un obstacle. <kbd>Maj</kbd> + clic : sélectionner un véhicule sans ajouter d’obstacle.</p>
+<p>Masquer les tracés ne désactive aucun comportement. Détection ne signifie pas évitement réussi. Les scénarios « menace masquée » et « entre les échantillons » exposent les limites de l’algorithme.</p></article>
+<section class="readout"><h2>Dernière décision physique</h2><pre id="geometry"></pre>
+<div class="table-scroll"><table><caption>Forces · composantes (x,y), normes, poids configuré → effectif</caption><thead><tr><th>Comportement</th><th>Brute</th><th>Norme</th><th>Poids configuré → effectif</th><th>Pondérée</th><th>Norme</th></tr></thead><tbody id="forces"></tbody></table></div><p id="result"></p></section>
+</section><aside><h2>Expérience</h2><label for="vehicle">Véhicule observé</label><select id="vehicle"></select>
+<p id="defaults"></p><label for="maxSpeed">Vitesse max · px/pas<output id="maxSpeed-value">4</output></label><input type="range" id="maxSpeed" min="0" max="20" step="0.1" value="4" >
+<label for="maxForce">Force max · px/pas²<output id="maxForce-value">0.2</output></label><input type="range" id="maxForce" min="0" max="5" step="0.01" value="0.2" >
+<label for="shortHorizon">Horizon court · pas<output id="shortHorizon-value">15</output></label><input type="range" id="shortHorizon" min="0" max="120" step="1" value="15" >
+<label for="longHorizon">Horizon long · pas<output id="longHorizon-value">30</output></label><input type="range" id="longHorizon" min="0" max="120" step="1" value="30" >
+<label for="arrive">Poids Arrive<output id="arrive-value">0.2</output></label><input type="range" id="arrive" min="0" max="10" step="0.1" value="0.2">
+<label for="avoid">Poids Avoid configuré<output id="avoid-value">3</output></label><input type="range" id="avoid" min="0" max="10" step="0.1" value="3">
+<label for="separate">Poids Separate<output id="separate-value">0.2</output></label><input type="range" id="separate" min="0" max="10" step="0.1" value="0.2">
+<label for="boundaries">Poids Boundaries<output id="boundaries-value">3</output></label><input type="range" id="boundaries" min="0" max="10" step="0.1" value="3">
+<label><input type="checkbox" id="avoid-enabled" checked> Avoid activé</label>
+<output id="avoid-state" aria-live="polite">Poids configuré 3 · poids effectif 3</output>
+<p class="note">Le tableau distingue le poids configuré du poids effectif. Quand Avoid est coupé, sa détection reste informative, mais sa force pondérée vaut zéro.</p>
+<p id="validation" role="status"></p><h2>Obstacle sélectionné</h2>
+<label for="radius">Rayon · px<output id="radius-value">Sélectionner un obstacle</output></label>
+<input id="radius" type="range" min="0" max="250" step="1" value="50" disabled>
+<button id="remove" disabled>Supprimer l’obstacle</button><p class="note">Activez l’édition puis cliquez un obstacle. Le rayon nul est accepté. Déplacement et suppression ne déclenchent aucune locomotion.</p>
+</aside></main><footer>Michel Buffa · Steering Behaviors · p5.js local · Laboratoire TD6</footer></body></html>

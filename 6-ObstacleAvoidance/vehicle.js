@@ -1,3 +1,6 @@
+function finitePoint(p) { return !!p && Number.isFinite(p.x) && Number.isFinite(p.y); }
+function validObstacle(o) { return finitePoint(o?.pos) && Number.isFinite(o.r) && o.r>=0; }
+
 /*
   Calcule la projection orthogonale du point a sur le vecteur b
   a et b sont des vecteurs calculés comme ceci :
@@ -42,6 +45,10 @@ class Vehicle {
     // chemin derrière vaisseaux
     this.path = [];
     this.pathMaxLength = 30;
+    this.shortHorizon = 15;
+    this.longHorizon = 30;
+    this.behaviorWeights = {arrive:0.2, avoid:3, separate:0.2, boundaries:3};
+    this.avoidEnabled = true;
 
    
   }
@@ -49,127 +56,122 @@ class Vehicle {
   // on fait une méthode applyBehaviors qui applique les comportements
   // seek et avoid
   applyBehaviors(target, obstacles) {
-
-    let seekForce = this.arrive(target);
-    let avoidForce = this.avoid(obstacles);
-    let separateForce = this.separate(vehicules);
-    let boudariesForce = this.boundaries(0, 0, width, height, 25);
-
-    seekForce.mult(0.2);
-    avoidForce.mult(3);
-    separateForce.mult(0.2);
-    boudariesForce.mult(3);
-
-    this.applyForce(seekForce);
-    this.applyForce(avoidForce);
-    this.applyForce(separateForce);
-    this.applyForce(boudariesForce);
+    if (!this.validPhysics()) {
+      this.forceDiagnostics = {status:'invalid', total:createVector(0,0)};
+      this.avoidDiagnostics = null;
+      this.boundaryDiagnostics = null;
+      return false; // The caller must not integrate an invalid state.
+    }
+    const raw = {
+      arrive: finitePoint(target) ? this.arrive(target) : createVector(0,0),
+      avoid: this.avoid(obstacles),
+      separate: this.separate(vehicules),
+      boundaries: this.boundaries(0,0,width,height,25)
+    };
+    const defaults = {arrive:0.2, avoid:3, separate:0.2, boundaries:3};
+    const configured = {};
+    for (const name of Object.keys(defaults)) {
+      const value = this.behaviorWeights?.[name];
+      configured[name] = Number.isFinite(value) && value >= 0 ? value : defaults[name];
+    }
+    const weights = {...configured, avoid:this.avoidEnabled === false ? 0 : configured.avoid};
+    const weighted = {}, total = createVector(0,0);
+    for (const name of Object.keys(raw)) {
+      weighted[name] = raw[name].copy().mult(weights[name]);
+      total.add(weighted[name]);
+    }
+    const unclamped = total.copy();
+    if (!finitePoint(total) || !Number.isFinite(total.mag())) total.set(0,0);
+    total.limit(this.maxForce);
+    this.forceDiagnostics = this.copyDiagnostic({status:'defined',
+      origin:this.pos.copy(), velocity:this.vel.copy(), raw, weighted,
+      weights:{...weights},configuredWeights:{...configured},avoidEnabled:this.avoidEnabled !== false,
+      maxForce:this.maxForce,maxSpeed:this.maxSpeed,
+      step:this.diagnosticStep??null,stage:'pre-integration',
+      unclamped, total:total.copy()});
+    this.applyForce(total);
+    return true;
   }
 
+  validPhysics() {
+    return finitePoint(this.pos) && finitePoint(this.vel) && finitePoint(this.acc) &&
+      Number.isFinite(this.maxSpeed) && this.maxSpeed >= 0 &&
+      Number.isFinite(this.maxForce) && this.maxForce >= 0;
+  }
+
+  copyDiagnostic(value) {
+    if (value && typeof value.copy === 'function') return value.copy();
+    if (Array.isArray(value)) return value.map(item=>this.copyDiagnostic(item));
+    if (value && typeof value === 'object') return Object.fromEntries(
+      Object.entries(value).map(([key,item])=>[key,this.copyDiagnostic(item)]));
+    return value;
+  }
+  setAnticipation(short,long) {
+    if(!Number.isFinite(short)||!Number.isFinite(long)||short<0||long<short)return false;
+    this.shortHorizon=short;this.longHorizon=long;return true;
+  }
+
+  copyAvoidDiagnostics() { return this.copyDiagnostic(this.avoidDiagnostics ?? null); }
+  copyForceDiagnostics() { return this.copyDiagnostic(this.forceDiagnostics ?? null); }
+
   avoid(obstacles) {
-    // TODO
+    const zero = () => createVector(0,0);
+    const d = {status:'invalid',reason:'invalid-input',stage:'pre-integration',step:this.diagnosticStep??null,
+      velocity:finitePoint(this.vel)?this.vel.copy():null,shortHorizon:this.shortHorizon,longHorizon:this.longHorizon,
+      margin:this.largeurZoneEvitementDevantVaisseau,minDistance:null,origin:finitePoint(this.pos)?this.pos.copy():null,
+      q15:null,q30:null,selectedIndex:null,center:null,radius:null,
+      sample:null,sampleName:null,distances:null,threshold:null,
+      detected:false,force:zero(),rejected:[]};
+    this.avoidDiagnostics = d;
+    if (!this.validPhysics() || !Number.isFinite(this.largeurZoneEvitementDevantVaisseau) ||
+        this.largeurZoneEvitementDevantVaisseau < 0 || !Array.isArray(obstacles) ||
+        !Number.isFinite(this.shortHorizon)||!Number.isFinite(this.longHorizon)||
+        this.shortHorizon<0||this.longHorizon<this.shortHorizon) return zero();
+    const ahead=this.vel.copy(); ahead.mult(this.longHorizon);
+    const ahead2=this.vel.copy(); ahead2.mult(this.shortHorizon);
+    const q30=p5.Vector.add(this.pos,ahead),q15=p5.Vector.add(this.pos,ahead2);
+    if (!finitePoint(q30)||!finitePoint(q15)) return zero();
+    d.q30=q30.copy();d.q15=q15.copy();
+    d.rejected=Array.from(obstacles,(o,i)=>validObstacle(o)?null:i).filter(i=>i!==null);
+    const obstacle=this.getObstacleLePlusProche(obstacles);
+    if (!obstacle) {d.status='no-obstacle';d.reason=obstacles.length?'no-valid-obstacle':'empty-list';return zero();}
+    d.selectedIndex=obstacles.indexOf(obstacle);d.center=createVector(obstacle.pos.x,obstacle.pos.y);
+    d.radius=obstacle.r;
+    let distance=p5.Vector.dist(obstacle.pos,q30);
+    const distance2=p5.Vector.dist(obstacle.pos,q15),distance3=p5.Vector.dist(obstacle.pos,this.pos);
+    d.distances={q30:distance,q15:distance2,x:distance3};
+    let point=q30,name='Q30';
+    if(distance2<distance){distance=distance2;point=q15;name='Q15';}
+    if(distance3<distance){distance=distance3;point=this.pos;name='X';}
+    const threshold=obstacle.r+this.largeurZoneEvitementDevantVaisseau;
+    if(!Number.isFinite(distance)||!Number.isFinite(threshold))return zero();
+    d.status='defined';d.sample=point.copy();d.sampleName=name;d.threshold=threshold;
+    d.minDistance=distance;d.detected=distance<threshold;
+    d.reason=d.detected?'detected':'outside-threshold';
+    if (!d.detected) return zero();
+    const force=p5.Vector.sub(point,obstacle.pos);
+    force.setMag(this.maxForce/2); // Historical direct force, intentionally NOT desired - velocity.
+    if(!finitePoint(force)) {d.status='invalid';d.detected=false;return zero();}
+    d.force=force.copy();
+    if(d.detected&&force.mag()===0)d.reason=this.maxForce===0?'zero-force-budget':'coincident-sample';
+    return force;
+  }
 
-
-    // il regarde par exemple 20 frames devant lui
-    let ahead = this.vel.copy()
-    ahead.mult(30);
-    if (Vehicle.debug)
-      // on le dessine avec ma méthode this.drawVector(pos vecteur, color)
-      this.drawVector(this.pos, ahead, "yellow");
-
-    // on calcule la distance entre le point au bout du vecteur ahead
-    // et le centre de l'obstacle le plus proche
-    let pointAuBoutDeAhead = p5.Vector.add(this.pos, ahead);
-
-    if (Vehicle.debug) {
-      // on dessine le point pour vérifier
-      push()
-      fill("red");
-      circle(pointAuBoutDeAhead.x, pointAuBoutDeAhead.y, 10);
-      pop();
-    }
-    // 1 - on duplique le vecteur vitesse
-    // calcul d'un vecteur ahead devant le véhicule
-    // ahead2 est deux fois plus petit
-    let ahead2 = this.vel.copy()
-    ahead2.mult(15);
-    if (Vehicle.debug) {
-      // on le dessine avec ma méthode this.drawVector(pos vecteur, color)
-      this.drawVector(this.pos, ahead2, "purple");
-    }
-    // on calcule la distance entre le point au bout du vecteur ahead
-    // et le centre de l'obstacle le plus proche
-    let pointAuBoutDeAhead2 = p5.Vector.add(this.pos, ahead2);
-    if (Vehicle.debug) {
-      // on dessine le point pour vérifier
-      push()
-      fill("lightblue");
-      circle(pointAuBoutDeAhead2.x, pointAuBoutDeAhead2.y, 10);
-      pop();
-
-      // on dessine la zone d'évitement
-      push()
-      stroke(255, 50)
-      strokeWeight(this.largeurZoneEvitementDevantVaisseau * 2)
-      line(this.pos.x, this.pos.y, pointAuBoutDeAhead.x, pointAuBoutDeAhead.y)
-      pop()
-    }
-    // On cherche l'obstacle le plus proche
-    let obstacleLePlusProche = this.getObstacleLePlusProche(obstacles);
-
-    // on regarde aussi le vehicule le plus proche
-    let vehiculeLePlusProche = this.getVehiculeLePlusProche(vehicules)
-    let distance4 = 1000000;
-
-    
-    //if (vehiculeLePlusProche !== undefined) {
-      // on calcule la distance4 entre le vaisseau et
-      // ce vehicule
-      //distance4 = this.pos.dist(vehiculeLePlusProche.pos);
-    //}
-
-    let distance = obstacleLePlusProche.pos.dist(pointAuBoutDeAhead);
-    let distance2 = obstacleLePlusProche.pos.dist(pointAuBoutDeAhead2);
-    let distance3 = obstacleLePlusProche.pos.dist(this.pos);
-
-    let pointLePlusProche = pointAuBoutDeAhead;
-
-    if (distance2 < distance) {
-      distance = distance2;
-      pointLePlusProche = pointAuBoutDeAhead2
-    }
-
-    if (distance3 < distance) {
-      distance = distance3;
-      pointLePlusProche = this.pos;
-    }
-    if (distance4 < distance) {
-      // on a bien un vaisseau qui est plus près que l'obstacle le plus proche
-      if (distance4 < 2 * this.r) {
-        // il y a collision, on calcule la force
-        let force = p5.Vector.sub(this.pos, vehiculeLePlusProche.pos);
-
-        if (Vehicle.debug)
-          this.drawVector(vehiculeLePlusProche.pos, force, "yellow");
-
-        force.setMag(this.maxForce);
-        return force;
-
-      }
-    } else {
-      if (distance < obstacleLePlusProche.r + this.largeurZoneEvitementDevantVaisseau) {
-        // on calcule le vecteur qui part du centre du cercle et qui va
-        // jusqu'au point au bout de ahead
-        let force = p5.Vector.sub(pointLePlusProche, obstacleLePlusProche.pos);
-
-        if (Vehicle.debug)
-          this.drawVector(obstacleLePlusProche.pos, force, "yellow");
-
-        force.setMag(this.maxForce/2);
-        return force;
-      }
-    }
-    return createVector(0, 0);
+  // Rendering only: consumes the last physical calculation, never calls avoid().
+  drawAvoidDiagnostics() {
+    if(!Vehicle.debug)return;
+    const d=this.copyAvoidDiagnostics();
+    if(!d?.q30)return;
+    const origin=d.origin;
+    this.drawVector(origin,p5.Vector.sub(d.q30,origin),'yellow');
+    this.drawVector(origin,p5.Vector.sub(d.q15,origin),'purple');
+    push();
+    fill('red');circle(d.q30.x,d.q30.y,10);
+    fill('lightblue');circle(d.q15.x,d.q15.y,10);
+    stroke(255,50);strokeWeight(this.largeurZoneEvitementDevantVaisseau*2);
+    line(origin.x,origin.y,d.q30.x,d.q30.y);
+    pop();
+    if(d.detected)this.drawVector(origin,d.force.copy().mult(100),'yellow');
   }
 
   avoidCorrige(obstacles) {
@@ -293,6 +295,8 @@ class Vehicle {
   // normalement : force = vitesseDesiree - vitesseActuelle
   // paramètres = un rectangle (bx, by, bw, bh) et une distance d
   boundaries(bx, by, bw, bh, d) {
+    if (!this.validPhysics() || ![bx,by,bw,bh,d].every(Number.isFinite) || bw<0 || bh<0 || d<0) return createVector(0,0);
+    this.boundaryDiagnostics = {rectangle:[bx,by,bw,bh], margin:d, active:false};
     let vitesseDesiree = null;
 
     const xBordGauche = bx + d;
@@ -316,24 +320,11 @@ class Vehicle {
 
     if (vitesseDesiree !== null) {
       vitesseDesiree.setMag(this.maxSpeed);
+      this.boundaryDiagnostics.active=true;
       const force = p5.Vector.sub(vitesseDesiree, this.vel);
-      vitesseDesiree.limit(this.maxForce);
-      return vitesseDesiree;
-    }
-
-    if (Vehicle.debug) {
-      // dessin du cadre de la zone
-      push();
-
-      noFill();
-      stroke("white");
-      rect(bx, by, bw, bh);
-
-      // et du rectangle intérieur avec une bordure rouge de d pixels
-      stroke("red");
-      rect(bx + d, by + d, bw - 2 * d, bh - 2 * d);
-
-      pop();
+      if(!finitePoint(force)||!Number.isFinite(force.mag()))return createVector(0,0);
+      force.limit(this.maxForce);
+      return finitePoint(force) ? force : createVector(0,0);
     }
 
     // si on est pas près du bord (vitesse désirée nulle), on renvoie un vecteur nul
@@ -342,20 +333,14 @@ class Vehicle {
 
 
   getObstacleLePlusProche(obstacles) {
-    let plusPetiteDistance = 100000000;
-    let obstacleLePlusProche = undefined;
-
-    obstacles.forEach(o => {
-      // Je calcule la distance entre le vaisseau et l'obstacle
-      const distance = this.pos.dist(o.pos);
-
-      if (distance < plusPetiteDistance) {
-        plusPetiteDistance = distance;
-        obstacleLePlusProche = o;
-      }
-    });
-
-    return obstacleLePlusProche;
+    if(!finitePoint(this.pos)||!Array.isArray(obstacles))return undefined;
+    let closest,record=Infinity;
+    for(const obstacle of obstacles) {
+      if(!validObstacle(obstacle))continue;
+      const distance=p5.Vector.dist(this.pos,obstacle.pos);
+      if(Number.isFinite(distance)&&distance<record){record=distance;closest=obstacle;}
+    }
+    return closest;
   }
 
   getVehiculeLePlusProche(vehicules) {
@@ -439,15 +424,17 @@ class Vehicle {
   // Comportement Separation : on garde ses distances par rapport aux voisins
   // ON ETUDIERA CE COMPORTEMENT PLUS TARD !
   separate(boids) {
+    if (!this.validPhysics() || !Number.isFinite(this.r) || this.r<0 || !Array.isArray(boids)) return createVector(0,0);
     let desiredseparation = this.r;
     let steer = createVector(0, 0, 0);
     let count = 0;
     // On examine les autres boids pour voir s'ils sont trop près
     for (let i = 0; i < boids.length; i++) {
       let other = boids[i];
+      if (!finitePoint(other?.pos)) continue;
       let d = p5.Vector.dist(this.pos, other.pos);
       // Si la distance est supérieure à 0 et inférieure à une valeur arbitraire (0 quand on est soi-même)
-      if (d > 0 && d < desiredseparation) {
+      if (Number.isFinite(d) && d > 0 && d < desiredseparation) {
         // Calculate vector pointing away from neighbor
         let diff = p5.Vector.sub(this.pos, other.pos);
         diff.normalize();
@@ -465,11 +452,12 @@ class Vehicle {
     if (steer.mag() > 0) {
       // On implemente : Steering = Desired - Velocity
       steer.normalize();
-      steer.mult(this.maxspeed);
-      steer.sub(this.velocity);
-      steer.limit(this.maxforce);
+      steer.mult(this.maxSpeed);
+      steer.sub(this.vel);
+      if(!finitePoint(steer)||!Number.isFinite(steer.mag()))return createVector(0,0);
+      steer.limit(this.maxForce);
     }
-    return steer;
+    return finitePoint(steer) ? steer : createVector(0,0);
   }
 
   // applyForce est une méthode qui permet d'appliquer une force au véhicule
@@ -510,6 +498,13 @@ class Vehicle {
 
   // On dessine le véhicule, le chemin etc.
   show() {
+    this.drawAvoidDiagnostics();
+    const frame=this.boundaryDiagnostics;
+    if(Vehicle.debug && frame && !frame.active){
+      const [bx,by,bw,bh]=frame.rectangle,d=frame.margin;
+      push();noFill();stroke("white");rect(bx,by,bw,bh);
+      stroke("red");rect(bx+d,by+d,bw-2*d,bh-2*d);pop();
+    }
     // dessin du chemin
     this.drawPath();
     // dessin du vehicule
@@ -601,25 +596,5 @@ class Vehicle {
     } else if (this.pos.y < -this.r) {
       this.pos.y = height + this.r;
     }
-  }
-}
-
-class Target extends Vehicle {
-  constructor(x, y) {
-    super(x, y);
-    this.vel = p5.Vector.random2D();
-    this.vel.mult(5);
-  }
-
-  show() {
-    push();
-    stroke(255);
-    strokeWeight(2);
-    fill("#F063A4");
-    push();
-    translate(this.pos.x, this.pos.y);
-    circle(0, 0, this.r * 2);
-    pop();
-    pop();
   }
 }
