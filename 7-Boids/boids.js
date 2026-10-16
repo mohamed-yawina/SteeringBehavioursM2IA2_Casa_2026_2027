@@ -3,10 +3,67 @@
 // https://thecodingtrain.com/CodingChallenges/124-flocking-boids.html
 // https://youtu.be/mhjuuHl6qHM
 
+function finiteVector(vector) {
+  return vector !== null && vector !== undefined && Number.isFinite(vector.x) &&
+    Number.isFinite(vector.y) && (vector.z === undefined || Number.isFinite(vector.z));
+}
+
+function normalizedComponents(vector) {
+  const x = vector.x;
+  const y = vector.y;
+  const z = vector.z === undefined ? 0 : vector.z;
+  const scale = Math.max(Math.abs(x), Math.abs(y), Math.abs(z));
+  if (scale === 0) return [0, 0, 0];
+  const sx = x / scale;
+  const sy = y / scale;
+  const sz = z / scale;
+  const magnitude = Math.hypot(sx, sy, sz);
+  return [sx / magnitude, sy / magnitude, sz / magnitude];
+}
+
+function steeringFromDirection(boid, direction, forceLimit = boid.maxForce) {
+  const zero = createVector(0, 0);
+  if (!finiteVector(direction) || !finiteVector(boid.vel) ||
+      !Number.isFinite(boid.maxSpeed) || boid.maxSpeed < 0 ||
+      !Number.isFinite(forceLimit) || forceLimit < 0) return zero;
+
+  const directionMagnitudeSq = direction.magSq();
+  let desiredVelocity;
+  if (directionMagnitudeSq === 0) {
+    desiredVelocity = createVector(0, 0, 0);
+  } else if (Number.isFinite(directionMagnitudeSq)) {
+    // Keep p5.Vector's historical normalization arithmetic for ordinary inputs.
+    desiredVelocity = direction.copy().setMag(boid.maxSpeed);
+  } else {
+    const [dx, dy, dz] = normalizedComponents(direction);
+    desiredVelocity = createVector(dx * boid.maxSpeed, dy * boid.maxSpeed, dz * boid.maxSpeed);
+  }
+  const steering = p5.Vector.sub(desiredVelocity, boid.vel);
+  if (!finiteVector(steering)) return zero;
+
+  if (forceLimit === 0) return steering.set(0, 0, 0);
+  if (Number.isFinite(steering.magSq())) return steering.limit(forceLimit);
+
+  // Avoid overflow in p5.Vector.magSq() for very large but finite components.
+  const scale = Math.max(Math.abs(steering.x), Math.abs(steering.y), Math.abs(steering.z));
+  if (scale === 0) return steering;
+  const sx = steering.x / scale;
+  const sy = steering.y / scale;
+  const sz = steering.z / scale;
+  const scaledMagnitude = Math.hypot(sx, sy, sz);
+  if (scale > forceLimit / scaledMagnitude) {
+    steering.set(sx / scaledMagnitude * forceLimit,
+      sy / scaledMagnitude * forceLimit, sz / scaledMagnitude * forceLimit);
+  }
+  return steering;
+}
+
 class Boid extends Vehicle {
   static debug = false;
+  static nextId = 1;
   constructor(x, y, image) {
     super(x, y, { maxSpeed: 5, maxForce: 0.2, r: 6 });
+    this.id = Boid.nextId++;
 
     this.vel = p5.Vector.random2D();
     this.vel.setMag(random(2, 4));
@@ -85,6 +142,9 @@ class Boid extends Vehicle {
   avoid(obstacles) {
     // TODO
 
+    if (!finiteVector(this.pos) || !finiteVector(this.vel) ||
+        !Number.isFinite(this.largeurZoneEvitementDevantVaisseau) ||
+        this.largeurZoneEvitementDevantVaisseau < 0) return createVector(0, 0);
 
     // il regarde par exemple 20 frames devant lui
     let ahead = this.vel.copy()
@@ -132,18 +192,10 @@ class Boid extends Vehicle {
     }
     // On cherche l'obstacle le plus proche
     let obstacleLePlusProche = this.getObstacleLePlusProche(obstacles);
+    if (obstacleLePlusProche === undefined) return createVector(0, 0);
 
     // on regarde aussi le vehicule le plus proche
     //let vehiculeLePlusProche = this.getVehiculeLePlusProche(vehicules)
-    let distance4 = 1000000;
-
-    /*
-    if (vehiculeLePlusProche !== undefined) {
-      // on calcule la distance4 entre le vaisseau et
-      // ce vehicule
-      distance4 = this.pos.dist(vehiculeLePlusProche.pos);
-    }
-*/
     let distance = obstacleLePlusProche.pos.dist(pointAuBoutDeAhead);
     let distance2 = obstacleLePlusProche.pos.dist(pointAuBoutDeAhead2);
     let distance3 = obstacleLePlusProche.pos.dist(this.pos);
@@ -159,40 +211,26 @@ class Boid extends Vehicle {
       distance = distance3;
       pointLePlusProche = this.pos;
     }
-    if (distance4 < distance) {
-      // on a bien un vaisseau qui est plus près que l'obstacle le plus proche
-      if (distance4 < 2 * this.r) {
-        // il y a collision, on calcule la force
-        let force = p5.Vector.sub(this.pos, vehiculeLePlusProche.pos);
+    if (distance < obstacleLePlusProche.r + this.largeurZoneEvitementDevantVaisseau) {
+      // Preserve discrete detection; only replace the direct repulsion with steering.
+      let force = steeringFromDirection(this,
+        p5.Vector.sub(pointLePlusProche, obstacleLePlusProche.pos), this.maxForce / 2);
 
-        if (Boid.debug)
-          this.drawVector(vehiculeLePlusProche.pos, force, "yellow");
+      if (Boid.debug)
+        this.drawVector(obstacleLePlusProche.pos, force, "yellow");
 
-        force.setMag(this.maxForce);
-        return force;
-
-      }
-    } else {
-      if (distance < obstacleLePlusProche.r + this.largeurZoneEvitementDevantVaisseau) {
-        // on calcule le vecteur qui part du centre du cercle et qui va
-        // jusqu'au point au bout de ahead
-        let force = p5.Vector.sub(pointLePlusProche, obstacleLePlusProche.pos);
-
-        if (Boid.debug)
-          this.drawVector(obstacleLePlusProche.pos, force, "yellow");
-
-        force.setMag(this.maxForce/2);
-        return force;
-      }
+      return force;
     }
     return createVector(0, 0);
   }
 
     getObstacleLePlusProche(obstacles) {
-    let plusPetiteDistance = 100000000;
+    if (!Array.isArray(obstacles) || !finiteVector(this.pos)) return undefined;
+    let plusPetiteDistance = Infinity;
     let obstacleLePlusProche = undefined;
 
     obstacles.forEach(o => {
+      if (!o || !finiteVector(o.pos) || !Number.isFinite(o.r) || o.r < 0) return;
       // Je calcule la distance entre le vaisseau et l'obstacle
       const distance = this.pos.dist(o.pos);
 
@@ -233,19 +271,31 @@ class Boid extends Vehicle {
     let total = 0;
 
     for (let other of boids) {
+      if (other === this || !other || !finiteVector(other.pos) || !finiteVector(other.vel) ||
+          !finiteVector(this.pos) || !finiteVector(this.vel)) continue;
       let d = dist(this.pos.x, this.pos.y, other.pos.x, other.pos.y);
-      if (other != this && d < perceptionRadius) {
+      if (d < perceptionRadius) {
         let diff = p5.Vector.sub(this.pos, other.pos);
-        diff.div(d * d);
+        if (d === 0) {
+          diff = p5.Vector.sub(other.vel, this.vel);
+          if (diff.x === 0 && diff.y === 0 && (diff.z || 0) === 0) {
+            // Exact overlap with equal velocities has no geometric escape axis.
+            // This pairwise ID rule is deterministic and reverses for the other Boid.
+            diff.set(this.id < other.id ? 1 : -1, 0, 0);
+          } else {
+            const [x, y, z] = normalizedComponents(diff);
+            diff.set(x, y, z);
+          }
+        } else {
+          diff.div(d * d);
+        }
         steering.add(diff);
         total++;
       }
     }
     if (total > 0) {
       steering.div(total);
-      steering.setMag(this.maxSpeed);
-      steering.sub(this.vel);
-      steering.limit(this.maxForce);
+      steering = steeringFromDirection(this, steering);
     }
     return steering;
   }
@@ -293,9 +343,9 @@ class Boid extends Vehicle {
   }
 
   flee(target) {
-    // inverse de seek ! 
-    let force = this.seek(target).mult(-1);
-    return force;
+    if (!finiteVector(this.pos) || !finiteVector(target)) return createVector(0, 0);
+    const direction = p5.Vector.sub(this.pos, target);
+    return steeringFromDirection(this, direction);
   }
 
   fleeWithTargetRadius(target) {
@@ -366,13 +416,9 @@ class Boid extends Vehicle {
 
     // On a donc la vitesse désirée que l'on cherche qui est le vecteur
     // allant du vaisseau au cercle vert. On le calcule :
-    // ci-dessous, steer c'est la desiredSpeed directement !
-    // Voir l'article de Craig Reynolds, Daniel Shiffman s'est trompé
-    // dans sa vidéo, on ne calcule pas la formule classique
-    // force = desiredSpeed - vitesseCourante, mais ici on a directement
-    // force = desiredSpeed
-    let force = p5.Vector.sub(desiredSpeed, this.vel);
-    force.setMag(this.maxForce);
+    // The projected target supplies a desired direction.
+    // Steering is the desired velocity minus current velocity, capped at maxForce.
+    let force = steeringFromDirection(this, desiredSpeed);
 
     // On déplace le point vert sur le cerlcle (en radians)
     this.wanderTheta += random(-this.displaceRange, this.displaceRange);
@@ -416,10 +462,7 @@ class Boid extends Vehicle {
     }
 
     if (vitesseDesiree !== null) {
-      vitesseDesiree.setMag(this.maxSpeed);
-      const force = p5.Vector.sub(vitesseDesiree, this.vel);
-      vitesseDesiree.limit(this.maxForce);
-      return vitesseDesiree;
+      return steeringFromDirection(this, vitesseDesiree);
     }
 
     if (Boid.debug) {

@@ -1,0 +1,61 @@
+{
+  "notice": "These values characterize the pre-correction TD7 implementation. They are not the final mathematical contract.",
+  "absoluteTolerance": 1e-12,
+  "vectors": {
+    "seek": [0.1856953381770519, -0.07427813527082075],
+    "fleeAsInverseSeek": [-0.1856953381770519, 0.07427813527082075],
+    "wanderForcedMagnitude": [3.588599675556062e-18, 0.2],
+    "boundariesReturnsDesired": [0.2, 0],
+    "separation": [-0.19611613513818404, -0.03922322702763681],
+    "alignment": [0, 0.2],
+    "cohesion": [0.19611613513818404, -0.03922322702763681],
+    "avoidDirectRepulsion": [0, -0.1],
+    "fleeWithTargetRadiusApplied": [-19.611613513818405, 3.922322702763681]
+  },
+  "wander": {
+    "thetaBefore": 0,
+    "thetaAfter": 0,
+    "randomDraws": [[-0.1, 0.1]]
+  },
+  "avoid": {
+    "selectedSample": "Q30",
+    "emptyObstacleListError": "TypeError"
+  },
+  "fleeWithTargetRadius": {
+    "thresholdIsStrict": true,
+    "forceMultiplier": 100,
+    "appliedNorm": 20
+  },
+  "flock": {
+    "weightedApplications": [[0.30000000000000004, 0], [0.2, 0], [0.4, 0], [2, 0], [1.5, 0]],
+    "applicationCount": 5,
+    "resultant": [4.4, 0],
+    "maxForce": 0.2
+  },
+  "predatorFrame": {
+    "events": [
+      {"kind": "wander", "force": [0, 0.5]},
+      {"kind": "apply", "force": [0, 0.5]},
+      {"kind": "seek", "force": [0.49497474683058323, -0.07071067811865475]},
+      {"kind": "apply", "force": [3.4648232278140827, -0.4949747468305833]},
+      {"kind": "update"}
+    ],
+    "positionAfter": [100, 101],
+    "velocityAfter": [3.4648232278140827, 1.0050252531694168],
+    "accelerationAfter": [0, 0]
+  },
+  "threeFrameSketchRun": [
+    {
+      "fish": [[501, 400, 0.562482929129583, 0.16333213948523945], [519.5, 405.5, 0.0065675885626536035, 0.5315282574974372]],
+      "shark": [599, 400, -1.5, 0]
+    },
+    {
+      "fish": [[501.5624829291296, 400.16333213948525, 0.3397570777834059, 0.4051612390868948], [519.5065675885627, 406.0315282574974, 0.4236348782224854, 0.7446268048465844]],
+      "shark": [597.5, 400, -1.999889239289631, 0.010523708587472187]
+    },
+    {
+      "fish": [[501.902240006913, 400.56849337857216, 0.30277433483689137, 0.5757544364471888], [519.9302024667852, 406.776155062344, 0.7719761364912384, 0.999181125318316]],
+      "shark": [595.5001107607104, 400.01052370858747, -2.499665787670482, 0.025470336585883414]
+    }
+  ]
+}

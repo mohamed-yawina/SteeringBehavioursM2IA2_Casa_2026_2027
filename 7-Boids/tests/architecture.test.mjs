@@ -10,7 +10,7 @@ const point = (actual, expected) => {
 };
 
 test('Boid et Obstacle héritent de Vehicle et conservent leurs constructeurs publics', () => {
-  const {Vehicle, Boid, Obstacle} = loadTD7();
+  const {Vehicle, Boid, Obstacle} = loadTD7({mode:'current'});
   const boid = new Boid(12, 34);
   const obstacle = new Obstacle(56, 78, 19, 'green');
   assert.ok(boid instanceof Vehicle);
@@ -26,7 +26,7 @@ test('Boid et Obstacle héritent de Vehicle et conservent leurs constructeurs pu
 });
 
 test('Vehicle initialise les états physiques avec de vrais p5.Vector sans aléatoire', () => {
-  const {Vehicle, Vector, randomEvents} = loadTD7();
+  const {Vehicle, Vector, randomEvents} = loadTD7({mode:'current'});
   const vehicle = new Vehicle(5, 8, {maxSpeed: 4, maxForce: 0.2, r: 6});
   for (const state of [vehicle.pos, vehicle.vel, vehicle.acc]) assert.ok(state instanceof Vector);
   point(vehicle.pos, [5, 8]);
@@ -36,7 +36,7 @@ test('Vehicle initialise les états physiques avec de vrais p5.Vector sans aléa
 });
 
 test('Boid conserve les tirages aléatoires et les valeurs initiales historiques', () => {
-  const {Boid, randomEvents} = loadTD7();
+  const {Boid, randomEvents} = loadTD7({mode:'current'});
   const boid = new Boid(12, 34);
   assert.deepEqual(randomEvents, [[Math.PI * 2, undefined], [2, 4]]);
   assert.equal(boid.pos.x, 12);
@@ -49,7 +49,7 @@ test('Boid conserve les tirages aléatoires et les valeurs initiales historiques
 });
 
 test('Boid image constructor remains compatible', () => {
-  const {Boid} = loadTD7();
+  const {Boid} = loadTD7({mode:'current'});
   const image = {width: 120, height: 60};
   const boid = new Boid(1, 2, image);
   assert.equal(boid.image, image);
@@ -58,7 +58,7 @@ test('Boid image constructor remains compatible', () => {
 });
 
 test('applyForce accumulates finite forces without mutating inputs', () => {
-  const {Vehicle, Vector} = loadTD7();
+  const {Vehicle, Vector} = loadTD7({mode:'current'});
   const vehicle = new Vehicle(0, 0);
   const force = new Vector(1.25, -2);
   const before = force.copy();
@@ -69,7 +69,7 @@ test('applyForce accumulates finite forces without mutating inputs', () => {
 });
 
 test('applyForce rejects non-finite forces and overflow without corrupting acceleration', () => {
-  const {Vehicle} = loadTD7();
+  const {Vehicle} = loadTD7({mode:'current'});
   const vehicle = new Vehicle(0, 0);
   vehicle.acc.set(2, 3);
   vehicle.applyForce({x: NaN, y: 1, z: 0});
@@ -81,7 +81,7 @@ test('applyForce rejects non-finite forces and overflow without corrupting accel
 });
 
 test('update conserve l’ordre d’intégration historique, limite la vitesse et vide acc', () => {
-  const {Vehicle} = loadTD7();
+  const {Vehicle} = loadTD7({mode:'current'});
   const vehicle = new Vehicle(10, 20, {maxSpeed: 2});
   vehicle.vel.set(3, 4);
   vehicle.acc.set(1, -2);
@@ -92,7 +92,7 @@ test('update conserve l’ordre d’intégration historique, limite la vitesse e
 });
 
 test('Vehicle ignore les limites physiques invalides et négatives', () => {
-  const {Vehicle} = loadTD7();
+  const {Vehicle} = loadTD7({mode:'current'});
   const vehicle = new Vehicle(NaN, Infinity, {maxSpeed: -1, maxForce: NaN, r: Infinity});
   point(vehicle.pos, [0, 0]);
   assert.equal(vehicle.maxSpeed, 0);
@@ -101,7 +101,7 @@ test('Vehicle ignore les limites physiques invalides et négatives', () => {
 });
 
 test('Obstacle ignore forces et intégration et reste immobile', () => {
-  const {Obstacle, Vector} = loadTD7();
+  const {Obstacle, Vector} = loadTD7({mode:'current'});
   const obstacle = new Obstacle(42, 73, 12, 'green');
   obstacle.vel.set(5, -3);
   obstacle.applyForce(new Vector(100, 100));
@@ -112,7 +112,7 @@ test('Obstacle ignore forces et intégration et reste immobile', () => {
 });
 
 test('Vehicle ne porte aucun rendu; les appels locomoteurs de sketch restent disponibles', () => {
-  const {Vehicle, Boid} = loadTD7();
+  const {Vehicle, Boid} = loadTD7({mode:'current'});
   assert.equal(typeof Vehicle.prototype.show, 'undefined');
   assert.equal(typeof Vehicle.prototype.draw, 'undefined');
   for (const method of ['applyForce', 'update']) assert.equal(typeof Boid.prototype[method], 'function');
