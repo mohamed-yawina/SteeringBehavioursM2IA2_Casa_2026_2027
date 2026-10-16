@@ -99,7 +99,7 @@ class Vehicle {
       let a = p5.Vector.sub(ahead, threat.pos);
       a.setMag(this.maxSpeed);
       a.sub(this.vel);
-      a.limit(this.maxForce * 3);
+      a.limit(this.maxForce);
       return a;
     }
     return createVector(0, 0);

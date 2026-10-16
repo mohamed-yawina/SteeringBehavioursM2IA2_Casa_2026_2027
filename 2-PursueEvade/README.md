@@ -86,7 +86,7 @@ Le laboratoire charge seulement `Vehicle`, les entités requises et son propre c
 
 Le `vehicle.js` conserve les versions existantes de Seek, Flee, Pursuit et Evade et son intégrateur. Il n'a pas été modifié pendant cette correction architecturale. Les agents du laboratoire ont des bords toriques, avec effacement des trajectoires au rebouclage ; `BouncingBall` rebondit sur les bords.
 
-Dans le challenge, chaque chasseur compose comportement principal, évitement et bordures, puis applique une seule force plafonnée à `maxForce`. L'évitement est également plafonné localement à `maxForce`. La méthode fournie `Vehicle.avoid()` conserve son plafond brut historique de `3 × maxForce` ; le contrôleur corrige sa sortie à l'utilisation. Dans le laboratoire, le scénario `chase` additionne Pursuit et bordures puis plafonne leur somme avant une application unique. Les proies avaient déjà leur propre plafonnement global, conservé.
+Dans le challenge, chaque chasseur compose comportement principal, évitement et bordures, puis applique une seule force plafonnée à `maxForce`. `Vehicle.avoid()` limite aussi sa force individuelle à `maxForce`, et le contrôleur conserve un plafonnement local de sécurité. Dans le laboratoire, le scénario `chase` additionne Pursuit et bordures puis plafonne leur somme avant une application unique. Les proies avaient déjà leur propre plafonnement global, conservé.
 
 ### Effets balistiques et exceptions
 

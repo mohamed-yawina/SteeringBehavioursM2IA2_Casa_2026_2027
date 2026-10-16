@@ -148,7 +148,7 @@ class Vehicle {
       let avoidance = p5.Vector.sub(ahead, mostThreatening.pos);
       avoidance.setMag(this.maxSpeed);
       avoidance.sub(this.vel);
-      avoidance.limit(this.maxForce * 3);
+      avoidance.limit(this.maxForce);
       return avoidance;
     }
     return createVector(0, 0);

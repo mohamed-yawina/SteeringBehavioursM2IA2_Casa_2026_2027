@@ -145,7 +145,22 @@ test('PowerUp and Obstacle inherit Vehicle and preserve static position and coll
   const agent = new Vehicle(100, 100); agent.vel.set(1, 0);
   const avoidance = agent.avoid([obstacle]);
   assert.ok(avoidance.x < 0);
+  assert.ok(Number.isFinite(avoidance.mag()));
+  assert.ok(avoidance.mag() <= agent.maxForce + 1e-12);
+  assert.ok(Math.abs(avoidance.mag() - agent.maxForce) <= 1e-12,
+    'this geometry would produce a raw force larger than maxForce before limiting');
   assert.deepEqual([obstacle.pos.x, obstacle.pos.y, obstacle.r], [before.x, before.y, 30]);
+});
+
+test('Vehicle.avoid returns zero with no obstacle and when maxForce is zero', () => {
+  const { classes: { Vehicle } } = loadEntities();
+  const agent = new Vehicle(100, 100); agent.vel.set(1, 0);
+  assert.deepEqual([agent.avoid([]).x, agent.avoid([]).y], [0, 0]);
+
+  agent.maxForce = 0;
+  const force = agent.avoid([{ pos: new Vector(160, 100), r: 30 }]);
+  assert.ok(Number.isFinite(force.x) && Number.isFinite(force.y));
+  assert.equal(force.mag(), 0);
 });
 
 test('Particle inherits Vehicle and keeps its ballistic displacement, drag and expiration schedule', () => {

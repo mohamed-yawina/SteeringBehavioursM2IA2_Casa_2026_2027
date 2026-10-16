@@ -55,7 +55,7 @@ Les deux pages sont des documents distincts : chacune charge ses scripts applica
 
 `LabVehicle.calculateSteering()` délègue le calcul physique à `super.seek()` ou `super.flee()`. Les vitesses désirées recalculées pour les flèches sont uniquement des diagnostics ; la force affichée est une copie de celle effectivement retournée par Vehicle. Flee reste inactif au-delà du rayon de perception et actif à son seuil inclusif. À distance nulle, le comportement hérité freine la vitesse résiduelle.
 
-Dans Swarm Attack, `calculatePlayerSteering()` compose Arrive, évitement et bordures. Le résultat d'évitement est limité localement à `player.maxForce`, puis la somme complète est limitée à cette même valeur avant un unique `applyForce()`. La locomotion reste celle de Vehicle. L'évitement fourni dans `vehicle.js` conserve son plafond historique de `3 × maxForce` : il n'a pas été modifié et son résultat brut ne respecte donc pas la limite individuelle stricte. Le contrôleur du joueur corrige cette limite à l'utilisation.
+Dans Swarm Attack, `calculatePlayerSteering()` compose Arrive, évitement et bordures. `Vehicle.avoid()` limite sa force individuelle à `maxForce`; le contrôleur conserve également son plafonnement local, puis limite la somme complète avant un unique `applyForce()`. La locomotion reste celle de Vehicle.
 
 Le boss conserve ses trois phases et attaques :
 

@@ -87,8 +87,24 @@ test('Obstacle extends Vehicle, remains static and retains the Vehicle.avoid int
   const force = agent.avoid([obstacle]);
   assert.ok(force instanceof Vector);
   assert.ok(force.x < 0, 'avoidance steers away from an obstacle directly ahead');
+  assert.ok(Number.isFinite(force.mag()));
+  assert.ok(force.mag() <= agent.maxForce + 1e-12);
+  assert.ok(Math.abs(force.mag() - agent.maxForce) <= 1e-12,
+    'this geometry would produce a raw force larger than maxForce before limiting');
   assert.deepEqual([obstacle.pos.x, obstacle.pos.y], [obstacleBefore.x, obstacleBefore.y]);
   assert.equal(obstacle.r, 40);
+});
+
+test('Vehicle.avoid returns zero with no obstacle and when maxForce is zero', () => {
+  const { Vehicle } = loadEntities();
+  const agent = new Vehicle(100, 100);
+  agent.vel = new Vector(1, 0);
+  assert.deepEqual([agent.avoid([]).x, agent.avoid([]).y], [0, 0]);
+
+  agent.maxForce = 0;
+  const force = agent.avoid([{ pos: new Vector(170, 100), r: 40 }]);
+  assert.ok(Number.isFinite(force.x) && Number.isFinite(force.y));
+  assert.equal(force.mag(), 0);
 });
 
 test('deferred ballistic forces preserve historical positions over 100 steps with changing gravity', () => {
