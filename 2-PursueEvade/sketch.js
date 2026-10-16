@@ -146,6 +146,13 @@ function updateChallengeStats() {
   setText('challenge-last-capture', lastCapture ? `${(lastCapture.frame / 60).toFixed(1)} s` : '—');
 }
 
+function composeHunterSteering(agent, primaryForce, sceneObstacles) {
+  return primaryForce.copy()
+    .add(agent.avoid(sceneObstacles).limit(agent.maxForce))
+    .add(agent.boundaries(80))
+    .limit(agent.maxForce);
+}
+
 function draw() {
   if (musicPlayer) musicPlayer.update();
   updateChallengeStats();
@@ -192,9 +199,7 @@ function draw() {
         : hunterMode === 'wander'
           ? hunterAgent.wander()
           : hunterAgent.arrive(mouseTarget, 100);
-    hunterAgent.applyForce(force);
-    hunterAgent.applyForce(hunterAgent.avoid(obstacles));
-    hunterAgent.applyForce(hunterAgent.boundaries(80));
+    hunterAgent.applyForce(composeHunterSteering(hunterAgent, force, obstacles));
     hunterAgent.update();
     wrapAgentWithoutTrailSeam(hunterAgent);
   }

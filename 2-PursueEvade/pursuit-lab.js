@@ -157,14 +157,16 @@ const PursuitLab = (() => {
     const target = system.targets.length ? closestTargetTo(system.agent, system.targets) : system.target;
     if (state.scenario === 'chase') {
       const force = system.agent.steer('pursuit', target, state.predictionFrames);
-      system.agent.applyForce(force);
-      system.agent.applyForce(system.agent.boundaries(45));
+      const totalForce = force.copy().add(system.agent.boundaries(45)).limit(system.agent.maxForce);
+      system.agent.lastSteering.totalForce = totalForce.copy();
+      system.agent.applyForce(totalForce);
       system.agent.update();
       target.update([system.agent], { visionMode: 'radius', predictionFrames: state.predictionFrames });
       wrapToroidal(system.agent);
       wrapToroidal(target);
     } else {
       const force = system.agent.steer(behavior, target, state.predictionFrames);
+      system.agent.lastSteering.totalForce = force.copy();
       system.agent.applyForce(force);
       system.agent.update();
       if (system.bounds) wrapInPane(system.agent, system.bounds);

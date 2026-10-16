@@ -70,7 +70,7 @@ function setup() {
   for (const file of ['vehicle.js', 'target-selection.js', 'target.js', 'bouncingBall.js', 'pursuit-agent.js', 'lab-renderer.js', 'pursuit-lab.js']) {
     vm.runInContext(readFileSync(new URL(`../${file}`, import.meta.url), 'utf8'), context);
   }
-  return { lab: vm.runInContext('PursuitLab', context), elements };
+  return { lab: vm.runInContext('PursuitLab', context), elements, context };
 }
 
 test('lab pause, resume, single-step, speed control and reset work through controls', () => {
@@ -141,4 +141,39 @@ test('bouncing-ball scenario builds different speeds and pursues the nearest bal
   assert.ok(new Set(system.targets.map(target => target.maxSpeed)).size > 1);
   lab.drawFrame(60);
   assert.ok(system.agent.lastSteering.predictedPosition);
+});
+
+test('chase applies one capped resultant while keeping independent Pursuit diagnostics', () => {
+  const { lab, elements } = setup(); lab.init();
+  elements.get('scenario-select').value = 'chase'; elements.get('scenario-select').dispatch('change');
+  const { agent } = lab.state.systems[0];
+  let applications = 0, integrations = 0, primary, applied;
+  const steer = agent.steer.bind(agent), update = agent.update.bind(agent), apply = agent.applyForce.bind(agent);
+  agent.steer = (...args) => { const f = steer(...args); primary = f.copy(); return f; };
+  agent.boundaries = margin => { assert.equal(margin, 45); return new Vector(0, agent.maxForce); };
+  agent.applyForce = f => { applications++; applied = f.copy(); apply(f); };
+  agent.update = () => { integrations++; update(); };
+  lab.drawFrame(60);
+  const expected = primary.copy().add(new Vector(0, agent.maxForce)).limit(agent.maxForce);
+  assert.equal(applications, 1); assert.equal(integrations, 1);
+  for (const key of ['x', 'y']) {
+    assert.equal(agent.lastSteering.force[key], primary[key]);
+    assert.equal(agent.lastSteering.totalForce[key], expected[key]);
+    assert.equal(applied[key], expected[key]);
+  }
+  assert.ok(applied.mag() <= agent.maxForce + 1e-12);
+  applied.mult(0); assert.ok(agent.lastSteering.totalForce.mag() > 0);
+});
+
+test('renderer draws the total force diagnostic without altering the individual force', () => {
+  const { lab, context } = setup(); lab.init(); lab.drawFrame(60);
+  const system = lab.state.systems[0];
+  system.agent.lastSteering.force = new Vector(.1, .2);
+  system.agent.lastSteering.totalForce = new Vector(.3, -.4);
+  const lines = []; context.line = (...args) => lines.push(args);
+  vm.runInContext('PursuitLabRenderer', context).render(lab.state, 800, 460);
+  const origin = system.agent.lastSteering.origin;
+  assert.ok(lines.some(l => l[0] === origin.x && l[1] === origin.y &&
+    l[2] === origin.x + .3 * 35 && l[3] === origin.y - .4 * 35));
+  assert.deepEqual([system.agent.lastSteering.force.x, system.agent.lastSteering.force.y], [.1, .2]);
 });

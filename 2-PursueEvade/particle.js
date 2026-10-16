@@ -19,8 +19,9 @@ class Particle extends Vehicle {
     super.update();
     // Particle.show() does not render Vehicle trails; discard the inherited sample.
     this.trail.length = 0;
-    this.vel.mult(0.94);
-    this.vel.y += this.gravity;
+    // Prepare the historical next velocity for the NEXT inherited integration.
+    // Position still advances by the current velocity before drag/gravity act.
+    this.applyForce(this.vel.copy().mult(-0.06).add(createVector(0, this.gravity)));
     this.life -= 6;
   }
 
@@ -32,32 +33,6 @@ class Particle extends Vehicle {
   }
 
   isDead() { return this.life <= 0; }
-}
-
-// Onde de choc
-class Shockwave extends Vehicle {
-  constructor(x, y, color, maxR = 100) {
-    super(x, y);
-    this.r = 5;
-    this.maxR = maxR;
-    this.color = color;
-    this.life = 255;
-  }
-
-  update() {
-    this.r += 8;
-    this.life -= 10;
-  }
-
-  show() {
-    let alpha = map(this.life, 0, 255, 0, 255);
-    noFill();
-    stroke(red(this.color), green(this.color), blue(this.color), alpha);
-    strokeWeight(3);
-    circle(this.pos.x, this.pos.y, this.r * 2);
-  }
-
-  isDead() { return this.life <= 0 || this.r > this.maxR; }
 }
 
 // Explosion avancée

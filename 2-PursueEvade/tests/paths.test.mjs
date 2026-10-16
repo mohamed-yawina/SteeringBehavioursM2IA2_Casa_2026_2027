@@ -43,6 +43,9 @@ test('lab loads only its own controller and no game-specific UI or state scripts
 
 test('Challenge page preserves game modules and uses local p5 libraries', () => {
   const html = readFileSync(path.join(root, 'predator-prey.html'), 'utf8');
+  assert.ok(html.includes('src="shockwave.js"'));
+  assert.ok(html.indexOf('src="vehicle.js"') < html.indexOf('src="shockwave.js"'));
+  assert.ok(html.indexOf('src="shockwave.js"') < html.indexOf('src="sketch.js"'));
   for (const script of ['libraries/p5.min.js', 'libraries/p5.sound.min.js', 'vehicle.js', 'obstacle.js', 'target-selection.js', 'target.js', 'bouncingBall.js', 'achievement.js', 'audio.js', 'combo.js', 'particle.js', 'powerup.js', 'storage.js', 'ui.js', 'sketch.js']) {
     assert.ok(html.includes(`src="${script}"`), `Missing game dependency ${script}`);
   }

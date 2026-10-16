@@ -45,7 +45,7 @@ const PursuitLabRenderer = (() => {
     if (selected && state.showVectors) {
       drawArrow(sample.origin, sample.velocity, color(86, 219, 255));
       drawArrow(sample.origin, sample.desiredVelocity, color(184, 167, 255));
-      drawArrow(sample.origin, sample.force, color(255, 108, 155), 35);
+      drawArrow(sample.origin, sample.totalForce || sample.force, color(255, 108, 155), 35);
     }
   }
 

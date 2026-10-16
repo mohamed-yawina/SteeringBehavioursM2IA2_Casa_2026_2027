@@ -6,6 +6,8 @@ import vm from 'node:vm';
 class Vector {
   constructor(x = 0, y = 0) { this.x = x; this.y = y; }
   copy() { return new Vector(this.x, this.y); }
+  add(v) { this.x += v.x; this.y += v.y; return this; }
+  limit(n) { if (this.mag() > n) this.mult(n / this.mag()); return this; }
   mult(n) { this.x *= n; this.y *= n; return this; }
   mag() { return Math.hypot(this.x, this.y); }
   static random2D() { return new Vector(1, 0); }
@@ -74,4 +76,22 @@ test('toroidal wrap clears trails so they do not draw a line across the canvas',
   const agent = { pos: { x: 1201, y: 50 }, trail: [{}], edges() { this.pos.x = 0; } };
   context.wrapAgentWithoutTrailSeam(agent);
   assert.equal(agent.trail.length, 0);
+});
+
+test('challenge composition caps avoidance and resultant while preserving the primary force', () => {
+  const { context } = setup();
+  const compose = vm.runInContext('composeHunterSteering', context);
+  const primary = new Vector(.6, 0);
+  const agent = { maxForce: .6, avoid: () => new Vector(0, 1.8), boundaries: margin => {
+    assert.equal(margin, 80); return new Vector(0, 0);
+  } };
+  let result = compose(agent, primary, []);
+  assert.ok(Math.abs(result.mag() - .6) <= 1e-12);
+  assert.ok(Math.abs(result.x - result.y) <= 1e-12);
+  assert.deepEqual([primary.x, primary.y], [.6, 0]);
+  agent.avoid = () => new Vector(-1.8, 0);
+  result = compose(agent, primary, []); assert.equal(result.mag(), 0);
+  agent.maxForce = 0; result = compose(agent, primary, []); assert.equal(result.mag(), 0);
+  const source = readFileSync(new URL('../sketch.js', import.meta.url), 'utf8');
+  assert.equal((source.match(/hunterAgent\.applyForce\(/g) || []).length, 1);
 });
