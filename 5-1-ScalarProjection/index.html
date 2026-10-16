@@ -1,19 +1,45 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Sketch</title>
-
-    <link rel="stylesheet" type="text/css" href="style.css">
-
-    <script src="libraries/p5.min.js"></script>
-    <script src="libraries/p5.sound.min.js"></script>
-    <script src="vehicle.js"></script>
-    <script src="sketch.js"></script>
-  </head>
-  <body>
-    <!-- Pas besoin de déclarer un canvas pour dessiner en P5.js -->
-  </body>
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Projection Lab — TD5.1</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="libraries/p5.min.js"></script>
+  <script defer src="projection.js"></script>
+  <script defer src="projection-controller.js"></script>
+  <script defer src="projection-ui.js"></script>
+  <script defer src="sketch.js"></script>
+</head>
+<body>
+<main class="app">
+  <header><div><p class="eyebrow">MASTER MIAGE IA2 / GÉOMÉTRIE VECTORIELLE / TD 05.1</p><h1>Projection<span> Lab.</span></h1><p class="intro">Une direction. Deux distances. Comprendre ce que projeter veut dire.</p></div><button id="reset" class="primary">Réinitialiser</button></header>
+  <div class="workspace">
+    <section class="scene-card" aria-label="Construction géométrique">
+      <div class="scene-heading"><span>01 / EXPLORER</span><span id="case-label">Projection oblique</span></div>
+      <div id="canvas-host"></div>
+      <p id="canvas-summary" class="sr-only"></p>
+      <div class="legend"><span class="cyan">a = OP</span><span class="muted">b = OB</span><span class="yellow">u unitaire (×55)</span><span class="purple">p = OH</span><span class="coral">r = HP</span><span class="green">Q sur le segment</span></div>
+      <p class="hint">Glissez O, P ou B. Au clavier : choisissez un point ci-dessous, puis utilisez les flèches dans le canvas (Maj : ×10). Les coordonnées sont en pixels du repère de référence, y vers le bas.</p>
+      <div class="point-select" aria-label="Point à déplacer au clavier"><button data-point="O">Origine O</button><button data-point="P" aria-pressed="true">Point P</button><button data-point="B">Direction B</button></div>
+    </section>
+    <aside class="controls">
+      <section class="card"><p class="eyebrow">02 / EXPÉRIMENTER</p><h2>Changer de regard</h2>
+        <label for="scenario">Scénario</label><select id="scenario"><option value="oblique">Oblique</option><option value="parallel">Parallèle</option><option value="perpendicular">Perpendiculaire</option><option value="negative">Projection négative</option><option value="beyond">Au-delà de B</option><option value="zero">Direction nulle</option><option value="custom" disabled>Personnalisé</option></select>
+        <label for="angle">Angle de OB <output id="angle-value">0°</output></label><input id="angle" type="range" min="-180" max="180" step="0.1" value="0">
+        <label for="length">Longueur de OB <output id="length-value">0 px</output></label><input id="length" type="range" min="0" max="1200" step="1" value="0">
+        <p class="hint">L’angle est mesuré depuis +x ; les angles positifs tournent vers le bas. Changer la longueur ne change pas la projection sur la droite.</p>
+        <div class="toggles"><label><input id="vectors" type="checkbox" checked> Vecteurs</label><label><input id="perpendicular" type="checkbox" checked> Perpendiculaire et distances</label><label><input id="annotations" type="checkbox" checked> Annotations</label></div>
+      </section>
+      <section class="card guide"><p class="eyebrow">03 / DÉCOMPOSER</p><label><input id="guided" type="checkbox"> Construction guidée</label><div class="step-nav"><button id="previous" aria-label="Étape précédente">←</button><strong id="step-label">Vue complète</strong><button id="next" aria-label="Étape suivante">→</button></div><p id="step-description"></p></section>
+    </aside>
+  </div>
+  <section class="math-panel"><div><p class="eyebrow">04 / LIRE LES MATHÉMATIQUES</p><h2>Du produit scalaire au point projeté</h2><p id="status" role="status"></p></div>
+    <div class="equations"><span>a = P − O · b = B − O</span><span>u = b / ‖b‖</span><span>s = a · u</span><span>p = s u · H = O + p</span><span>r = P − H</span><span>t = (a · b) / (b · b)</span></div>
+    <dl id="readout"></dl>
+    <p class="note">La droite est infinie : s peut être négatif et t peut dépasser 1. Pour le segment, t<sub>borné</sub> = min(1, max(0, t)) et Q = O + t<sub>borné</sub>b. PH est perpendiculaire à la droite ; PQ n’est pas nécessairement perpendiculaire au segment. Si O = B, la droite est indéfinie mais le segment réduit à O possède encore un point le plus proche.</p>
+  </section>
+  <footer><span>Adapté de Daniel Shiffman / The Coding Train · The Nature of Code</span><span><a href="https://youtu.be/DHPfoqiE4yQ">Démonstration d’origine</a> · <a href="README.md">Documentation</a></span></footer>
+</main>
+</body>
 </html>
