@@ -11,7 +11,7 @@ let obstacleSouris;
 
 let obstacles = [];
 
-let alignSlider, cohesionSlider, separationSlider;
+let alignSlider, cohesionSlider, separationSlider, boundariesSlider, perceptionSlider;
 let labelNbBoids;
 
 let target;
@@ -38,13 +38,13 @@ function setup() {
   // flocking en anglais c'est "se rassembler"
   // rappel : tableauDesVehicules, min max val step posX posY propriété
   const posYSliderDeDepart = 10;
-  creerUnSlider("Poids alignment", flock, 0, 2, 1.5, 0.1, 10, posYSliderDeDepart, "alignWeight");
-  creerUnSlider("Poids cohesion", flock, 0, 2, 1, 0.1, 10, posYSliderDeDepart+30, "cohesionWeight");
-  creerUnSlider("Poids séparation", flock, 0, 15, 2, 0.1, 10, posYSliderDeDepart+60,"separationWeight");
-  creerUnSlider("Poids boundaries", flock, 0, 15, 10, 1, 10, posYSliderDeDepart+90,"boundariesWeight");
+  alignSlider = creerUnSlider("Poids alignment", flock, 0, 2, 1.5, 0.1, 10, posYSliderDeDepart, "alignWeight");
+  cohesionSlider = creerUnSlider("Poids cohesion", flock, 0, 2, 1, 0.1, 10, posYSliderDeDepart+30, "cohesionWeight");
+  separationSlider = creerUnSlider("Poids séparation", flock, 0, 15, 2, 0.1, 10, posYSliderDeDepart+60,"separationWeight");
+  boundariesSlider = creerUnSlider("Poids boundaries", flock, 0, 15, 10, 1, 10, posYSliderDeDepart+90,"boundariesWeight");
   
   creerUnSlider("Rayon des boids", flock, 4, 40, 6, 1, 10, posYSliderDeDepart+120,"r");
-  creerUnSlider("Perception radius", flock, 15, 60, 25, 1, 10, posYSliderDeDepart+150,"perceptionRadius");
+  perceptionSlider = creerUnSlider("Perception radius", flock, 15, 60, 25, 1, 10, posYSliderDeDepart+150,"perceptionRadius");
 
   // On créer les "boids". Un boid en anglais signifie "un oiseau" ou "un poisson"
   // Dans cet exemple c'est l'équivalent d'un véhicule dans les autres exemples
@@ -222,6 +222,11 @@ function mouseDragged() {
   const b = new Boid(mouseX, mouseY, fishImage);
   
   b.r = random(8, 40);
+  b.alignWeight = Number(alignSlider.value());
+  b.cohesionWeight = Number(cohesionSlider.value());
+  b.separationWeight = Number(separationSlider.value());
+  b.boundariesWeight = Number(boundariesSlider.value());
+  b.perceptionRadius = Number(perceptionSlider.value());
 
   flock.push(b);
 
