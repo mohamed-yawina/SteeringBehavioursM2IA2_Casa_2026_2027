@@ -460,10 +460,6 @@ class Boid extends Vehicle {
       vitesseDesiree = createVector(this.vel.x, -this.maxSpeed);
     }
 
-    if (vitesseDesiree !== null) {
-      return steeringFromDirection(this, vitesseDesiree);
-    }
-
     if (Boid.debug) {
       // dessin du cadre de la zone
       push();
@@ -477,6 +473,10 @@ class Boid extends Vehicle {
       rect(bx + d, by + d, bw - 2 * d, bh - 2 * d);
 
       pop();
+    }
+
+    if (vitesseDesiree !== null) {
+      return steeringFromDirection(this, vitesseDesiree);
     }
 
     // si on est pas près du bord (vitesse désirée nulle), on renvoie un vecteur nul

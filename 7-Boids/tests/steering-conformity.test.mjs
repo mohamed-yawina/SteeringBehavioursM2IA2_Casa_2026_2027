@@ -169,6 +169,107 @@ test('Boundaries conserve la priorité des coins et le zéro hors zone', () => {
   close(stopped.boundaries(0, 0, 1200, 800, 25), [0, 0]);
 });
 
+function runBoundariesDebugCase(debug, position, velocity = [1, 2]) {
+  const env = loadTD7({mode: 'current'});
+  const boid = makeBoid(env, position, velocity);
+  const before = {
+    pos: boid.pos.copy(), vel: boid.vel.copy(), acc: boid.acc.copy(),
+    weights: [boid.alignWeight, boid.cohesionWeight, boid.separationWeight,
+      boid.boundariesWeight, boid.avoidWeight],
+    perceptionRadius: boid.perceptionRadius,
+    randomEvents: env.randomEvents.length
+  };
+  let applyCalls = 0;
+  let updateCalls = 0;
+  boid.applyForce = () => { applyCalls++; };
+  boid.update = () => { updateCalls++; };
+  env.Boid.debug = debug;
+  const force = boid.boundaries(0, 0, 1200, 800, 25);
+  return {env, boid, force, before, applyCalls, updateCalls};
+}
+
+test('Boundaries affiche les cadres en debug avec et sans correction', () => {
+  const cases = [
+    {position: [600, 400], velocity: [1, 2], expectedForce: [0, 0]},
+    {position: [10, 100], velocity: [1, 2], desiredDirection: [5, 2]}
+  ];
+  for (const item of cases) {
+    const off = runBoundariesDebugCase(false, item.position, item.velocity);
+    const on = runBoundariesDebugCase(true, item.position, item.velocity);
+    const expected = item.expectedForce ?? expectedSteering(
+      item.desiredDirection, item.velocity, 5, 0.2);
+    close(off.force, expected);
+    close(on.force, expected);
+    close(off.force, [on.force.x, on.force.y]);
+    assert.deepEqual(off.env.graphics, []);
+    assert.deepEqual(on.env.graphics.map(call => call.name),
+      ['push', 'noFill', 'stroke', 'rect', 'stroke', 'rect', 'pop']);
+    assert.deepEqual(on.env.graphics.filter(call => call.name === 'stroke').map(call => call.args),
+      [['white'], ['red']]);
+    assert.deepEqual(on.env.graphics.filter(call => call.name === 'rect').map(call => call.args),
+      [[0, 0, 1200, 800], [25, 25, 1150, 750]]);
+    assert.equal(on.env.graphics.filter(call => call.name === 'rect').length, 2);
+    for (const result of [off, on]) {
+      close(result.boid.pos, [result.before.pos.x, result.before.pos.y]);
+      close(result.boid.vel, [result.before.vel.x, result.before.vel.y]);
+      close(result.boid.acc, [result.before.acc.x, result.before.acc.y]);
+      assert.deepEqual([result.boid.alignWeight, result.boid.cohesionWeight,
+        result.boid.separationWeight, result.boid.boundariesWeight, result.boid.avoidWeight],
+      result.before.weights);
+      assert.equal(result.boid.perceptionRadius, result.before.perceptionRadius);
+      assert.equal(result.env.randomEvents.length, result.before.randomEvents);
+      assert.equal(result.applyCalls, 0);
+      assert.equal(result.updateCalls, 0);
+    }
+  }
+});
+
+test('Boundaries conserve les quatre directions et la priorite verticale aux coins en debug', () => {
+  const cases = [
+    {position: [10, 100], velocity: [1, 2], desiredDirection: [5, 2]},
+    {position: [1190, 100], velocity: [-1, 2], desiredDirection: [-5, 2]},
+    {position: [100, 10], velocity: [1, -2], desiredDirection: [1, 5]},
+    {position: [100, 790], velocity: [1, 2], desiredDirection: [1, -5]},
+    {position: [10, 10], velocity: [1, 2], desiredDirection: [1, 5]},
+    {position: [1190, 10], velocity: [-1, 2], desiredDirection: [-1, 5]},
+    {position: [10, 790], velocity: [1, -2], desiredDirection: [1, -5]},
+    {position: [1190, 790], velocity: [-1, -2], desiredDirection: [-1, -5]}
+  ];
+  for (const item of cases) {
+    const off = runBoundariesDebugCase(false, item.position, item.velocity);
+    const on = runBoundariesDebugCase(true, item.position, item.velocity);
+    const expected = expectedSteering(item.desiredDirection, item.velocity, 5, 0.2);
+    close(off.force, expected);
+    close(on.force, expected);
+    assert.ok(on.force.mag() <= on.boid.maxForce + 1e-12);
+    assert.equal(off.env.graphics.filter(call => call.name === 'rect').length, 0);
+    assert.equal(on.env.graphics.filter(call => call.name === 'rect').length, 2);
+  }
+});
+
+test('Boundaries conserve les seuils stricts tout en affichant le cadre debug', () => {
+  const thresholds = [
+    {position: [25, 400], velocity: [1, 0]},
+    {position: [1175, 400], velocity: [-1, 0]},
+    {position: [600, 25], velocity: [0, 1]},
+    {position: [600, 775], velocity: [0, -1]}
+  ];
+  for (const item of thresholds) {
+    const at = runBoundariesDebugCase(true, item.position, item.velocity);
+    close(at.force, [0, 0]);
+    assert.equal(at.env.graphics.filter(call => call.name === 'rect').length, 2);
+
+    const inside = [...item.position];
+    const axis = item.position[0] === 25 || item.position[0] === 1175 ? 0 : 1;
+    const direction = item.position[axis] < (axis === 0 ? 600 : 400) ? -1 : 1;
+    inside[axis] += direction * 0.001;
+    const beyond = runBoundariesDebugCase(false, inside, item.velocity);
+    assert.ok(beyond.force.mag() > 0, `expected correction beyond ${item.position}`);
+    assert.ok(beyond.force.mag() <= beyond.boid.maxForce + 1e-12);
+    assert.deepEqual(beyond.env.graphics, []);
+  }
+});
+
 test('Boundaries ne mute pas la vitesse et conserve son dessin debug', () => {
   const env = loadTD7({mode: 'current'});
   const boid = makeBoid(env, [600, 400], [-1, 1]);
