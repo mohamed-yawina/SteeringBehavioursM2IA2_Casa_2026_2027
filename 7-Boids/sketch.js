@@ -20,7 +20,7 @@ const poidsFuiteCible = 100;
 
 function preload() {
   // On charge une image de poisson
-  fishImage = loadImage('assets/niceFishtransparent.png');
+  fishImage = loadImage('assets/niceFishTransparent.png');
   //requinImage = loadImage('assets/requin.png');
   requinImage = loadImage('assets/SharkTransparent.png');
 
@@ -40,7 +40,7 @@ function setup() {
   const posYSliderDeDepart = 10;
   creerUnSlider("Poids alignment", flock, 0, 2, 1.5, 0.1, 10, posYSliderDeDepart, "alignWeight");
   creerUnSlider("Poids cohesion", flock, 0, 2, 1, 0.1, 10, posYSliderDeDepart+30, "cohesionWeight");
-  creerUnSlider("Poids séparation", flock, 0, 15, 3, 0.1, 10, posYSliderDeDepart+60,"separationWeight");
+  creerUnSlider("Poids séparation", flock, 0, 15, 2, 0.1, 10, posYSliderDeDepart+60,"separationWeight");
   creerUnSlider("Poids boundaries", flock, 0, 15, 10, 1, 10, posYSliderDeDepart+90,"boundariesWeight");
   
   creerUnSlider("Rayon des boids", flock, 4, 40, 6, 1, 10, posYSliderDeDepart+120,"r");
