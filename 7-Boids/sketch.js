@@ -105,6 +105,10 @@ function draw() {
   //imageMode(CORNER);
   //image(requinImage, 0, 0, width, height);
 
+  // souris = obstacle: update before the fish calculate Flee and Avoid.
+  obstacleSouris.pos.x = mouseX;
+  obstacleSouris.pos.y = mouseY;
+
   // dessin des obstacles
   obstacles.forEach(obstacle => {
     obstacle.show();
@@ -210,15 +214,6 @@ function draw() {
   requin.edges();
   requin.update();
   requin.show();
-
-  // souris = obstacle
-  obstacleSouris.pos.x = mouseX;
-  obstacleSouris.pos.y = mouseY;
-
-  // On dessine tous les obstacles
-  obstacles.forEach(obstacle => {
-    obstacle.show();
-  });
 
   //
 }

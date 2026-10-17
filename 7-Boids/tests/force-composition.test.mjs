@@ -446,3 +446,122 @@ test('poids, perception et seuils historiques restent inchangés', () => {
   assert.equal(fish.fleeWithTargetRadius({pos: new env.Vector(140, 100), r: mouseObstacle.r}).active, false);
   assert.equal(fish.fleeWithTargetRadius({pos: new env.Vector(139.999, 100), r: mouseObstacle.r}).active, true);
 });
+
+test('draw place l’obstacle souris avant Flee et Avoid et rend chaque obstacle une fois', () => {
+  const env = loadTD7({mode: 'current', includeSketch: true, seed: 0xc2a});
+  env.scope.preload();
+  env.scope.setup();
+  vm.runInContext('flock.length = 0', env.scope);
+
+  const mouseObstacle = vm.runInContext('obstacles[0]', env.scope);
+  const fixedObstacle = new env.Obstacle(950, 650, 24, 'green');
+  env.scope.__fixedObstacle = fixedObstacle;
+  vm.runInContext('obstacles.push(__fixedObstacle)', env.scope);
+  const originalMousePosition = mouseObstacle.pos.copy();
+  const mouseRadius = mouseObstacle.r;
+  const fixedPosition = fixedObstacle.pos.copy();
+  const obstacleShows = new Map([[mouseObstacle, []], [fixedObstacle, []]]);
+  for (const obstacle of obstacleShows.keys()) {
+    const show = obstacle.show.bind(obstacle);
+    obstacle.show = () => {
+      obstacleShows.get(obstacle).push(obstacle.pos.copy());
+      return show();
+    };
+  }
+
+  const fish = new env.Boid(100, 100);
+  fish.pos.set(100, 100);
+  fish.vel.set(0, 0);
+  const fishObservations = {flock: 0, avoid: [], flee: [], apply: [], update: 0};
+  const originalFlock = fish.flock.bind(fish);
+  fish.flock = (...args) => {
+    fishObservations.flock++;
+    return originalFlock(...args);
+  };
+  const originalAvoid = fish.avoid.bind(fish);
+  fish.avoid = obstacles => {
+    fishObservations.avoid.push({
+      instance: obstacles[0],
+      position: obstacles[0].pos.copy()
+    });
+    return originalAvoid(obstacles);
+  };
+  const originalFlee = fish.fleeWithTargetRadius.bind(fish);
+  fish.fleeWithTargetRadius = target => {
+    if (target === mouseObstacle) {
+      fishObservations.flee.push({instance: target, position: target.pos.copy()});
+    }
+    return originalFlee(target);
+  };
+  const applyFishForce = fish.applyForce.bind(fish);
+  fish.applyForce = force => {
+    fishObservations.apply.push(force.copy());
+    return applyFishForce(force);
+  };
+  const updateFish = fish.update.bind(fish);
+  fish.update = () => {
+    fishObservations.update++;
+    return updateFish();
+  };
+  fish.show = () => {};
+  env.scope.__c2Fish = fish;
+  vm.runInContext('flock.push(__c2Fish)', env.scope);
+
+  const shark = vm.runInContext('requin', env.scope);
+  shark.pos.set(1100, 700);
+  let wanderCalls = 0;
+  let sharkApplyCalls = 0;
+  let sharkUpdateCalls = 0;
+  let sharkEdgesCalls = 0;
+  const wander = shark.wander.bind(shark);
+  shark.wander = () => { wanderCalls++; return wander(); };
+  const applySharkForce = shark.applyForce.bind(shark);
+  shark.applyForce = force => { sharkApplyCalls++; return applySharkForce(force); };
+  const updateShark = shark.update.bind(shark);
+  shark.update = () => { sharkUpdateCalls++; return updateShark(); };
+  const sharkEdges = shark.edges.bind(shark);
+  shark.edges = () => { sharkEdgesCalls++; return sharkEdges(); };
+  shark.show = () => {};
+
+  env.setRandomSequence([0.5, 0.5]);
+  const mousePositions = [[220, 150], [340, 260]];
+  for (const [mouseX, mouseY] of mousePositions) {
+    env.scope.mouseX = mouseX;
+    env.scope.mouseY = mouseY;
+    env.scope.draw();
+  }
+
+  const close = (vector, expected) => {
+    assert.ok(Math.abs(vector.x - expected[0]) < 1e-10);
+    assert.ok(Math.abs(vector.y - expected[1]) < 1e-10);
+  };
+  const expectedPositions = mousePositions.map(([x, y]) => [x, y]);
+  assert.equal(vm.runInContext('obstacles[0]', env.scope), mouseObstacle);
+  assert.ok(mouseObstacle instanceof env.Obstacle);
+  assert.ok(mouseObstacle.pos instanceof env.Vector);
+  assert.equal(mouseObstacle.r, mouseRadius);
+  assert.equal(vm.runInContext('obstacles[1]', env.scope), fixedObstacle);
+  close(fixedObstacle.pos, [fixedPosition.x, fixedPosition.y]);
+  assert.notDeepEqual([originalMousePosition.x, originalMousePosition.y], expectedPositions[0]);
+
+  for (const observations of [fishObservations.avoid, fishObservations.flee]) {
+    assert.equal(observations.length, 2);
+    observations.forEach((observation, index) => {
+      assert.equal(observation.instance, mouseObstacle);
+      close(observation.position, expectedPositions[index]);
+    });
+  }
+  assert.equal(fishObservations.flock, 2);
+  assert.equal(fishObservations.apply.length, 2);
+  assert.ok(fishObservations.apply.every(force => force.mag() <= fish.maxForce + 1e-12));
+  assert.equal(fishObservations.update, 2);
+  assert.deepEqual(obstacleShows.get(mouseObstacle).map(({x, y}) => [x, y]), expectedPositions);
+  assert.deepEqual(obstacleShows.get(fixedObstacle).map(({x, y}) => [x, y]), [
+    [fixedPosition.x, fixedPosition.y], [fixedPosition.x, fixedPosition.y]
+  ]);
+  assert.equal(wanderCalls, 2);
+  assert.equal(sharkApplyCalls, 2);
+  assert.equal(sharkEdgesCalls, 2);
+  assert.equal(sharkUpdateCalls, 2);
+  assert.equal(env.randomEvents.length, 2, 'one unchanged Wander draw per frame');
+});
