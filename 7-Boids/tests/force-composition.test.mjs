@@ -565,3 +565,106 @@ test('draw place l’obstacle souris avant Flee et Avoid et rend chaque obstacle
   assert.equal(sharkUpdateCalls, 2);
   assert.equal(env.randomEvents.length, 2, 'one unchanged Wander draw per frame');
 });
+
+function runFleeDiagnosticCase(debug, targetPosition, targetRadius = 5) {
+  const env = loadTD7({mode: 'current', seed: 0xc71});
+  const boid = new env.Boid(0, 0);
+  boid.pos.set(0, 0);
+  boid.vel.set(0, 1);
+  boid.acc.set(0.03, -0.02);
+  const target = {pos: new env.Vector(...targetPosition), r: targetRadius};
+  let applyCalls = 0;
+  let updateCalls = 0;
+  boid.applyForce = () => { applyCalls++; };
+  boid.update = () => { updateCalls++; };
+  env.Boid.debug = debug;
+  const before = {
+    pos: boid.pos.copy(), vel: boid.vel.copy(), acc: boid.acc.copy(),
+    targetPos: target.pos.copy(), targetRadius: target.r,
+    perceptionRadius: boid.perceptionRadius,
+    weights: [boid.alignWeight, boid.cohesionWeight, boid.separationWeight,
+      boid.boundariesWeight, boid.avoidWeight],
+    randomEvents: env.randomEvents.length
+  };
+  const result = boid.fleeWithTargetRadius(target);
+  return {env, boid, target, result, before, applyCalls, updateCalls};
+}
+
+test('Flee dessine son cercle uniquement en debug, sans remplissage et avec la géométrie historique', () => {
+  const inactiveOff = runFleeDiagnosticCase(false, [15, 0]);
+  const inactiveOn = runFleeDiagnosticCase(true, [15, 0]);
+  for (const item of [inactiveOff, inactiveOn]) {
+    assert.equal(item.result.active, false);
+    closeVector(item.result.force, zero);
+    assert.deepEqual(item.env.graphics, []);
+  }
+
+  const activeOff = runFleeDiagnosticCase(false, [3, 4]);
+  assert.equal(activeOff.result.active, true);
+  assert.ok(activeOff.result.force instanceof activeOff.env.Vector);
+  assert.ok(Number.isFinite(activeOff.result.force.mag()));
+  assert.ok(activeOff.result.force.mag() <= activeOff.boid.maxForce + 1e-12);
+  assert.deepEqual(activeOff.env.graphics, []);
+
+  const activeOn = runFleeDiagnosticCase(true, [3, 4]);
+  assert.equal(activeOn.result.active, true);
+  assert.deepEqual(activeOn.env.graphics.map(({name}) => name),
+    ['push', 'noFill', 'stroke', 'strokeWeight', 'circle', 'pop']);
+  assert.deepEqual(activeOn.env.graphics.find(({name}) => name === 'stroke').args, ['red']);
+  assert.deepEqual(activeOn.env.graphics.find(({name}) => name === 'strokeWeight').args, [2]);
+  assert.deepEqual(activeOn.env.graphics.find(({name}) => name === 'circle').args, [3, 4, 30]);
+  assert.equal(activeOn.env.graphics.filter(({name}) => name === 'circle').length, 1);
+});
+
+test('Flee conserve le seuil strict et ne dessine pas pour les cibles invalides', () => {
+  for (const debug of [false, true]) {
+    const atThreshold = runFleeDiagnosticCase(debug, [15, 0]);
+    assert.equal(atThreshold.result.active, false);
+    closeVector(atThreshold.result.force, zero);
+    assert.deepEqual(atThreshold.env.graphics, []);
+
+    const justInside = runFleeDiagnosticCase(debug, [14.999, 0]);
+    assert.equal(justInside.result.active, true);
+    assert.equal(justInside.env.graphics.some(({name}) => name === 'circle'), debug);
+
+    const env = loadTD7({mode: 'current'});
+    const boid = new env.Boid(0, 0);
+    env.Boid.debug = debug;
+    for (const target of [null, undefined, {}, {pos: null, r: 2},
+      {pos: new env.Vector(0, 0), r: NaN}, {pos: new env.Vector(0, 0), r: Infinity}]) {
+      const result = boid.fleeWithTargetRadius(target);
+      assert.equal(result.active, false);
+      closeVector(result.force, zero);
+    }
+    assert.deepEqual(env.graphics, []);
+  }
+});
+
+test('Flee est physiquement invariant entre debug activé et désactivé', () => {
+  const debugOff = runFleeDiagnosticCase(false, [3, 4]);
+  const debugOn = runFleeDiagnosticCase(true, [3, 4]);
+  assert.equal(debugOff.result.active, debugOn.result.active);
+  closeVector(debugOff.result.force, [debugOn.result.force.x, debugOn.result.force.y]);
+  assert.equal(debugOff.result.force.mag(), debugOn.result.force.mag());
+  for (const key of ['pos', 'vel', 'acc']) {
+    closeVector(debugOff.boid[key], [debugOff.before[key].x, debugOff.before[key].y]);
+    closeVector(debugOn.boid[key], [debugOn.before[key].x, debugOn.before[key].y]);
+    closeVector(debugOff.boid[key], [debugOn.boid[key].x, debugOn.boid[key].y]);
+  }
+  closeVector(debugOff.target.pos, [debugOff.before.targetPos.x, debugOff.before.targetPos.y]);
+  closeVector(debugOn.target.pos, [debugOn.before.targetPos.x, debugOn.before.targetPos.y]);
+  assert.equal(debugOff.target.r, debugOff.before.targetRadius);
+  assert.equal(debugOn.target.r, debugOn.before.targetRadius);
+  assert.equal(debugOff.boid.perceptionRadius, debugOff.before.perceptionRadius);
+  assert.equal(debugOn.boid.perceptionRadius, debugOn.before.perceptionRadius);
+  assert.deepEqual([debugOff.boid.alignWeight, debugOff.boid.cohesionWeight,
+    debugOff.boid.separationWeight, debugOff.boid.boundariesWeight, debugOff.boid.avoidWeight],
+  debugOff.before.weights);
+  assert.deepEqual([debugOn.boid.alignWeight, debugOn.boid.cohesionWeight,
+    debugOn.boid.separationWeight, debugOn.boid.boundariesWeight, debugOn.boid.avoidWeight],
+  debugOn.before.weights);
+  assert.equal(debugOff.env.randomEvents.length, debugOff.before.randomEvents);
+  assert.equal(debugOn.env.randomEvents.length, debugOn.before.randomEvents);
+  assert.equal(debugOff.applyCalls + debugOn.applyCalls, 0);
+  assert.equal(debugOff.updateCalls + debugOn.updateCalls, 0);
+});

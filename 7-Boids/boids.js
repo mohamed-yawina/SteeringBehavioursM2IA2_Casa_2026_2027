@@ -349,12 +349,15 @@ class Boid extends Vehicle {
     if (!Number.isFinite(d) || !Number.isFinite(rayonZoneAFuir)) return inactive();
 
     if (d < rayonZoneAFuir) {
-      // On dessine le cercle de la zone à fuir
-      push();
-      stroke("red");
-      strokeWeight(2);
-      circle(target.pos.x, target.pos.y, rayonZoneAFuir*2);
-    pop();
+      if (Boid.debug) {
+        // On dessine le cercle de la zone à fuir
+        push();
+        noFill();
+        stroke("red");
+        strokeWeight(2);
+        circle(target.pos.x, target.pos.y, rayonZoneAFuir*2);
+        pop();
+      }
 
       // je fuis la cible, on réutilise le comportement flee
       return {active: true, force: this.flee(target.pos)};
