@@ -16,6 +16,7 @@ let labelNbBoids;
 
 let target;
 let requin;
+const poidsFuiteCible = 100;
 
 function preload() {
   // On charge une image de poisson
@@ -124,13 +125,38 @@ function draw() {
 
   for (let boid of flock) {
     // équivalent de applyBehaviors, cohesion + separation + alignenement + confinement
-    boid.flock(flock, obstacles);
-
-    boid.fleeWithTargetRadius(requin);
+    const flockForces = boid.flock(flock, obstacles);
+    const fleeFromShark = boid.fleeWithTargetRadius(requin);
 
     // on tester le comportement fleeWithTargetRadius sur tous les obstacles
-    
-    boid.fleeWithTargetRadius(obstacles[0]);
+    const fleeFromMouseObstacle = boid.fleeWithTargetRadius(obstacles[0]);
+
+    // Les vecteurs dessinés par les comportements restent des diagnostics individuels.
+    // La force physique de cette frame est la somme pondérée ci-dessous, après limitation.
+    const totalForce = createVector(0, 0);
+    const addWeightedContribution = (force, weight) => {
+      if (!finiteVector(force) || !Number.isFinite(weight) || weight < 0) return;
+      const contribution = force.copy().mult(weight);
+      if (!finiteVector(contribution)) return;
+      const nextTotal = totalForce.copy().add(contribution);
+      if (finiteVector(nextTotal)) totalForce.set(nextTotal);
+    };
+
+    // Preserve the historical application order and weights.
+    addWeightedContribution(flockForces.alignment, boid.alignWeight);
+    addWeightedContribution(flockForces.cohesion, boid.cohesionWeight);
+    addWeightedContribution(flockForces.separation, boid.separationWeight);
+    addWeightedContribution(flockForces.boundaries, boid.boundariesWeight);
+    addWeightedContribution(flockForces.avoid, boid.avoidWeight);
+    addWeightedContribution(fleeFromShark.force, poidsFuiteCible);
+    addWeightedContribution(fleeFromMouseObstacle.force, poidsFuiteCible);
+
+    if (Number.isFinite(boid.maxForce) && boid.maxForce >= 0 && finiteVector(totalForce)) {
+      totalForce.limit(boid.maxForce);
+    } else {
+      totalForce.set(0, 0);
+    }
+    boid.applyForce(totalForce);
 
     boid.update();
     boid.show();

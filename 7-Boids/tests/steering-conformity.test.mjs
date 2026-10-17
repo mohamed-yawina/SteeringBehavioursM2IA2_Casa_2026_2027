@@ -292,13 +292,15 @@ test('Avoid reste borné avec maxSpeed/maxForce nuls et conserve son rendu debug
   env.Boid.debug = false;
 });
 
-test('fleeWithTargetRadius conserve son application unique et son multiplicateur historique', () => {
+test('fleeWithTargetRadius retourne un steering brut sans appliquer le poids historique', () => {
   const env = loadTD7({mode: 'current'});
   const boid = makeBoid(env, [0, 0], [0, 1]);
-  const applied = [];
-  boid.applyForce = force => applied.push(force.copy());
-  boid.fleeWithTargetRadius({pos: new env.Vector(10, 0), r: 5});
-  assert.equal(applied.length, 1);
+  let applyCount = 0;
+  boid.applyForce = () => { applyCount++; };
+  const result = boid.fleeWithTargetRadius({pos: new env.Vector(10, 0), r: 5});
+  assert.equal(result.active, true);
+  assert.equal(applyCount, 0);
   const force = expectedSteering([-10, 0], [0, 1], boid.maxSpeed, boid.maxForce);
-  close(applied[0], [force[0] * 100, force[1] * 100]);
+  close(result.force, force);
+  assert.ok(result.force.mag() <= boid.maxForce + 1e-12);
 });

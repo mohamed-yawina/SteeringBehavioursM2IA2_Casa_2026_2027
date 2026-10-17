@@ -92,6 +92,9 @@ export function loadTD7({mode, seed = 0x12345678, randomValues, includeSketch = 
   const boidSourcePath = mode === 'historical'
     ? new URL('./references/historical-boids.js', import.meta.url)
     : new URL('../boids.js', import.meta.url);
+  const sketchSourcePath = mode === 'historical'
+    ? new URL('./references/historical-sketch.js', import.meta.url)
+    : new URL('../sketch.js', import.meta.url);
   vm.runInContext(readFileSync(new URL('../vehicle.js', import.meta.url), 'utf8'), scope,
     {filename: 'vehicle.js'});
   vm.runInContext(readFileSync(boidSourcePath, 'utf8'), scope,
@@ -99,12 +102,13 @@ export function loadTD7({mode, seed = 0x12345678, randomValues, includeSketch = 
   vm.runInContext(readFileSync(new URL('../obstacle.js', import.meta.url), 'utf8'), scope,
     {filename: 'obstacle.js'});
   if (includeSketch) {
-    vm.runInContext(readFileSync(new URL('../sketch.js', import.meta.url), 'utf8'), scope,
-      {filename: 'sketch.js'});
+    vm.runInContext(readFileSync(sketchSourcePath, 'utf8'), scope,
+      {filename: mode === 'historical' ? 'historical-sketch.js' : 'sketch.js'});
   }
   return {
     mode,
     boidSourcePath: boidSourcePath.href,
+    sketchSourcePath: includeSketch ? sketchSourcePath.href : null,
     scope,
     Vector: P5.Vector,
     Vehicle: vm.runInContext('Vehicle', scope),

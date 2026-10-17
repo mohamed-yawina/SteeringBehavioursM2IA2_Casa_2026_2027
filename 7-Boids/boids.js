@@ -119,24 +119,15 @@ class Boid extends Vehicle {
   // Equivalent de "applyBehaviors" dans le code des autres exemples
   // flock signifie "se rassembler" en anglais
   flock(boids, obstacles) {
-    let avoid = this.avoid(obstacles);
-    let alignment = this.align(boids);
-    let cohesion = this.cohesion(boids);
-    let separation = this.separation(boids);
-    let boundaries = this.boundaries(this.boundariesX, this.boundariesY, this.boundariesWidth, this.boundariesHeight, this.boundariesDistance);
+    const avoid = this.avoid(obstacles);
+    const alignment = this.align(boids);
+    const cohesion = this.cohesion(boids);
+    const separation = this.separation(boids);
+    const boundaries = this.boundaries(this.boundariesX, this.boundariesY, this.boundariesWidth, this.boundariesHeight, this.boundariesDistance);
     //let boundaries = this.boundaries(100, 200, 800, 400, 25);
 
-    avoid.mult(this.avoidWeight);
-    alignment.mult(this.alignWeight);
-    cohesion.mult(this.cohesionWeight);
-    separation.mult(this.separationWeight);
-    boundaries.mult(this.boundariesWeight);
-
-    this.applyForce(alignment);
-    this.applyForce(cohesion);
-    this.applyForce(separation);
-    this.applyForce(boundaries);
-    this.applyForce(avoid);
+    // Return raw steering contributions. The scenario owns weighting and application.
+    return {avoid, alignment, cohesion, separation, boundaries};
   }
 
   avoid(obstacles) {
@@ -349,8 +340,13 @@ class Boid extends Vehicle {
   }
 
   fleeWithTargetRadius(target) {
+    const inactive = () => ({active: false, force: createVector(0, 0)});
+    if (!target || !finiteVector(this.pos) || !finiteVector(target.pos) ||
+        !Number.isFinite(target.r) || target.r < 0) return inactive();
+
     const d = this.pos.dist(target.pos);
-    let rayonZoneAFuir = target.r + 10;
+    const rayonZoneAFuir = target.r + 10;
+    if (!Number.isFinite(d) || !Number.isFinite(rayonZoneAFuir)) return inactive();
 
     if (d < rayonZoneAFuir) {
       // On dessine le cercle de la zone à fuir
@@ -361,10 +357,10 @@ class Boid extends Vehicle {
     pop();
 
       // je fuis la cible, on réutilise le comportement flee
-      const fleeForce = this.flee(target.pos);
-      fleeForce.mult(100);
-      this.applyForce(fleeForce);
+      return {active: true, force: this.flee(target.pos)};
     }
+
+    return inactive();
   }
 
   wander() {

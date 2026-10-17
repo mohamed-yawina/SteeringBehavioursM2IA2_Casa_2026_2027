@@ -41,6 +41,18 @@ test('application HTML never loads the test-only historical implementation', () 
   assert.doesNotMatch(html, /historical-boids|tests\/references/);
 });
 
+test('historical sketch characterization loads its frozen pre-composition source', () => {
+  const historical = loadTD7({mode: 'historical', includeSketch: true});
+  const current = loadTD7({mode: 'current', includeSketch: true});
+  assert.equal(historical.sketchSourcePath,
+    new URL('./references/historical-sketch.js', import.meta.url).href);
+  assert.equal(current.sketchSourcePath,
+    new URL('../sketch.js', import.meta.url).href);
+  const source = readFileSync(new URL('./references/historical-sketch.js', import.meta.url), 'utf8');
+  assert.match(source, /HISTORICAL TEST REFERENCE ONLY/);
+  assert.match(source, /56cb485dd7b9a2158ff460880e95c3923fdea644/);
+});
+
 test('historical fixtures remain byte-identical to the pre-isolation characterization', () => {
   assert.equal(
     sha256(readFileSync(fixtureURL)),
