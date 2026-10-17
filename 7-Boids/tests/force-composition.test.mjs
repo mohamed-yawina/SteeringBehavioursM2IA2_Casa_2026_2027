@@ -92,6 +92,155 @@ function createSketchFish({raw = {}, sharkFlee = zero, mouseFlee = zero,
   return {env, fish, events, applied, rawVectorSets};
 }
 
+function createSharkDraw({fishDistances = [], wander = [0.1, 0], seek = [0.02, 0],
+  useRealWander = false, useRealSeek = false, maxForce = 0.5, randomValues = [0.5]} = {}) {
+  const env = loadTD7({mode: 'current', includeSketch: true, seed: 0x7d03});
+  env.scope.preload();
+  env.scope.setup();
+  vm.runInContext('flock.length = 0', env.scope);
+
+  const shark = vm.runInContext('requin', env.scope);
+  shark.pos.set(600, 400);
+  shark.vel.set(0, 0);
+  shark.maxForce = maxForce;
+  const events = [];
+  const applied = [];
+  const wanderVector = new env.Vector(wander[0], wander[1]);
+  const seekVector = new env.Vector(seek[0], seek[1]);
+  const originalWander = shark.wander.bind(shark);
+  const originalSeek = shark.seek.bind(shark);
+  const originalApply = shark.applyForce.bind(shark);
+  const originalUpdate = shark.update.bind(shark);
+  const originalEdges = shark.edges.bind(shark);
+  let wanderCalls = 0;
+  let seekTarget;
+
+  if (!useRealWander) {
+    shark.wander = () => {
+      wanderCalls++;
+      events.push('wander');
+      return wanderVector;
+    };
+  } else {
+    shark.wander = () => {
+      wanderCalls++;
+      events.push('wander');
+      return originalWander();
+    };
+  }
+  shark.seek = target => {
+    events.push('seek');
+    seekTarget = target;
+    return useRealSeek ? originalSeek(target) : seekVector;
+  };
+  shark.applyForce = force => {
+    events.push('apply');
+    applied.push(force.copy());
+    return originalApply(force);
+  };
+  shark.edges = () => {
+    events.push('edges');
+    return originalEdges();
+  };
+  shark.update = () => {
+    events.push('update');
+    return originalUpdate();
+  };
+  shark.show = () => events.push('show-shark');
+
+  const fish = fishDistances.map((distance, index) => {
+    const boid = new env.Boid(600 + distance, 400);
+    boid.pos.set(600 + distance, 400);
+    boid.vel.set(0, 0);
+    boid.flock = () => Object.fromEntries(behaviorNames.map(name => [name, new env.Vector(0, 0)]));
+    boid.fleeWithTargetRadius = () => ({active: false, force: new env.Vector(0, 0)});
+    boid.applyForce = () => {};
+    boid.update = () => {};
+    boid.show = () => {};
+    env.scope[`__sharkTestFish${index}`] = boid;
+    return boid;
+  });
+  vm.runInContext(`flock.push(${fish.map((_, index) => `__sharkTestFish${index}`).join(',')})`, env.scope);
+  env.setRandomSequence(randomValues);
+  env.scope.draw();
+  return {env, shark, fish, events, applied, wanderVector, seekVector, seekTarget,
+    get wanderCalls() { return wanderCalls; }};
+}
+
+test('requin sans poisson ou avec un poisson hors rayon applique uniquement Wander', () => {
+  for (const fishDistances of [[], [70.001]]) {
+    const result = createSharkDraw({fishDistances, wander: [0.3, 0.4]});
+    closeVector(result.applied[0], [0.3, 0.4]);
+    assert.equal(result.events.filter(event => event === 'seek').length, 0);
+    assert.equal(result.events.filter(event => event === 'apply').length, 1);
+    assert.equal(result.events.filter(event => event === 'update').length, 1);
+    assert.equal(result.wanderCalls, 1);
+  }
+});
+
+test('requin compose Wander + 7 × Seek avec sélection réelle du poisson le plus proche', () => {
+  const result = createSharkDraw({fishDistances: [35, 20, 50],
+    wander: [0.1, 0], seek: [0.02, 0]});
+  closeVector(result.applied[0], [0.24, 0]);
+  assert.equal(result.seekTarget, result.fish[1].pos);
+  assert.deepEqual(result.events.filter(event => ['wander', 'seek', 'apply', 'edges', 'update'].includes(event)),
+    ['wander', 'seek', 'apply', 'edges', 'update']);
+  assert.equal(result.events.filter(event => event === 'apply').length, 1);
+  assert.equal(result.events.filter(event => event === 'edges').length, 1);
+  assert.equal(result.events.filter(event => event === 'update').length, 1);
+  closeVector(result.wanderVector, [0.1, 0]);
+  closeVector(result.seekVector, [0.02, 0]);
+});
+
+test('seuil de poursuite du requin reste strictement inférieur à 70 pixels', () => {
+  const atThreshold = createSharkDraw({fishDistances: [70], wander: [0.1, 0]});
+  closeVector(atThreshold.applied[0], [0.1, 0]);
+  assert.equal(atThreshold.events.includes('seek'), false);
+
+  const inside = createSharkDraw({fishDistances: [69.999], wander: [0.1, 0], seek: [0, 0.02]});
+  closeVector(inside.applied[0], [0.1, 0.14]);
+  assert.equal(inside.events.includes('seek'), true);
+});
+
+test('poisson exactement sur le requin reste sélectionné; Seek nul et Wander nul restent finis', () => {
+  const coincident = createSharkDraw({fishDistances: [0], wander: [0, 0], useRealSeek: true});
+  closeVector(coincident.applied[0], [0, 0]);
+  assert.equal(coincident.seekTarget, coincident.fish[0].pos);
+  assert.equal(coincident.events.filter(event => event === 'seek').length, 1);
+  assert.equal(vm.runInContext('flock.length', coincident.env.scope), 0,
+    'historical close-range eating interaction remains active');
+  assert.ok(Number.isFinite(coincident.applied[0].x) && Number.isFinite(coincident.applied[0].y));
+
+  const zeroContributions = createSharkDraw({fishDistances: [20], wander: [0, 0], seek: [0, 0]});
+  closeVector(zeroContributions.applied[0], [0, 0]);
+});
+
+test('la résultante Wander + Seek est plafonnée à maxForce sans muter les forces sources', () => {
+  const aligned = createSharkDraw({fishDistances: [10], wander: [0.3, 0], seek: [0.1, 0]});
+  closeVector(aligned.applied[0], [0.5, 0]);
+  assert.ok(aligned.applied[0].mag() <= aligned.shark.maxForce + 1e-12);
+  closeVector(aligned.wanderVector, [0.3, 0]);
+  closeVector(aligned.seekVector, [0.1, 0]);
+
+  const opposed = createSharkDraw({fishDistances: [10], wander: [0.2, 0], seek: [-0.02, 0]});
+  closeVector(opposed.applied[0], [0.06, 0]);
+
+  const zeroLimit = createSharkDraw({fishDistances: [10], wander: [0.2, 0],
+    seek: [0.02, 0], maxForce: 0});
+  closeVector(zeroLimit.applied[0], [0, 0]);
+  assert.ok(Number.isFinite(zeroLimit.shark.acc.x) && Number.isFinite(zeroLimit.shark.acc.y));
+});
+
+test('Wander du requin est calculé une fois et consomme un seul tirage aléatoire par frame', () => {
+  const result = createSharkDraw({fishDistances: [], useRealWander: true, randomValues: [0.5]});
+  assert.equal(result.wanderCalls, 1);
+  assert.equal(result.env.randomEvents.length, 1);
+  assert.deepEqual(result.env.randomEvents[0], [-result.shark.displaceRange, result.shark.displaceRange]);
+  assert.equal(result.events.filter(event => event === 'apply').length, 1);
+  assert.equal(result.events.filter(event => event === 'update').length, 1);
+  assert.ok(Number.isFinite(result.applied[0].x) && Number.isFinite(result.applied[0].y));
+});
+
 test('flock retourne cinq forces brutes dans l’ordre historique et ne les applique pas', () => {
   const env = loadTD7({mode: 'current'});
   const boid = new env.Boid(100, 100);

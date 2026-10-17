@@ -163,12 +163,10 @@ function draw() {
   }  
 
   // REQUIN
-  let wanderForce = requin.wander();
-  wanderForce.mult(1);
-  requin.applyForce(wanderForce);
+  const wanderForce = requin.wander();
 
   // calcul du poisson le plus proche du requin
-  let seekForce;
+  let seekForce = null;
   let rayonDeDetection = 70;
   // dessin du cercle en fil de fer jaune
   noFill();
@@ -188,8 +186,6 @@ function draw() {
       }
 
       seekForce = requin.seek(closest.pos);
-      seekForce.mult(7);
-      requin.applyForce(seekForce);
     }
     if (d < 5) {
       // on mange !!!!
@@ -204,6 +200,13 @@ function draw() {
 
     }
   }
+
+  // Compose the independent steering contributions once, then apply the global cap.
+  const sharkForce = wanderForce.copy();
+  if (seekForce !== null) sharkForce.add(seekForce.copy().mult(7));
+  sharkForce.limit(requin.maxForce);
+  requin.applyForce(sharkForce);
+
   requin.edges();
   requin.update();
   requin.show();
