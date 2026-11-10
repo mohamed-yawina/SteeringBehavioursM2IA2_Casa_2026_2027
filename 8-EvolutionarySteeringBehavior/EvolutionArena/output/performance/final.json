@@ -1,0 +1,53 @@
+{
+  "date": "2026-10-25T22:16:58.637Z",
+  "node": "v24.18.0",
+  "cpu": "AMD Ryzen 7 5800H with Radeon Graphics         ",
+  "runtime": "Node + doublure vectorielle, sans DOM ni rendu p5",
+  "gcExposed": true,
+  "protocol": "600 pas échauffement, 20000 pas mesurés par taille ; reproduction off, drain=0, poison=0, trois prédateurs au repos ; 100 pas/bloc ; statistiques actives",
+  "limitations": "Pas de FPS ni temps de rendu navigateur. Delta heap après GC, pas une preuve d’absence de fuite. p95 des moyennes de blocs, pas des pas individuels.",
+  "results": [
+    {
+      "population": 36,
+      "steps": 20000,
+      "simulatedSeconds": 333.3333333333333,
+      "totalMs": 193.261,
+      "meanUpdateMs": 0.00966305,
+      "p95BlockMeanUpdateMs": 0.013244000000000113,
+      "heapBeforeBytes": 5295064,
+      "heapAfterBytes": 5899808,
+      "heapDeltaBytes": 604744,
+      "historyLength": 344,
+      "finalPopulation": 36,
+      "finite": true
+    },
+    {
+      "population": 120,
+      "steps": 20000,
+      "simulatedSeconds": 333.3333333333333,
+      "totalMs": 502.5951,
+      "meanUpdateMs": 0.025129755,
+      "p95BlockMeanUpdateMs": 0.029835999999999103,
+      "heapBeforeBytes": 5495736,
+      "heapAfterBytes": 5970288,
+      "heapDeltaBytes": 474552,
+      "historyLength": 344,
+      "finalPopulation": 120,
+      "finite": true
+    },
+    {
+      "population": 300,
+      "steps": 20000,
+      "simulatedSeconds": 333.3333333333333,
+      "totalMs": 1275.7017,
+      "meanUpdateMs": 0.063785085,
+      "p95BlockMeanUpdateMs": 0.07276700000000119,
+      "heapBeforeBytes": 5758736,
+      "heapAfterBytes": 6161560,
+      "heapDeltaBytes": 402824,
+      "historyLength": 344,
+      "finalPopulation": 300,
+      "finite": true
+    }
+  ]
+}

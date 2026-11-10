@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NeuroDrive AI — Evolution Racing</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="ui-theme.css">
+  <script src="vendor/p5.min.js"></script>
+  <script type="module" src="src/main.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Aller au contenu</a>
+  <header class="app-header">
+    <a class="brand" href="#main-content" aria-label="NeuroDrive AI, Evolution Racing"><svg viewBox="0 0 44 44" width="44" height="44" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="3" d="M6 33V11h7l18 22h7V11M6 22h32"/></svg><span><strong>NEURODRIVE <em>AI</em></strong><small>EVOLUTION RACING</small></span></a>
+    <div class="project-badge">MASTER IA2 <span>SIMULATION · NEURO-ÉVOLUTION</span></div>
+    <div id="interface-tools"><button id="tutorial-open" aria-haspopup="dialog">Comprendre l’IA</button><button id="presentation-toggle" aria-pressed="false">Presentation Mode</button><label><input id="visual-effects" type="checkbox" checked>Effets</label><label><input id="trail-toggle" type="checkbox">Trajectoire</label></div>
+  </header>
+  <nav id="app-navigation" aria-label="Espaces de l’application"><button id="go-home">Accueil</button><button id="go-lab">AI Laboratory</button><button id="go-career">Championship</button><button id="go-human-ai">Human vs AI</button><button id="go-ai-ai">AI vs AI</button><button id="go-science">Science Center</button></nav>
+  <main id="main-content" tabindex="-1"><div class="workspace-heading"><p class="eyebrow">PERCEPTION → DÉCISION → ÉVOLUTION</p><h2 id="workspace-title" tabindex="-1">Mission control</h2></div>
+  <section id="telemetry-hud" class="telemetry-grid" aria-label="Télémétrie réelle de la voiture sélectionnée" hidden><div data-telemetry-card><span>Mode</span><strong id="metric-mode">—</strong></div><div data-telemetry-card><span>Circuit</span><strong id="metric-track">—</strong></div><div data-telemetry-card><span>Voiture sélectionnée</span><strong id="metric-identity">—</strong></div><div data-telemetry-card><span>Vitesse</span><strong id="metric-speed">—</strong></div><div data-telemetry-card><span>Objectif / progression stricte</span><strong id="metric-progress">—</strong></div><div data-telemetry-card><span>Checkpoints</span><strong id="metric-checkpoints">—</strong></div><div data-telemetry-card><span>Tours</span><strong id="metric-laps">—</strong></div><div data-telemetry-card><span>Temps simulé</span><strong id="metric-time">—</strong></div><div data-telemetry-card><span>Collisions / épisodes courants</span><strong id="metric-collisions">—</strong></div><div data-telemetry-card><span>Génération</span><strong id="metric-generation">—</strong></div><div data-telemetry-card><span>Population active</span><strong id="metric-active">—</strong></div><div data-telemetry-card><span>Fitness max courante</span><strong id="metric-fitness">—</strong></div><div data-telemetry-card><span>Fitness moyenne</span><strong id="metric-meanFitness">—</strong></div><div data-telemetry-card><span>État</span><strong id="metric-state">—</strong></div></section>
+    <section id="game-screen" aria-label="Evolution Racing gameplay">
+      <section id="championship-home">
+        <div class="hero-copy"><p class="eyebrow">AUTONOMOUS DRIVING / EVOLUTIONARY INTELLIGENCE</p><h2>La conduite s’explore.<br><span>L’intelligence évolue.</span></h2><p>Du rayon de perception au réseau neuronal. Entraînez, observez et confrontez des politiques de conduite dans un environnement reproductible.</p><div class="hero-tags"><span>8 → 12 → 2</span><span>Canvas 2D</span><span>100 % local</span></div></div>
+        <figure class="hero-map"><figcaption>TRAINING OVAL · Géométrie physique réelle · Aperçu statique</figcaption><canvas id="hero-track" aria-label="Aperçu statique du circuit Training Oval"></canvas></figure>
+        <div class="home-stats"><div><strong id="home-tracks">—</strong><span>Circuits disponibles</span></div><div><strong id="home-champions">—</strong><span>Champions chargés</span></div><div><strong id="home-completed">—</strong><span>Missions terminées</span></div><div><strong id="home-stars">—</strong><span>Étoiles de carrière</span></div></div>
+        <div class="portal-grid"><article><span class="portal-number">01 / EXPERIMENT</span><h3>AI Laboratory</h3><p>Capteurs, réseau, entraînement mono ou multi-circuits. Inspectez les décisions réelles.</p><button id="home-lab">Ouvrir le laboratoire →</button></article><article><span class="portal-number">02 / PROGRESS</span><h3>Championship</h3><p>Cinq missions, records et étoiles. Pilotage humain et IA distingués.</p><button id="home-career">Choisir une mission →</button></article><article><span class="portal-number">03 / COMPETE</span><h3>Racing Arena</h3><p>Départ identique, voitures fantômes, classement déterministe. Aucun réentraînement en course.</p><button id="home-human-ai">Human vs AI →</button><button id="home-ai-ai">AI vs AI →</button></article><article><span class="portal-number">04 / UNDERSTAND</span><h3>Science Center</h3><p>Comparez les stratégies, les transferts et leurs limites à partir des rapports mesurés.</p><button id="home-science">Consulter les expériences →</button></article></div>
+      </section>
+      <section id="career-setup" hidden><h2>Championship <small>Progression de carrière</small></h2><div id="mission-cards" class="mission-grid" aria-label="Les cinq missions et leur état"></div><label>Mission <select id="game-mission"></select></label><p id="game-mission-description"></p><label>Pilotage <select id="game-mission-control"><option value="human">Humain au clavier</option><option value="ai">Champion IA A</option></select></label><p>La victoire débloque la mission suivante. Les meilleurs résultats humains et IA sont enregistrés séparément.</p></section>
+      <section id="race-setup" hidden><h2>Compétition</h2><div class="game-actions"><label>Circuit <select id="game-race-track"></select></label><label>Tours <select id="game-race-laps"><option value="1">1</option><option value="3">3</option></select></label><label>Limite (secondes) <input id="game-race-duration" type="number" min="1" max="300" value="90"></label></div><p>Human vs AI : joueur cyan au clavier et champion A violet. AI vs AI : A cyan et B violet. Compte à rebours commun de trois secondes.</p></section>
+      <details id="game-champions"><summary>Sélection des champions</summary><div class="game-actions"><label>Champion A <select id="game-champion-a"></select></label><label id="game-champion-b-field">Champion B <select id="game-champion-b"></select></label></div><div class="game-actions"><label>Exemples enregistrés <select id="game-catalog"></select></label><button id="game-load-champion">Charger cet exemple</button></div><label>Nom de l’import <input id="game-champion-name" maxlength="80" placeholder="Mon champion"></label><label>Importer un fichier JSON <input id="game-champion-file" type="file" accept=".json,application/json"></label><label>Ou coller le JSON <textarea id="game-champion-json" rows="4" spellcheck="false"></textarea></label><button id="game-import-champion">Importer le JSON collé</button><p>Les réseaux sont conservés en mémoire durant la session, sans réentraînement. Choisir Desert · 2028 ou 2029 pour Desert. Les exemples techniques sont expérimentaux.</p></details>
+      <div class="game-actions"><button id="game-start">Démarrer une nouvelle partie</button></div><p id="game-status" role="status">Chargement des champions locaux…</p>
+      <section id="game-race-area" hidden><div class="game-actions"><button id="game-pause">Pause</button><button id="game-resume">Reprendre</button><button id="game-restart">Recommencer</button><button id="game-retire" hidden>Abandon du joueur</button><button id="game-abandon">Abandonner la partie</button><label><input id="game-sensors" type="checkbox" checked>Capteurs de la voiture sélectionnée</label></div><div id="race-stage"><p id="game-hud" role="status" aria-live="off"></p><canvas id="game-canvas" tabindex="0" aria-label="Course et véhicules ; contrôle au clavier"></canvas><p>↑ / Z / W : accélérer · ↓ / S : freiner · ← → / Q D / A D : tourner. Cliquer la piste pour reprendre le focus clavier.</p></div><aside id="race-network-panel" class="panel"><h3>Décision neuronale</h3><label>Voiture inspectée <select id="selected-racer" aria-label="Voiture à mettre en évidence"></select></label><canvas id="game-network-canvas" aria-label="Réseau et activations de la voiture sélectionnée"></canvas><pre id="game-network-values"></pre><p class="network-legend">Cyan + · Violet − · Intensité = |activation|. « — » = aucune inférence.</p></aside><section id="game-end-screen" hidden aria-label="Fin de partie"><h2 id="game-end-title"></h2><p id="game-verdict" role="status"></p></section><pre id="game-results" aria-label="Classement de course"></pre></section>
+      <details><summary>Progression de carrière</summary><pre id="game-progress"></pre><p id="game-save-status" role="status"></p></details>
+    </section>
+    <div id="lab-screen" hidden>    <nav id="lab-controls" aria-label="Simulation" hidden>
+      <label>Mode <select id="drive-mode"><option value="manual">Manuel</option><option value="autonomous">Autonome</option><option value="training">Entraînement IA mono-circuit</option><option value="multi-training">Entraînement multi-circuits</option><option value="transfer">Transfert sans réentraînement</option></select></label>
+      <button id="pause" aria-pressed="false">Pause</button>
+      <button id="reset">Réinitialiser</button>
+      <label><input type="checkbox" id="sensors" checked> Capteurs</label>
+    </nav>
+    <section id="track-panel"><label>Circuit manuel / prochain entraînement mono <select id="track-select"><option value="oval">Training Oval</option><option value="desert">Desert Circuit</option><option value="mountain">Mountain Pass</option><option value="neon">Neon City</option><option value="championship">Evolution Championship</option></select></label><p id="track-info"></p><canvas id="track-preview" aria-label="Aperçu du circuit sélectionné"></canvas></section>
+    <section id="simulation-stage" class="panel">    <p id="hud" role="status" aria-live="off">Initialisation du moteur…</p>
+    <canvas id="simulation-canvas" aria-label="Circuit fermé et voiture, contrôle au clavier"></canvas>
+    <footer><span>↑ / Z / W : accélérer · ↓ / S : freiner · ← → / Q D / A D : tourner</span><span id="event" aria-live="polite"></span></footer>
+    </section>
+    <section id="training-panel" aria-label="Entraînement par algorithme génétique">
+      <h2>Entraînement IA <small>conditions identiques, générations reproductibles</small></h2>
+      <details><summary>Évaluation multi-circuits</summary><label><input id="multi-enabled" type="checkbox"> Évaluer chaque génome sur plusieurs circuits</label><div class="network-controls">
+      <label><input id="train-track-oval" type="checkbox" checked>Training Oval</label><label><input id="train-track-desert" type="checkbox" checked>Desert Circuit</label><label><input id="train-track-mountain" type="checkbox" checked>Mountain Pass</label><label><input id="train-track-neon" type="checkbox">Neon City</label><label><input id="train-track-championship" type="checkbox">Evolution Championship</label></div><p>Scores normalisés, moyenne et pire cas. La piste affichée est la première de la liste. Exporter l’archive avant de démarrer un nouvel essai.</p></details>
+      <div class="network-controls">
+        <label>Stratégie <select id="training-strategy"><option value="custom">Personnalisée</option><option value="A">A — Roulette</option><option value="B">B — Tournoi</option><option value="C">C — Tournoi + élites</option><option value="D">D — Élites + mutation adaptative</option></select></label>
+        <label>Population <input id="training-population" type="number" min="1" max="200" value="50"></label>
+        <label>Graine <input id="training-seed" type="number" min="0" max="4294967295" value="2026"></label>
+        <label>Sélection <select id="training-selection"><option value="tournament">Tournoi</option><option value="roulette">Roulette</option></select></label>
+        <label>Fitness <select id="training-fitness"><option value="optimized">Optimisée étape 5</option><option value="improved">Améliorée étape 4</option><option value="reference">Référence TP 9</option></select></label>
+        <label>Mutation (0–1) <input id="training-mutation" type="number" min="0" max="1" step="0.01" value="0.1"></label>
+        <label>Amplitude <input id="training-amplitude" type="number" min="0" max="5" step="0.05" value="0.2"></label>
+        <label>Élites <input id="training-elites" type="number" min="0" max="200" value="2"></label>
+        <label>Durée max (s) <input id="training-duration" type="number" min="0.1" max="120" step="0.1" value="20"></label>
+        <label>Stagnation (s) <input id="training-stagnation" type="number" min="0.1" max="120" step="0.1" value="4"></label>
+        <label>Taille tournoi <input id="training-tournament" type="number" min="1" max="100" value="5"></label>
+        <label>Vitesse simulée <select id="training-speed"><option value="1">×1</option><option value="2">×2</option><option value="5">×5</option><option value="10">×10</option></select></label>
+      </div>
+      <details class="adaptive-settings"><summary>Mutation adaptative et diversité</summary><div class="network-controls">
+        <label><input id="training-adaptive" type="checkbox"> Mutation adaptative</label>
+        <label>Taux min <input id="training-min-rate" type="number" min="0" max="1" step="0.01" value="0.02"></label>
+        <label>Taux max <input id="training-max-rate" type="number" min="0" max="1" step="0.01" value="0.3"></label>
+        <label>Patience (gén.) <input id="training-patience" type="number" min="1" max="100" value="2"></label>
+        <label>Seuil diversité <input id="training-diversity" type="number" min="0" max="5" step="0.01" value="0.25"></label>
+        <label>Immigration (0–0,2) <input id="training-immigrants" type="number" min="0" max="0.2" step="0.01" value="0"></label>
+      </div><p>L’immigration est optionnelle et reste nulle dans le protocole A–D livré. Les élites sont préservées.</p></details>
+      <div class="network-controls training-actions">
+        <button id="train-start">Démarrer un nouvel essai</button><button id="train-pause">Pause IA</button>
+        <button id="train-resume">Reprendre IA</button><button id="train-reset">Réinitialiser IA</button>
+        <button id="export-best">Exporter le meilleur</button><button id="import-best">Importer depuis le champ JSON</button><button id="use-best">Utiliser en autonome</button>
+      </div>
+      <p id="training-status" role="status">Démarrer applique les paramètres et efface l’ancien essai. Les changements de paramètres attendent un nouvel essai ; la vitesse peut varier immédiatement.</p>
+      <pre id="training-stats">Aucun essai démarré.</pre>
+      <pre id="training-diagnostics">Les diagnostics apparaîtront au démarrage.</pre>
+      <pre id="training-per-track"></pre>
+      <details><summary>Historique des générations (20 dernières affichées)</summary><pre id="training-history"></pre></details>
+    </section>
+    <section id="transfer-panel"><h2>Transfert direct</h2><p>Coller un champion JSON dans le champ neuronal, sélectionner le circuit de test ci-dessus, puis démarrer. Horizon fixe 30 s. Aucun poids n’est mis à jour.</p><button id="transfer-start">Charger le JSON et tester sans réentraînement</button><pre id="transfer-results">Aucun transfert lancé.</pre></section>
+    <section id="neural-panel" aria-label="Inspection du réseau neuronal">
+      <h2>Réseau feedforward <small>8 → 12 → 2 par défaut · tanh · diagnostic en lecture seule</small></h2>
+      <div class="network-controls">
+        <label>Graine <input id="network-seed" type="number" min="0" max="4294967295" step="1" value="1"></label>
+        <button id="new-network">Charger cette graine</button>
+        <button id="export-network">Exporter JSON</button>
+        <button id="import-network">Importer JSON</button>
+        <label><input type="checkbox" id="network-parameters"> Inspecter poids et biais</label>
+      </div>
+      <p id="network-status" role="status">Réseau aléatoire, graine 1. Une conduite correcte n’est pas garantie.</p>
+      <p>En entraînement, le graphe inspecte le leader et les commandes du réseau individuel sont désactivées. Utiliser « Exporter le meilleur » pour l’archive.</p>
+      <div class="network-diagnostics">
+        <pre id="neural-inputs" aria-label="Huit entrées normalisées"></pre>
+        <canvas id="network-canvas" aria-label="Neurones, connexions et activations"></canvas>
+        <pre id="neural-outputs" aria-label="Sorties et commandes"></pre>
+      </div>
+      <p>Connexions cyan : poids positifs ; violet : négatifs. Intensité des neurones : activation. Les valeurs affichées correspondent à la dernière décision, figées en pause.</p>
+      <label for="network-json">Réseau JSON versionné — copier pour exporter ou coller pour importer</label>
+      <textarea id="network-json" rows="5" spellcheck="false" placeholder="Le JSON exporté et les paramètres inspectés apparaissent ici."></textarea>
+      <pre id="network-inspection" aria-label="Poids et biais du réseau inspecté" hidden></pre>
+    </section>
+    </div>
+    <section id="science-screen" hidden aria-labelledby="science-title"><div class="science-intro"><p class="eyebrow">MESURES / REPRODUCTIBILITÉ / LIMITES</p><h2 id="science-title">Science Center</h2><p>Les tableaux sont calculés depuis les rapports JSON. Une réussite sur l’ovale ne démontre pas une généralisation aux circuits techniques.</p><div class="science-links"><a href="docs/ETAPE-5-APPRENTISSAGE-AVANCE.md">Stratégies génétiques ↗</a><a href="docs/ETAPE-6-CIRCUITS-GENERALISATION.md">Circuits et transfert ↗</a><a href="docs/ETAPE-7-GAMEPLAY.md">Équilibrage des missions ↗</a></div></div>    <details id="comparison-panel"><summary>Comparer les expériences multi-graines A–D</summary>
+      <p>Les réussites comptent les graines avec au moins un tour légal ; les tours cumulent des épisodes réévalués. Cinq graines constituent un essai préliminaire.</p>
+      <div class="network-controls"><button id="comparison-load">Charger les résultats livrés</button><button id="comparison-import">Comparer le rapport JSON collé</button></div>
+      <label for="comparison-json">Rapport JSON de comparaison</label><textarea id="comparison-json" rows="3" spellcheck="false"></textarea>
+      <p id="comparison-status" role="status">Aucun rapport chargé.</p><pre id="comparison-summary"></pre>
+    </details>
+    <details><summary>Généralisation : résultats par circuit (étape 6)</summary><p>Comparer les champions mono et multi sur les cinq circuits. Les conditions multi gardent Neon City et Evolution Championship hors entraînement.</p><button id="generalization-load">Charger les mesures livrées</button><button id="generalization-import">Lire le rapport JSON collé</button><label>Condition d’entraînement <select id="generalization-condition"></select></label><textarea id="generalization-json" rows="3" aria-label="Rapport de généralisation JSON"></textarea><p id="generalization-status" role="status">Aucun rapport chargé.</p><pre id="generalization-summary"></pre></details>
+</section>
+  </main>
+  <aside id="scientific-notice" role="note"><strong>Transparence scientifique.</strong> Les résultats restent préliminaires. Les missions Mountain et Championship sont des défis avancés, sans réussite des champions livrés lors de l’équilibrage. Les effets visuels ne modifient ni les capteurs, ni les checkpoints, ni les poids.</aside>
+  <dialog id="tutorial-dialog" aria-labelledby="tutorial-title"><div class="dialog-heading"><p class="eyebrow">DE LA PERCEPTION À LA GÉNÉRALISATION</p><button data-close-tutorial aria-label="Fermer le tutoriel" autofocus>Fermer ×</button></div><h2 id="tutorial-title">Comment une voiture prend-elle ses décisions ?</h2><ol class="tutorial-steps">
+  <li><h3>Ray Casting</h3><p>Sept rayons mesurent le mur le plus proche, à portée limitée. Les valeurs de distance sont normalisées entre 0 et 1.</p></li>
+  <li><h3>Réseau neuronal</h3><p>Sept distances et la vitesse forment huit entrées. La couche cachée contient douze neurones, puis deux sorties. Les activations affichées sont celles des inférences réelles.</p></li>
+  <li><h3>Décisions de conduite</h3><p>Une sortie commande le braquage ; l’autre accélère ou freine. Les commandes traversent le moteur physique et ses limites, sans déplacer directement la voiture.</p></li>
+  <li><h3>Fitness</h3><p>Une fonction évalue chaque épisode. Elle utilise la progression valide et les tours, avec des pénalités selon la formule choisie. La fitness n’est pas une preuve de conduite fiable.</p></li>
+  <li><h3>Sélection</h3><p>La roulette sélectionne selon les scores ; le tournoi compare des candidats tirés au hasard. L’élitisme peut conserver certains génomes.</p></li>
+  <li><h3>Mutations</h3><p>De petites perturbations reproductibles modifient des poids et biais lors de la reproduction. Le diagnostic visuel et les courses ne mutent jamais un réseau.</p></li>
+  <li><h3>Générations</h3><p>Simulation, évaluation, sélection, croisement et mutation produisent une nouvelle population. Les paramètres d’un essai restent explicites.</p></li>
+  <li><h3>Généralisation</h3><p>Un champion est testé sur un circuit inconnu sans changer ses poids. Il faut plusieurs graines et des conditions comparables. Les transferts techniques réussis ne sont pas démontrés pour tous les circuits.</p></li></ol><p>Ouvrir ce tutoriel suspend la simulation. Fermer puis utiliser Reprendre pour continuer.</p></dialog>
+  <noscript>JavaScript est nécessaire pour exécuter la simulation.</noscript>
+</body>
+</html>

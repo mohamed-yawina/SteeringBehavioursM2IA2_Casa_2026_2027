@@ -1,0 +1,204 @@
+{
+  "condition": "multi:oval+desert+mountain",
+  "seed": 2030,
+  "trainingIds": [
+    "oval",
+    "desert",
+    "mountain"
+  ],
+  "generations": 2,
+  "populationSize": 20,
+  "horizon": 30,
+  "allocatedIndividualCircuitSteps": 432000,
+  "activeIndividualCircuitSteps": 55641,
+  "normalizedFitness": 0.0514409516134432,
+  "history": [
+    {
+      "generation": 1,
+      "duration": 22.60833333333269,
+      "population": 20,
+      "maxFitness": 0.05132233291053672,
+      "meanFitness": 0.008317094630449391,
+      "progressingCars": 4,
+      "laps": 0,
+      "collisions": 8,
+      "stagnant": 0,
+      "timeouts": 0,
+      "bestCheckpoints": 10,
+      "diversity": 0.31641110330681016,
+      "mutationRate": 0.1,
+      "nextMutationRate": 0.1,
+      "stagnantGenerations": 0,
+      "lowDiversity": false,
+      "immigrants": 0,
+      "immigrantsNext": 0,
+      "integrationSteps": 29069
+    },
+    {
+      "generation": 2,
+      "duration": 13.424999999999878,
+      "population": 20,
+      "maxFitness": 0.0514409516134432,
+      "meanFitness": 0.013363220699002677,
+      "progressingCars": 7,
+      "laps": 0,
+      "collisions": 14,
+      "stagnant": 0,
+      "timeouts": 0,
+      "bestCheckpoints": 10,
+      "diversity": 0.2902889551350792,
+      "mutationRate": 0.1,
+      "nextMutationRate": 0.1,
+      "stagnantGenerations": 1,
+      "lowDiversity": false,
+      "immigrants": 0,
+      "immigrantsNext": 0,
+      "integrationSteps": 26572
+    }
+  ],
+  "bestTrainingResults": [
+    {
+      "id": "2:15",
+      "generation": 2,
+      "checkpoints": 6,
+      "laps": 0,
+      "fraction": 0.6887401912350835,
+      "progression": 6.688740191235084,
+      "elapsed": 5.258333333333384,
+      "firstLapTime": null,
+      "crashed": true,
+      "reason": "collision",
+      "distance": 948.3419214153681,
+      "trackId": "oval",
+      "score": 0.16721850478087708
+    },
+    {
+      "id": "2:15",
+      "generation": 2,
+      "checkpoints": 3,
+      "laps": 0,
+      "fraction": 0.1523332977031462,
+      "progression": 3.152333297703146,
+      "elapsed": 2.7416666666666596,
+      "firstLapTime": null,
+      "crashed": true,
+      "reason": "collision",
+      "distance": 376.50201789423505,
+      "trackId": "desert",
+      "score": 0.06754999923649599
+    },
+    {
+      "id": "2:15",
+      "generation": 2,
+      "checkpoints": 1,
+      "laps": 0,
+      "fraction": 0.10815808494929206,
+      "progression": 1.108158084949292,
+      "elapsed": 1.2666666666666646,
+      "firstLapTime": null,
+      "crashed": true,
+      "reason": "collision",
+      "distance": 95.97123746700532,
+      "trackId": "mountain",
+      "score": 0.018469301415821534
+    }
+  ],
+  "evaluations": [
+    {
+      "trackId": "oval",
+      "trainingTrackIds": [
+        "oval",
+        "desert",
+        "mountain"
+      ],
+      "checkpoints": 6,
+      "laps": 0,
+      "elapsed": 5.258333333333384,
+      "firstLapTime": null,
+      "crashed": true,
+      "reason": "collision",
+      "fraction": 0.6887401912350835,
+      "normalizedProgress": 0.557395015936257,
+      "weightsUnchanged": true,
+      "fitness": 246.88740191235084,
+      "normalizedScore": 0.16721850478087708
+    },
+    {
+      "trackId": "desert",
+      "trainingTrackIds": [
+        "oval",
+        "desert",
+        "mountain"
+      ],
+      "checkpoints": 3,
+      "laps": 0,
+      "elapsed": 2.7416666666666596,
+      "firstLapTime": null,
+      "crashed": true,
+      "reason": "collision",
+      "fraction": 0.1523332977031462,
+      "normalizedProgress": 0.2251666641216533,
+      "weightsUnchanged": true,
+      "fitness": 121.52333297703147,
+      "normalizedScore": 0.06754999923649599
+    },
+    {
+      "trackId": "mountain",
+      "trainingTrackIds": [
+        "oval",
+        "desert",
+        "mountain"
+      ],
+      "checkpoints": 1,
+      "laps": 0,
+      "elapsed": 1.2666666666666646,
+      "firstLapTime": null,
+      "crashed": true,
+      "reason": "collision",
+      "fraction": 0.10815808494929206,
+      "normalizedProgress": 0.06156433805273845,
+      "weightsUnchanged": true,
+      "fitness": 41.08158084949292,
+      "normalizedScore": 0.018469301415821534
+    },
+    {
+      "trackId": "neon",
+      "trainingTrackIds": [
+        "oval",
+        "desert",
+        "mountain"
+      ],
+      "checkpoints": 1,
+      "laps": 0,
+      "elapsed": 1.441666666666664,
+      "firstLapTime": null,
+      "crashed": true,
+      "reason": "collision",
+      "fraction": 0.23092623433478596,
+      "normalizedProgress": 0.07693288964592412,
+      "weightsUnchanged": true,
+      "fitness": 42.30926234334786,
+      "normalizedScore": 0.023079866893777237
+    },
+    {
+      "trackId": "championship",
+      "trainingTrackIds": [
+        "oval",
+        "desert",
+        "mountain"
+      ],
+      "checkpoints": 1,
+      "laps": 0,
+      "elapsed": 1.2999999999999978,
+      "firstLapTime": null,
+      "crashed": true,
+      "reason": "collision",
+      "fraction": 0.24693601995088882,
+      "normalizedProgress": 0.06234680099754444,
+      "weightsUnchanged": true,
+      "fitness": 42.46936019950889,
+      "normalizedScore": 0.01870404029926333
+    }
+  ],
+  "championPath": "champions/multi-2030.json"
+}

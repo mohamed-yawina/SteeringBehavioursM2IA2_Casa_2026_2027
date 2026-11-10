@@ -1,0 +1,17 @@
+{
+  "format": "NeuroDriveAI.interface-benchmark",
+  "version": 1,
+  "node": "v24.18.0",
+  "frames": 600,
+  "physicsStepsPerSimulation": 1200,
+  "simulatedSeconds": 10.000000000000073,
+  "networkDraws": 133,
+  "layoutBuilds": 1,
+  "tracePoints": 180,
+  "syntheticCanvasOperations": 719811,
+  "elapsedMs": 688.375,
+  "trajectoryUnchanged": true,
+  "weightsUnchanged": true,
+  "activeAtEnd": true,
+  "limitation": "Synthetic Canvas and Node JS only: no browser layout, rasterization, GPU timing or real FPS measured."
+}

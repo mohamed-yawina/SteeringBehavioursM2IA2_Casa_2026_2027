@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b151c">
+  <title>Evolution Arena — Survival of the Smartest</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="theme.css">
+  <script src="vendor/p5.min.js"></script>
+  <script src="vendor/vehicle.js"></script>
+  <script type="module" src="src/main.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-navigation">Aller à la navigation</a>
+  <main id="app-root" class="shell" data-motion="full" data-contrast="standard" data-effects="on">
+    <header class="masthead">
+      <div class="brand"><span class="brand-icon" aria-hidden="true">◈</span><div><p class="eyebrow">Laboratoire de vie autonome · IA2</p><h1>EVOLUTION <span>ARENA</span></h1><p class="subtitle">Survival of the Smartest</p></div></div>
+      <nav id="main-navigation" class="main-navigation" aria-label="Navigation principale" tabindex="-1"><button id="nav-home">Accueil</button><button id="nav-help">Guide</button><button id="nav-settings">Paramètres</button></nav>
+    </header>
+    <section id="screen-home" class="home-screen" aria-labelledby="home-title">
+      <div class="home-copy"><p class="eyebrow">LABORATOIRE GÉNÉTIQUE FUTURISTE <span class="online-dot" aria-hidden="true"></span></p><h2 id="home-title" tabindex="-1">EVOLUTION<br><span>ARENA</span><span class="title-period">.</span></h2><p class="hero-subtitle">Survival of the Smartest</p><p class="hero-description">Un écosystème. Des milliers de décisions locales.<br>Préservez la vie. Observez ce qui émerge.</p>
+        <div class="home-actions"><button id="home-play" class="primary-action">Jouer <span aria-hidden="true">↗</span></button><button id="home-laboratory">Ouvrir le Laboratoire</button><button id="home-help" class="text-action">Comment jouer</button><button id="home-settings" class="text-action">Paramètres</button></div>
+        <div class="home-features"><span><b>04</b> gènes héritables</span><span><b>05</b> missions de survie</span><span><b>∞</b> interactions locales</span></div>
+      </div>
+      <div class="genome-visual" aria-hidden="true"><div class="genome-grid"></div><div class="genome-orbit orbit-one"></div><div class="genome-orbit orbit-two"></div><div class="genome-orbit orbit-three"></div><div class="helix"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="visual-tag tag-top">ADN // 4 LOCI</span><span class="visual-tag tag-bottom">VIE · VARIATION · TRANSMISSION</span><div class="visual-cross cross-one">＋</div><div class="visual-cross cross-two">＋</div></div>
+      <div class="home-note"><span class="key food-key" aria-hidden="true"></span> Simulation autonome · Aucune trajectoire imposée · Score de jeu ≠ preuve d’adaptation</div>
+    </section>
+    <section id="screen-tutorial" class="secondary-screen" aria-labelledby="tutorial-title" hidden><div class="secondary-heading"><span class="eyebrow">PROTOCOLE D’INITIATION</span><button id="tutorial-close">Fermer le guide</button></div><article class="tutorial-card"><span id="tutorial-counter" class="eyebrow"></span><div id="tutorial-symbol" class="tutorial-symbol" aria-hidden="true"></div><h2 id="tutorial-title" tabindex="-1"></h2><p id="tutorial-text"></p><div class="tutorial-controls"><button id="tutorial-previous">Précédent</button><button id="tutorial-restart" class="text-action">Recommencer</button><button id="tutorial-next" class="primary-action">Continuer</button></div></article><p class="help">Tab : naviguer entre les contrôles · Entrée / Espace : activer un bouton · Les menus suspendent le temps simulé.</p></section>
+    <section id="screen-settings" class="secondary-screen" aria-labelledby="settings-title" hidden><div class="secondary-heading"><div><span class="eyebrow">CONFORT &amp; AFFICHAGE</span><h2 id="settings-title" tabindex="-1">Votre poste d’observation</h2></div><button id="settings-back">Retour</button></div><div class="preferences-grid">
+      <label class="preference-card"><div><strong>Réduire les animations</strong><p>Transitions et halos statiques. La demande du système est respectée.</p></div><input id="pref-reduced-motion" type="checkbox"></label>
+      <label class="preference-card"><div><strong>Contraste renforcé</strong><p>Texte et bordures plus nets. Les formes restent distinctes.</p></div><input id="pref-high-contrast" type="checkbox"></label>
+      <label class="preference-card"><div><strong>Effets visuels subtils</strong><p>Impulsions, naissances et captures. Les informations essentielles restent visibles sans effets.</p></div><input id="pref-effects" type="checkbox" checked></label>
+      <label class="preference-card quality-card"><div><strong>Qualité de rendu</strong><p>Économique : moins de détails et de pixels. Le pas physique reste identique.</p></div><select id="pref-quality"><option value="standard">Standard · 60 images/s visées</option><option value="economy">Économique · 30 images/s visées</option></select></label>
+    </div><p id="settings-summary" class="help" role="status"></p><button id="settings-reset">Rétablir les valeurs par défaut</button><button id="progress-reset">Réinitialiser la progression</button><p id="persistence-status" class="help" role="status">Progression, étoiles et préférences enregistrées localement si le stockage est disponible. Aucune simulation sauvegardée.</p></section>
+    <div id="screen-workspace" hidden><h2 id="workspace-title" class="sr-only" tabindex="-1">Poste de simulation</h2>
+    <nav class="mode-selector" aria-label="Mode de jeu"><button id="mode-laboratory" aria-pressed="true">Laboratoire</button><button id="mode-survival" aria-pressed="false">Survie — Missions</button><span>Deux simulations indépendantes. Les étoiles ne mesurent pas l’adaptation génétique.</span></nav>
+    <p id="game-message" class="game-message" hidden></p>
+    <section id="mission-selection" class="experiment-panel mission-select" hidden>
+      <span class="section-number">CINQ ÉCOSYSTÈMES À PRÉSERVER</span><h2>Choisissez votre mission</h2>
+      <label>Graine de la prochaine tentative <input id="mission-seed" type="number" min="0" max="4294967295" step="1" value="2026"></label>
+      <p class="help">Les missions se débloquent dans l’ordre. Étoiles et progression sont enregistrées sur ce navigateur si le stockage est disponible. Les réglages du Laboratoire ne sont pas importés.</p>
+      <div class="mission-cards">
+        <article><span>MISSION 01</span><h3>Premiers pas</h3><p>60 secondes · au moins 10 créatures à la fin.</p><p id="mission-1-progress"></p><button id="mission-1">Jouer — Premiers pas</button></article>
+        <article><span>MISSION 02</span><h3>Équilibre naturel</h3><p>120 secondes · nourriture et poison.</p><p id="mission-2-progress"></p><button id="mission-2">Jouer — Équilibre naturel</button></article>
+        <article><span>MISSION 03</span><h3>Première évolution</h3><p>Atteindre G3 · limite de 150 secondes.</p><p id="mission-3-progress"></p><button id="mission-3">Jouer — Première évolution</button></article>
+        <article><span>MISSION 04</span><h3>Invasion</h3><p>180 secondes · 3 prédateurs persistants.</p><p id="mission-4-progress"></p><button id="mission-4">Jouer — Invasion</button></article>
+        <article><span>MISSION 05</span><h3>Survival of the Smartest</h3><p>G5 et 15 créatures · limite de 240 secondes.</p><p id="mission-5-progress"></p><button id="mission-5">Jouer — Finale</button></article>
+      </div>
+    </section>
+    <section id="game-hud" class="experiment-panel game-hud" hidden>
+      <div class="predation-heading"><div><span class="section-number">SURVIE</span><h2 id="game-mission"></h2><p id="game-objective"></p></div><button id="game-selection">Choisir une mission / abandonner</button></div>
+      <div class="game-stats"><div><small>Temps simulé / limite</small><strong id="game-time"></strong></div><div><small>Population</small><strong id="game-population"></strong></div><div><small>Génération atteinte</small><strong id="game-generation"></strong></div><div><small>Énergie moyenne</small><strong id="game-energy"></strong></div><div><small>Points d’écosystème</small><strong id="game-points"></strong></div><div><small>Prédateurs actifs</small><strong id="game-predators"></strong></div></div>
+      <progress id="game-progress" max="100" value="0" aria-label="Progression vers les objectifs"></progress>
+      <div class="player-actions">
+        <div class="action-card"><button id="action-food" aria-describedby="action-food-state"></button><progress id="action-food-progress" max="100" value="100" aria-label="Récupération nourriture"></progress><small id="action-food-state"></small></div>
+        <div class="action-card"><button id="action-cleanse" aria-describedby="action-cleanse-state"></button><progress id="action-cleanse-progress" max="100" value="100" aria-label="Récupération nettoyage"></progress><small id="action-cleanse-state"></small></div>
+        <div class="action-card"><button id="action-shelter" aria-describedby="action-shelter-state"></button><progress id="action-shelter-progress" max="100" value="100" aria-label="Récupération protection"></progress><small id="action-shelter-state"></small></div>
+        <div class="action-card"><button id="action-abundance" aria-describedby="action-abundance-state"></button><progress id="action-abundance-progress" max="100" value="100" aria-label="Récupération abondance"></progress><small id="action-abundance-state"></small></div>
+        <button id="game-cancel">Annuler l’action</button></div>
+      <p class="help">Nourriture : jusqu’à 10 points autour du clic. Nettoyage : jusqu’à 6 poisons dans un rayon de 120 px. Protection : rayon 95 px pendant 8 s, seulement contre les captures. Abondance : +6 nourritures/s pendant 10 s.</p>
+      <p id="game-effects" class="help"></p><p id="game-star-rules" class="help"></p><p id="game-selected" class="help"></p>
+    </section>
+    <section id="game-results" class="experiment-panel game-results" aria-label="Résultat de mission" hidden><h2 id="game-result-title"></h2><p id="game-stars" class="game-stars"></p><p id="game-result-detail"></p><div class="predation-buttons"><button id="game-replay">Rejouer cette mission</button><button id="game-next" class="button-primary">Mission suivante</button></div></section>
+    <section id="laboratory-metrics" class="metrics" aria-label="Statistiques de la simulation">
+      <div class="metric"><span class="metric-label"><i class="key creature-key"></i>Population</span><strong id="population">36</strong><small>créatures autonomes</small></div>
+      <div class="metric"><span class="metric-label"><i class="key food-key"></i>Nourriture</span><strong id="food-count">90</strong><small>ressources disponibles</small></div>
+      <div class="metric"><span class="metric-label"><i class="key poison-key"></i>Poison</span><strong id="poison-count">28</strong><small>ressources toxiques</small></div>
+      <div class="metric"><span class="metric-label">Énergie moyenne</span><strong id="mean-energy">100 %</strong><small>réserve vitale</small></div>
+      <div class="metric"><span class="metric-label">Temps de simulation</span><strong id="sim-time">00:00</strong><small>temps actif uniquement</small></div>
+    </section>
+    <section id="laboratory-genetics" class="evolution-metrics metrics" aria-label="Statistiques génétiques">
+      <div class="metric"><span class="metric-label">Naissances</span><strong id="births">0</strong><small>hors fondateurs</small></div>
+      <div class="metric"><span class="metric-label">Morts</span><strong id="deaths">0</strong><small>depuis la réinitialisation</small></div>
+      <div class="metric"><span class="metric-label">Génération maximale</span><strong id="max-generation">1</strong><small>atteinte depuis le début</small></div>
+      <div class="metric"><span class="metric-label">Âge moyen</span><strong id="mean-age">0 s</strong><small>population vivante</small></div>
+    </section>
+    <section id="arena-panel" class="arena-panel" aria-label="Simulation interactive">
+      <div class="arena-toolbar"><div class="arena-title"><span class="eyebrow">Écosystème 01</span><span id="status" role="status" data-state="live">Simulation active</span></div><div class="controls"><label class="toggle"><input id="perception" type="checkbox"> Rayons de perception</label><button id="pause" aria-pressed="false">Pause</button><button id="reset" class="button-primary">Réinitialiser</button></div></div>
+      <div class="arena-wrap"><div id="arena"></div><div id="extinction" class="extinction" hidden><strong>La population s’est éteinte.</strong><span>Réinitialisez pour observer une nouvelle population.</span></div></div>
+      <div class="arena-footer"><div class="legend"><span>G1 bleu · G2 vert · G3 or · G4 violet, puis cycle</span><span><i class="key food-key"></i>Nourriture</span><span><i class="key poison-key"></i>Poison</span><span class="predator-legend">Prédateur rouge orangé</span></div><p id="arena-hint">Clic créature : inspecter · Clic vide : nourriture · Maj + clic : poison</p></div>
+    </section>
+    <div id="laboratory-settings">
+    <section class="experiment-panel scientific-dashboard" aria-labelledby="science-title">
+      <span class="section-number">OBSERVER · MESURER · COMPARER</span><h2 id="science-title">Tableau de bord scientifique</h2>
+      <p class="help">Population, naissances, décès, génération, énergie et âge sont affichés dans les compteurs au-dessus de l’arène. Les mesures ci-dessous proviennent du même moteur, sans nouveaux compteurs concurrents. Les courbes et l’analyse génétique sont échantillonnées à 1 Hz.</p>
+      <dl class="science-stats"><div><dt>Graine utilisée</dt><dd id="science-current-seed"></dd></div><div><dt>Durée de vie moyenne des décédés</dt><dd id="science-lifespan"></dd></div><div><dt>Nourritures consommées</dt><dd id="science-food"></dd></div><div><dt>Poisons consommés</dt><dd id="science-poison"></dd></div><div><dt>Morts par prédation</dt><dd id="science-predation"></dd></div><div><dt>Diversité normalisée D</dt><dd id="science-diversity"></dd></div></dl>
+      <p id="science-timeline" class="help"></p>
+      <details class="scientific-protocol"><summary>Expériences reproductibles et export CSV</summary><div class="experiment-toolbar">
+        <label>Profil contrôlé <select id="science-profile">
+          <option value="tp-p0-m0">TP · sans prédateurs · mutation 0 %</option><option value="tp-p0-m1">TP · sans prédateurs · mutation 1 %</option><option value="tp-p1-m0">TP · prédateurs · mutation 0 %</option><option value="tp-p1-m1">TP · prédateurs · mutation 1 %</option>
+          <option value="arena-p0-m0">Arena · sans prédateurs · mutation 0 %</option><option value="arena-p0-m1" selected>Arena · sans prédateurs · mutation 1 %</option><option value="arena-p1-m0">Arena · prédateurs · mutation 0 %</option><option value="arena-p1-m1">Arena · prédateurs · mutation 1 %</option>
+        </select></label><label>Graine <input id="science-seed" type="number" min="0" max="4294967295" step="1" value="2026"></label><button id="science-apply">Appliquer et redémarrer</button>
+        <label>Nom de la trace <input id="science-label" type="text" maxlength="80" value="Expérience"></label><button id="science-save">Conserver la trace</button><button id="science-export">Exporter le CSV courant</button>
+      </div><p class="help">Enregistrer avant de redémarrer. Les profils fixent deux prédateurs demandés et une mutation de 0 ou 1 %, en conservant les autres paramètres courants. Une relance remet les paramètres finaux enregistrés au temps zéro, sans rejouer les interventions manuelles. Quatre traces maximum en mémoire ; rien n’est sauvegardé au rechargement.</p><p id="science-status" class="help" role="status"></p>
+      <div class="table-scroll"><table><caption>Traces conservées — comparer à durée identique et sans interventions</caption><thead><tr><th>Trace / graine</th><th>Conditions</th><th>Durée</th><th>Population</th><th>Génération max</th><th>Diversité D</th><th>Actions</th></tr></thead><tbody>
+        <tr id="experiment-row-0" hidden><th id="experiment-label-0"></th><td id="experiment-config-0"></td><td id="experiment-duration-0"></td><td id="experiment-pop-0"></td><td id="experiment-generation-0"></td><td id="experiment-diversity-0"></td><td><button id="experiment-replay-0">Relancer les paramètres enregistrés</button><button id="experiment-export-0">CSV</button></td></tr>
+        <tr id="experiment-row-1" hidden><th id="experiment-label-1"></th><td id="experiment-config-1"></td><td id="experiment-duration-1"></td><td id="experiment-pop-1"></td><td id="experiment-generation-1"></td><td id="experiment-diversity-1"></td><td><button id="experiment-replay-1">Relancer les paramètres enregistrés</button><button id="experiment-export-1">CSV</button></td></tr>
+        <tr id="experiment-row-2" hidden><th id="experiment-label-2"></th><td id="experiment-config-2"></td><td id="experiment-duration-2"></td><td id="experiment-pop-2"></td><td id="experiment-generation-2"></td><td id="experiment-diversity-2"></td><td><button id="experiment-replay-2">Relancer les paramètres enregistrés</button><button id="experiment-export-2">CSV</button></td></tr>
+        <tr id="experiment-row-3" hidden><th id="experiment-label-3"></th><td id="experiment-config-3"></td><td id="experiment-duration-3"></td><td id="experiment-pop-3"></td><td id="experiment-generation-3"></td><td id="experiment-diversity-3"></td><td><button id="experiment-replay-3">Relancer les paramètres enregistrés</button><button id="experiment-export-3">CSV</button></td></tr>
+      </tbody></table></div></details>
+      <div class="science-charts">
+        <figure><figcaption>Population vivante</figcaption><canvas id="chart-population" role="img" aria-label="Population en fonction du temps ; données accessibles dans le CSV"></canvas></figure>
+        <figure><figcaption>Naissances — vert plein / Décès — rose pointillé</figcaption><canvas id="chart-events" role="img" aria-label="Naissances et décès cumulés en fonction du temps"></canvas></figure>
+        <figure><figcaption>Énergie moyenne des vivants</figcaption><canvas id="chart-energy" role="img" aria-label="Énergie moyenne en fonction du temps"></canvas></figure>
+        <figure><figcaption>Génération maximale atteinte</figcaption><canvas id="chart-generation" role="img" aria-label="Génération maximale historique en fonction du temps"></canvas></figure>
+        <figure><figcaption>Moyenne du poids nourriture</figcaption><canvas id="chart-gene-0" role="img" aria-label="Poids nourriture moyen, axe de moins 2 à 2"></canvas></figure>
+        <figure><figcaption>Moyenne du poids poison</figcaption><canvas id="chart-gene-1" role="img" aria-label="Poids poison moyen, axe de moins 2 à 2"></canvas></figure>
+        <figure><figcaption>Moyenne de perception nourriture (px)</figcaption><canvas id="chart-gene-2" role="img" aria-label="Perception nourriture moyenne, de 0 à 100 pixels"></canvas></figure>
+        <figure><figcaption>Moyenne de perception poison (px)</figcaption><canvas id="chart-gene-3" role="img" aria-label="Perception poison moyenne, de 0 à 100 pixels"></canvas></figure>
+        <figure><figcaption>Diversité D — dispersion normalisée, pas performance</figcaption><canvas id="chart-diversity" role="img" aria-label="Dispersion génétique normalisée, de 0 à 0,25"></canvas></figure>
+      </div><p class="help">Une population vide donne des mesures génétiques absentes (—), pas une diversité nulle. Les moyennes et la diversité peuvent changer par mortalité ou dérive. Une faible diversité n’est pas nécessairement positive. L’export reprend les valeurs numériques et les paramètres de chaque échantillon.</p>
+    </section>
+    <section class="experiment-panel predation-panel" aria-label="Prédateurs et survie">
+      <div class="predation-heading"><div><span class="section-number">PRESSION DE SÉLECTION</span><h2>Prédateurs &amp; comportements de survie</h2></div><label class="toggle"><input id="predators-enabled" type="checkbox"> Activer les prédateurs</label></div>
+      <p class="help">Désactivés au départ pour conserver le témoin. Réinitialisez avec la même graine après avoir choisi avec ou sans prédateurs. Ils poursuivent une position prédite ; les créatures fuient cette menace sans nouveau gène.</p>
+      <div class="sliders predator-sliders">
+        <label>Nombre demandé <output id="predator-count-value"></output><input id="predator-count" type="range" min="0" max="8" step="1" value="2"></label>
+        <label>Vitesse (pixels / pas) <output id="predator-speed-value"></output><input id="predator-speed" type="range" min="0.2" max="4" step="0.1" value="2.4"></label>
+        <label>Rayon de perception (px) <output id="predator-perception-value"></output><input id="predator-perception" type="range" min="40" max="350" step="5" value="160"></label>
+        <label>Rayon de capture (px) <output id="predator-capture-value"></output><input id="predator-capture" type="range" min="3" max="24" step="1" value="9"></label>
+        <label>Intensité Evade <output id="evade-weight-value"></output><input id="evade-weight" type="range" min="0" max="5" step="0.1" value="2"></label>
+        <label>Poids global nourriture <output id="food-weight-value"></output><input id="food-weight" type="range" min="0" max="3" step="0.1" value="1"></label>
+        <label>Poids global poison <output id="poison-weight-value"></output><input id="poison-weight" type="range" min="0" max="3" step="0.1" value="1"></label>
+      </div>
+      <div class="predation-buttons"><button id="add-predator">Ajouter un prédateur</button><button id="remove-predator">Retirer un prédateur</button><label class="toggle"><input id="predator-debug" type="checkbox"> Diagnostic : rayons, cibles, prédictions et forces</label></div>
+      <dl class="science-stats"><div><dt>Prédateurs actifs</dt><dd id="active-predators">0</dd></div><div><dt>Captures</dt><dd id="captures">0</dd></div><div><dt>Attaques (poursuites engagées)</dt><dd id="attacks">0</dd></div><div><dt>Morts par prédation</dt><dd id="predation-deaths">0</dd></div><div><dt>Survie moyenne des vies terminées</dt><dd id="predation-survival">0 s</dd></div></dl>
+      <p id="predator-status" class="help"></p>
+      <p class="help">Limites par défaut : 3 s avant la première chasse, 4 s entre captures, protection des nouveau-nés pendant 1,5 s, arrêt de la chasse à 6 proies. La faim et le poison peuvent encore causer une extinction.</p>
+    </section>
+    <section class="experiment-layout" aria-label="Expérience génétique">
+      <div class="experiment-panel">
+        <h2>Paramètres de reproduction</h2>
+        <div class="experiment-toolbar">
+          <label>Mode <select id="reproduction-mode"><option value="arena">Evolution Arena</option><option value="tp">TP 8 comparable</option><option value="off">Témoin sans reproduction</option></select></label>
+          <label>Graine <input id="seed" type="number" min="0" max="4294967295" step="1" value="2026"></label>
+          <button id="seed-reset">Appliquer la graine et réinitialiser</button>
+        </div>
+        <p id="mode-description" class="help"></p>
+        <div class="sliders">
+          <label>Mutation par gène <output id="mutation-rate-value"></output><input id="mutation-rate" type="range" min="0" max="1" step="0.001" value="0.01"></label>
+          <label>Amplitude (× perturbation TP) <output id="mutation-amplitude-value"></output><input id="mutation-amplitude" type="range" min="0" max="5" step="0.05" value="1"></label>
+          <label>Seuil énergétique <output id="energy-threshold-value"></output><input id="energy-threshold" type="range" min="0" max="1.5" step="0.05" value="1.15"></label>
+          <label>Coût / énergie du nouveau-né <output id="energy-cost-value"></output><input id="energy-cost" type="range" min="0.05" max="1.5" step="0.05" value="0.4"></label>
+          <label>Âge minimal (secondes) <output id="min-age-value"></output><input id="min-age" type="range" min="0" max="60" step="0.5" value="6"></label>
+          <label>Population maximale <output id="max-population-value"></output><input id="max-population" type="range" min="1" max="1000" step="1" value="120"></label>
+          <label>Délai entre naissances (secondes) <output id="cooldown-value"></output><input id="cooldown" type="range" min="0" max="60" step="0.5" value="8"></label>
+        </div>
+        <p id="control-message" role="status" class="help">Pour comparer les modes, conservez la même graine et les mêmes paramètres, puis réinitialisez.</p>
+      </div>
+      <aside class="experiment-panel inspector"><span class="section-number">INDIVIDU SÉLECTIONNÉ</span><h2 id="inspector-title">Sélectionnez une créature</h2><p id="inspector-detail"></p><p class="help">ADN : poids nourriture, poids poison, perception nourriture, perception poison. Les enfants directs ne comptent pas les petits-enfants.</p></aside>
+    </section>
+    <section class="experiment-panel" aria-label="Mesurer une éventuelle adaptation">
+      <h2>Observer n’est pas encore démontrer une adaptation</h2>
+      <p class="help">Les moyennes peuvent changer par mortalité, hasard ou saturation. Comparez plusieurs graines, la diversité et les performances sous les mêmes conditions. Les générations coexistent ; leur couleur ne mesure pas leur qualité.</p>
+      <div class="table-scroll"><table><thead><tr><th>Gène</th><th>Moyenne initiale</th><th>Moyenne vivante (1 Hz)</th><th>Minimum</th><th>Maximum</th><th>Écart-type vivant</th></tr></thead><tbody>
+        <tr><th>Poids nourriture</th><td id="initial-gene-0"></td><td id="mean-gene-0"></td><td id="min-gene-0"></td><td id="max-gene-0"></td><td id="sd-gene-0"></td></tr>
+        <tr><th>Poids poison</th><td id="initial-gene-1"></td><td id="mean-gene-1"></td><td id="min-gene-1"></td><td id="max-gene-1"></td><td id="sd-gene-1"></td></tr>
+        <tr><th>Perception nourriture (px)</th><td id="initial-gene-2"></td><td id="mean-gene-2"></td><td id="min-gene-2"></td><td id="max-gene-2"></td><td id="sd-gene-2"></td></tr>
+        <tr><th>Perception poison (px)</th><td id="initial-gene-3"></td><td id="mean-gene-3"></td><td id="min-gene-3"></td><td id="max-gene-3"></td><td id="sd-gene-3"></td></tr>
+      </tbody></table></div>
+      <dl class="science-stats"><div><dt>Durée de vie moyenne des morts</dt><dd id="mean-lifespan"></dd></div><div><dt>Enfants directs / vie terminée</dt><dd id="mean-offspring"></dd></div><div><dt>Nourriture / créature-seconde</dt><dd id="food-rate"></dd></div><div><dt>Poison / créature-seconde</dt><dd id="poison-rate"></dd></div><div><dt>Gènes effectivement modifiés à la naissance</dt><dd id="mutation-count"></dd></div></dl>
+      <p id="experiment-status" class="help"></p>
+    </section>
+    <section class="learning" aria-label="Comprendre le moteur">
+      <div><span class="section-number">01 / PERCEVOIR</span><h2>Quatre gènes, des choix locaux.</h2><p>Deux poids d’attraction ou de répulsion, deux rayons de perception. Chaque créature réagit aux ressources proches selon son propre ADN.</p></div>
+      <div><span class="section-number">02 / SE DIRIGER</span><h2>Une force, puis un mouvement.</h2><p>Seek attire, Flee éloigne. Les forces corrigent la vitesse progressivement. Activez les rayons pour voir ce que les créatures détectent.</p></div>
+      <div><span class="section-number">03 / TRANSMETTRE</span><h2>Une filiation, pas un classement.</h2><p>Les descendants héritent de quatre gènes parfois mutés. Survivre ouvre des occasions de reproduction ; une génération plus élevée ne garantit pas une meilleure adaptation.</p></div>
+    </section>
+    </div>
+    </div>
+    <aside id="notifications" class="notifications" aria-label="Notifications" aria-live="polite" aria-relevant="additions text">
+      <div id="notice-0" class="notice" hidden><p id="notice-0-text"></p><button id="notice-0-close" aria-label="Fermer cette notification">×</button></div>
+      <div id="notice-1" class="notice" hidden><p id="notice-1-text"></p><button id="notice-1-close" aria-label="Fermer cette notification">×</button></div>
+      <div id="notice-2" class="notice" hidden><p id="notice-2-text"></p><button id="notice-2-close" aria-label="Fermer cette notification">×</button></div>
+    </aside>
+    <footer class="page-footer"><span>MASTER IA2 <b>/</b> STEERING BEHAVIORS</span><span>Evolution Arena · version 0.7</span></footer>
+    <noscript>Activez JavaScript pour lancer la simulation.</noscript>
+  </main>
+</body>
+</html>

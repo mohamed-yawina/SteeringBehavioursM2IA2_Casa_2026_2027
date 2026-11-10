@@ -1,19 +1,101 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EvoSwarm — Evolutionary Steering Behaviors</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="hud">
+    <div id="hud-left">
+      <div class="hud-block"><span class="hud-label">SCORE</span><span id="hud-score" class="hud-value">0</span></div>
+      <div class="hud-block"><span class="hud-label">VAGUE</span><span id="hud-wave" class="hud-value">1</span></div>
+      <div class="hud-block"><span class="hud-label">COLONIE</span><span id="hud-pop" class="hud-value">40</span></div>
+      <div class="hud-block"><span class="hud-label">GÉN. MAX</span><span id="hud-gen" class="hud-value">1</span></div>
+    </div>
+    <div id="hud-center">
+      <div id="wave-timer-wrap"><div id="wave-timer-bar"></div></div>
+      <div id="objective-text">Cliquez sur « Démarrer la vague ».</div>
+    </div>
+    <div id="hud-right">
+      <div class="hud-block"><span class="hud-label">ÉNERGIE</span><span id="hud-energy" class="hud-value">100%</span></div>
+      <button id="btn-pause" class="hud-btn">Pause</button>
+    </div>
+  </div>
 
-    <title>Sketch</title>
+  <div id="panel">
+    <h1>EvoSwarm</h1>
+    <p class="sub">Steering + Algo génétique + BehaviorManager</p>
 
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <label>Nourriture <span id="v-food">0.20</span>
+      <input type="range" id="s-food" min="0" max="0.6" step="0.01" value="0.2"></label>
+    <label>Poison <span id="v-poison">0.020</span>
+      <input type="range" id="s-poison" min="0" max="0.2" step="0.001" value="0.02"></label>
+    <label>Mutation <span id="v-mut">0.15</span>
+      <input type="range" id="s-mut" min="0" max="0.5" step="0.01" value="0.15"></label>
+    <label>Reproduction <span id="v-repro">0.004</span>
+      <input type="range" id="s-repro" min="0" max="0.02" step="0.0005" value="0.004"></label>
+    <label>Prédateurs <span id="v-pred">2</span>
+      <input type="range" id="s-pred" min="0" max="15" step="1" value="2"></label>
+    <label>Vitesse sim <span id="v-speed">1</span>
+      <input type="range" id="s-speed" min="1" max="4" step="1" value="1"></label>
 
-    <script src="libraries/p5.min.js"></script>
-    <script src="libraries/p5.sound.min.js"></script>
-    <script src="vehicle.js"></script>
-    <script src="sketch.js"></script>
-  </head>
-  <body>
-    <!-- Pas besoin de déclarer un canvas pour dessiner en P5.js -->
-  </body>
+    <div class="checks">
+      <label class="inline"><input type="checkbox" id="c-debug"> Debug</label>
+      <label class="inline"><input type="checkbox" id="c-trails" checked> Traînées</label>
+    </div>
+
+    <div class="buttons">
+      <button id="b-pause">Pause</button>
+      <button id="b-reset">Reset</button>
+      <button id="b-csv">CSV</button>
+    </div>
+
+    <div class="buttons" style="margin-top:6px">
+      <button id="b-start" style="flex:2">▶ Démarrer la vague</button>
+    </div>
+
+    <details>
+      <summary>Commandes</summary>
+      <ul>
+        <li><b>Clic / glisser</b> : ajouter véhicules</li>
+        <li><b>P</b> : poser un prédateur</li>
+        <li><b>F</b> : gerbe de nourriture</li>
+        <li><b>X</b> : gerbe de poison</li>
+        <li><b>O</b> : ajouter un obstacle</li>
+        <li><b>L</b> : activer/désactiver mode leader</li>
+        <li><b>D / T</b> : debug / traînées</li>
+        <li><b>Espace</b> : pause — <b>R</b> : reset</li>
+      </ul>
+    </details>
+
+    <div id="behavior-panel">
+      <h2>Comportements (doyen)</h2>
+      <div id="behavior-list"></div>
+    </div>
+  </div>
+
+  <div id="wave-timeline">
+    <div class="wave-dot" data-wave="1">1</div>
+    <div class="wave-dot" data-wave="2">2</div>
+    <div class="wave-dot" data-wave="3">3</div>
+    <div class="wave-dot" data-wave="4">4</div>
+    <div class="wave-dot" data-wave="5">5</div>
+    <div class="wave-dot" data-wave="6">6</div>
+    <div class="wave-dot" data-wave="7">7</div>
+    <div class="wave-dot" data-wave="8">∞</div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <script src="vehicle.js"></script>
+  <script src="behavior_manager.js"></script>
+  <script src="behaviors.js"></script>
+  <script src="predator.js"></script>
+  <script src="powerup.js"></script>
+  <script src="vehicle_variants.js"></script>
+  <script src="game.js"></script>
+</body>
 </html>

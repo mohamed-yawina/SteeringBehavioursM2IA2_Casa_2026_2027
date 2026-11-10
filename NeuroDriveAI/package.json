@@ -1,0 +1,16 @@
+{
+  "name": "neurodrive-ai",
+  "version": "0.8.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node tools/serve.mjs",
+    "test": "node --import ./tests/support/p5.mjs --test",
+    "experiment": "node tools/experiment.mjs",
+    "compare": "node tools/compare.mjs",
+    "generalization": "node tools/generalization.mjs",
+    "balance": "node tools/balance-gameplay.mjs",
+    "benchmark:ui": "node tools/benchmark-interface.mjs"
+  },
+  "engines": { "node": ">=20" }
+}

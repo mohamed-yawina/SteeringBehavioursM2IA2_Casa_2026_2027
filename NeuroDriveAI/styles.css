@@ -1,0 +1,57 @@
+:root { color-scheme: dark; font-family: system-ui, sans-serif; color: #dce6ed; background: #0c141d; }
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 300px; }
+header { padding: 20px 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; border-bottom: 1px solid #2d3b48; }
+h1 { margin: 0; font-size: 25px; letter-spacing: -.6px; }
+p { margin: 5px 0 0; color: #9bb0bf; font-size: 13px; }
+.eyebrow { color: #73e6bc; font-size: 10px; letter-spacing: 1.6px; margin: 0 0 5px; }
+nav { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+button { background: #21323f; color: #e8f3f7; border: 1px solid #4c6677; border-radius: 6px; padding: 9px 13px; font: inherit; font-size: 13px; cursor: pointer; }
+button:hover { background: #304b5b; }
+button:focus-visible, input:focus-visible { outline: 2px solid #73e6bc; outline-offset: 3px; }
+label { font-size: 13px; display: flex; align-items: center; gap: 6px; }
+input { accent-color: #73e6bc; }
+main { max-width: 1450px; margin: auto; padding: 12px 24px; }
+#hud { min-height: 24px; font-variant-numeric: tabular-nums; color: #c0d1dd; line-height: 1.8; }
+canvas { display: block; width: 100%; height: min(70vh, 760px); min-height: 260px; border: 1px solid #2b3d4d; border-radius: 8px; margin-top: 8px; }
+footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 12px; color: #9bb0bf; padding: 12px 0; }
+#event { color: #73e6bc; }
+@media (max-width: 650px) { header { align-items: flex-start; flex-direction: column; padding: 16px; } main { padding: 10px; } canvas { height: 55vh; } }
+select, #network-seed, textarea { background: #152532; color: #dce6ed; border: 1px solid #4c6677; border-radius: 5px; padding: 7px; font: inherit; }
+#network-seed { width: 135px; }
+#neural-panel { margin: 10px 0 20px; padding: 16px; border: 1px solid #2b3d4d; border-radius: 8px; }
+h2 { margin: 0 0 12px; font-size: 18px; }
+h2 small { font-size: 12px; color: #9bb0bf; font-weight: 400; }
+.network-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.network-diagnostics { display: grid; grid-template-columns: 180px minmax(300px, 1fr) 260px; gap: 12px; align-items: center; }
+#network-canvas { height: 320px; min-height: 0; margin: 0; }
+pre { white-space: pre-wrap; font-size: 12px; line-height: 1.7; color: #c0d1dd; font-variant-numeric: tabular-nums; }
+#network-json { width: 100%; margin-top: 8px; font-family: monospace; font-size: 12px; resize: vertical; }
+#network-status { min-height: 28px; }
+#neural-panel > label { margin-top: 12px; }
+@media (max-width: 1000px) { .network-diagnostics { grid-template-columns: 1fr 1fr; } #network-canvas { grid-column: 1 / -1; grid-row: 2; } }
+@media (max-width: 450px) { .network-diagnostics { grid-template-columns: 1fr; } #network-canvas { grid-row: auto; } }
+#training-panel { padding: 16px; border: 1px solid #2b3d4d; border-radius: 8px; margin: 10px 0; }
+#training-panel input { width: 100px; background: #152532; color: #dce6ed; border: 1px solid #4c6677; border-radius: 5px; padding: 7px; }
+.training-actions { margin-top: 14px; }
+#training-history { overflow-x: auto; white-space: pre; }
+#network-inspection { max-height: 250px; overflow: auto; white-space: pre; border: 1px solid #2b3d4d; padding: 12px; }
+.adaptive-settings { margin: 12px 0; }
+.adaptive-settings input[type="checkbox"] { width: auto !important; }
+.adaptive-settings .network-controls { padding-top: 10px; }
+#comparison-panel { border: 1px solid #2b3d4d; border-radius: 8px; padding: 16px; margin: 12px 0; }
+#comparison-json { width: 100%; margin-top: 8px; font-family: monospace; font-size: 12px; }
+#comparison-summary { white-space: pre; overflow: auto; }
+#track-panel,#transfer-panel { padding: 12px; border: 1px solid #2b3d4d; margin: 12px 0; border-radius: 8px; }
+#track-preview { width: 280px; max-width: 100%; height: 196px; min-height: 0; }
+#training-panel input[type="checkbox"] { width: auto; }
+[hidden] { display: none !important; }
+#app-navigation { padding: 12px 24px; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #2b3d4d; }
+#game-screen section, #game-screen details { padding: 16px; margin: 10px 0; border: 1px solid #2b3d4d; border-radius: 8px; }
+.game-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 12px 0; }
+#game-screen label { flex-wrap: wrap; margin: 8px 0; }
+#game-champion-json { width: 100%; }
+#game-results, #game-progress { white-space: pre; overflow: auto; line-height: 1.6; }
+#game-verdict { color: #73e6bc; font-size: 16px; margin: 12px 0; }
+#game-status { min-height: 22px; }
+#game-screen input[type="number"] { width: 95px; }

@@ -1,0 +1,1072 @@
+﻿TAP version 13
+# Subtest: ADN : ordre exact des quatre gènes, copie défensive et immutabilité
+ok 1 - ADN : ordre exact des quatre gènes, copie défensive et immutabilité
+  ---
+  duration_ms: 3.3957
+  type: 'test'
+  ...
+# Subtest: ADN : intervalles originaux et tirages reproductibles
+ok 2 - ADN : intervalles originaux et tirages reproductibles
+  ---
+  duration_ms: 1.4598
+  type: 'test'
+  ...
+# Subtest: ADN : refuse taille incorrecte, NaN, poids excessifs et rayons négatifs
+ok 3 - ADN : refuse taille incorrecte, NaN, poids excessifs et rayons négatifs
+  ---
+  duration_ms: 0.3878
+  type: 'test'
+  ...
+# Subtest: toutes les entités visibles héritent du Vehicle fourni
+ok 4 - toutes les entités visibles héritent du Vehicle fourni
+  ---
+  duration_ms: 0.6749
+  type: 'test'
+  ...
+# Subtest: Seek du cours : desiredVelocity - currentVelocity, limité et sans déplacement direct
+ok 5 - Seek du cours : desiredVelocity - currentVelocity, limité et sans déplacement direct
+  ---
+  duration_ms: 0.4231
+  type: 'test'
+  ...
+# Subtest: Flee inverse la vitesse désirée avant de soustraire la vitesse courante
+ok 6 - Flee inverse la vitesse désirée avant de soustraire la vitesse courante
+  ---
+  duration_ms: 0.2131
+  type: 'test'
+  ...
+# Subtest: Seek/Flee sur position identique et vitesse nulle : aucun NaN
+ok 7 - Seek/Flee sur position identique et vitesse nulle : aucun NaN
+  ---
+  duration_ms: 0.2033
+  type: 'test'
+  ...
+# Subtest: poids positif = Seek ; négatif = Flee ; nul ou cible absente = force nulle
+ok 8 - poids positif = Seek ; négatif = Flee ; nul ou cible absente = force nulle
+  ---
+  duration_ms: 0.3203
+  type: 'test'
+  ...
+# Subtest: amplitude génétique effective et limite après pondération
+ok 9 - amplitude génétique effective et limite après pondération
+  ---
+  duration_ms: 0.3361
+  type: 'test'
+  ...
+# Subtest: somme nourriture/poison : composantes effectives et norme finale limitée
+ok 10 - somme nourriture/poison : composantes effectives et norme finale limitée
+  ---
+  duration_ms: 0.6325
+  type: 'test'
+  ...
+# Subtest: perception : plus proche, rayon strict et aucune cible hors perception
+ok 11 - perception : plus proche, rayon strict et aucune cible hors perception
+  ---
+  duration_ms: 0.2717
+  type: 'test'
+  ...
+# Subtest: les deux rayons génétiques changent indépendamment les forces produites
+ok 12 - les deux rayons génétiques changent indépendamment les forces produites
+  ---
+  duration_ms: 1.7191
+  type: 'test'
+  ...
+# Subtest: confinement aux coins : corrige les deux axes et reste prioritaire
+ok 13 - confinement aux coins : corrige les deux axes et reste prioritaire
+  ---
+  duration_ms: 0.2007
+  type: 'test'
+  ...
+# Subtest: consommation de nourriture : retrait, gain plafonné, indépendance de la perception
+ok 14 - consommation de nourriture : retrait, gain plafonné, indépendance de la perception
+  ---
+  duration_ms: 0.3333
+  type: 'test'
+  ...
+# Subtest: poison : énergie réduite, retrait unique et arrêt au décès
+ok 15 - poison : énergie réduite, retrait unique et arrêt au décès
+  ---
+  duration_ms: 0.2609
+  type: 'test'
+  ...
+# Subtest: locomotion déléguée à Vehicle, remise à zéro de acc et perte d’énergie par seconde
+ok 16 - locomotion déléguée à Vehicle, remise à zéro de acc et perte d’énergie par seconde
+  ---
+  duration_ms: 0.3742
+  type: 'test'
+  ...
+# Subtest: initialisation : effectifs, ressources bornées, vecteurs finis
+ok 17 - initialisation : effectifs, ressources bornées, vecteurs finis
+  ---
+  duration_ms: 1.6972
+  type: 'test'
+  ...
+# Subtest: recherche de nourriture : une créature converge et consomme une cible proche
+ok 18 - recherche de nourriture : une créature converge et consomme une cible proche
+  ---
+  duration_ms: 1.5639
+  type: 'test'
+  ...
+# Subtest: réaction au poison : un poids négatif augmente la distance à la cible
+ok 19 - réaction au poison : un poids négatif augmente la distance à la cible
+  ---
+  duration_ms: 0.5311
+  type: 'test'
+  ...
+# Subtest: morts propres : retrait sans sauter les voisins, aucune naissance
+ok 20 - morts propres : retrait sans sauter les voisins, aucune naissance
+  ---
+  duration_ms: 1.0763
+  type: 'test'
+  ...
+# Subtest: un mort ne consomme pas les ressources placées à sa position
+ok 21 - un mort ne consomme pas les ressources placées à sa position
+  ---
+  duration_ms: 0.226
+  type: 'test'
+  ...
+# Subtest: la perte passive mène à la mort sans ressources
+ok 22 - la perte passive mène à la mort sans ressources
+  ---
+  duration_ms: 0.5412
+  type: 'test'
+  ...
+# Subtest: ressources : réapparition au cours du temps et plafonds mémoire
+ok 23 - ressources : réapparition au cours du temps et plafonds mémoire
+  ---
+  duration_ms: 0.8255
+  type: 'test'
+  ...
+# Subtest: pause : fige temps, positions, énergie et ressources ; reprise sans rattrapage
+ok 24 - pause : fige temps, positions, énergie et ressources ; reprise sans rattrapage
+  ---
+  duration_ms: 4.3259
+  type: 'test'
+  ...
+# Subtest: réinitialisation complète, y compris pause, temps et budget de ressources
+ok 25 - réinitialisation complète, y compris pause, temps et budget de ressources
+  ---
+  duration_ms: 6.0961
+  type: 'test'
+  ...
+# Subtest: pas fixe : résultats identiques à 30 et 60 rendus/s
+ok 26 - pas fixe : résultats identiques à 30 et 60 rendus/s
+  ---
+  duration_ms: 82.1404
+  type: 'test'
+  ...
+# Subtest: temps invalides ignorés, rattrapage limité après suspension de l’onglet
+ok 27 - temps invalides ignorés, rattrapage limité après suspension de l’onglet
+  ---
+  duration_ms: 0.2957
+  type: 'test'
+  ...
+# Subtest: ajout interactif : type et coordonnées validés, plafond respecté
+ok 28 - ajout interactif : type et coordonnées validés, plafond respecté
+  ---
+  duration_ms: 0.4007
+  type: 'test'
+  ...
+# Subtest: configuration incohérente refusée
+ok 29 - configuration incohérente refusée
+  ---
+  duration_ms: 0.5004
+  type: 'test'
+  ...
+# Subtest: endurance déterministe : 12 000 pas, aucune valeur NaN ou infinie, limites respectées
+ok 30 - endurance déterministe : 12 000 pas, aucune valeur NaN ou infinie, limites respectées
+  ---
+  duration_ms: 227.9961
+  type: 'test'
+  ...
+# Subtest: copie et héritage sans mutation : quatre valeurs identiques, aucun objet partagé
+ok 31 - copie et héritage sans mutation : quatre valeurs identiques, aucun objet partagé
+  ---
+  duration_ms: 6.5811
+  type: 'test'
+  ...
+# Subtest: mutation uniforme : amplitudes propres aux poids et perceptions
+ok 32 - mutation uniforme : amplitudes propres aux poids et perceptions
+  ---
+  duration_ms: 0.5267
+  type: 'test'
+  ...
+# Subtest: mutations aux limites : saturation par gène, vers les deux bornes
+ok 33 - mutations aux limites : saturation par gène, vers les deux bornes
+  ---
+  duration_ms: 0.412
+  type: 'test'
+  ...
+# Subtest: mutation nulle ou amplitude nulle : valeurs conservées avec objet indépendant
+ok 34 - mutation nulle ou amplitude nulle : valeurs conservées avec objet indépendant
+  ---
+  duration_ms: 0.4056
+  type: 'test'
+  ...
+# Subtest: mutation indépendante par locus et probabilité stricte
+ok 35 - mutation indépendante par locus et probabilité stricte
+  ---
+  duration_ms: 0.3513
+  type: 'test'
+  ...
+# Subtest: référence 1 % : fréquence reproductible compatible sur 40 000 loci
+ok 36 - référence 1 % : fréquence reproductible compatible sur 40 000 loci
+  ---
+  duration_ms: 25.2594
+  type: 'test'
+  ...
+# Subtest: validation : ADN creux, paramètres non finis, probabilités et graines invalides refusés
+ok 37 - validation : ADN creux, paramètres non finis, probabilités et graines invalides refusés
+  ---
+  duration_ms: 0.9361
+  type: 'test'
+  ...
+# Subtest: conditions Arena : seuil exact, âge minimal, réserve supérieure au coût et vivant
+ok 38 - conditions Arena : seuil exact, âge minimal, réserve supérieure au coût et vivant
+  ---
+  duration_ms: 0.5249
+  type: 'test'
+  ...
+# Subtest: coût énergétique Arena : transfert exact et aucune énergie créée à la naissance
+ok 39 - coût énergétique Arena : transfert exact et aucune énergie créée à la naissance
+  ---
+  duration_ms: 1.2152
+  type: 'test'
+  ...
+# Subtest: délai : pas de seconde naissance avant le délai, seuil exact accepté
+ok 40 - délai : pas de seconde naissance avant le délai, seuil exact accepté
+  ---
+  duration_ms: 0.8507
+  type: 'test'
+  ...
+# Subtest: échec du tirage ou plafond : aucun coût, aucun délai ni compteur consommé
+ok 41 - échec du tirage ou plafond : aucun coût, aucun délai ni compteur consommé
+  ---
+  duration_ms: 0.677
+  type: 'test'
+  ...
+# Subtest: filiation réelle : parent, enfant et petit-enfant, générations coexistantes
+ok 42 - filiation réelle : parent, enfant et petit-enfant, générations coexistantes
+  ---
+  duration_ms: 0.5197
+  type: 'test'
+  ...
+# Subtest: mode TP : probabilité 0,002 par défaut, pas de seuil, coût ou délai ; enfant à énergie 1
+ok 43 - mode TP : probabilité 0,002 par défaut, pas de seuil, coût ou délai ; enfant à énergie 1
+  ---
+  duration_ms: 0.5044
+  type: 'test'
+  ...
+# Subtest: probabilité TP strictement inférieure à 0,002 et un essai par parent par pas
+ok 44 - probabilité TP strictement inférieure à 0,002 et un essai par parent par pas
+  ---
+  duration_ms: 1.9522
+  type: 'test'
+  ...
+# Subtest: capacité : naissances simultanées plafonnées, baisse du plafond sans abattage
+ok 45 - capacité : naissances simultanées plafonnées, baisse du plafond sans abattage
+  ---
+  duration_ms: 1.3427
+  type: 'test'
+  ...
+# Subtest: pause et mode témoin : aucune naissance ni mutation, reprise normale
+ok 46 - pause et mode témoin : aucune naissance ni mutation, reprise normale
+  ---
+  duration_ms: 1.2735
+  type: 'test'
+  ...
+# Subtest: mort avant reproduction : aucun descendant post-mortem, max de génération historique conservé
+ok 47 - mort avant reproduction : aucun descendant post-mortem, max de génération historique conservé
+  ---
+  duration_ms: 0.6956
+  type: 'test'
+  ...
+# Subtest: graine : expérience complète et reset reproductibles, IDs uniques après reset
+ok 48 - graine : expérience complète et reset reproductibles, IDs uniques après reset
+  ---
+  duration_ms: 20.8939
+  type: 'test'
+  ...
+# Subtest: deux modes avec même graine : mêmes fondateurs et même environnement initial
+ok 49 - deux modes avec même graine : mêmes fondateurs et même environnement initial
+  ---
+  duration_ms: 3.0433
+  type: 'test'
+  ...
+# Subtest: statistiques génétiques : moyenne, variance, âge et vies terminées calculés exactement
+ok 50 - statistiques génétiques : moyenne, variance, âge et vies terminées calculés exactement
+  ---
+  duration_ms: 0.4075
+  type: 'test'
+  ...
+# Subtest: historique borné : échantillons indépendants, paramètres et interventions conservés
+ok 51 - historique borné : échantillons indépendants, paramètres et interventions conservés
+  ---
+  duration_ms: 1.2064
+  type: 'test'
+  ...
+# Subtest: sélection : plus proche, possible en pause, disparition propre après décès
+ok 52 - sélection : plus proche, possible en pause, disparition propre après décès
+  ---
+  duration_ms: 0.59
+  type: 'test'
+  ...
+# Subtest: naissance et génération : halo temporaire, couleur de filiation et sélection visibles
+ok 53 - naissance et génération : halo temporaire, couleur de filiation et sélection visibles
+  ---
+  duration_ms: 0.9713
+  type: 'test'
+  ...
+# Subtest: contrôles : sliders, mode, nouvelle graine, inspecteur et métriques connectés au moteur
+ok 54 - contrôles : sliders, mode, nouvelle graine, inspecteur et métriques connectés au moteur
+  ---
+  duration_ms: 5.6929
+  type: 'test'
+  ...
+# Subtest: stabilité arena : 20 000 pas avec reproduction active, filiation et absence de NaN
+ok 55 - stabilité arena : 20 000 pas avec reproduction active, filiation et absence de NaN
+  ---
+  duration_ms: 951.8936
+  type: 'test'
+  ...
+# Subtest: stabilité tp : 20 000 pas avec reproduction active, filiation et absence de NaN
+ok 56 - stabilité tp : 20 000 pas avec reproduction active, filiation et absence de NaN
+  ---
+  duration_ms: 865.5729
+  type: 'test'
+  ...
+# Subtest: définitions : cinq missions immuables, durées demandées et configurations sans nouveaux gènes
+ok 57 - définitions : cinq missions immuables, durées demandées et configurations sans nouveaux gènes
+  ---
+  duration_ms: 2.379
+  type: 'test'
+  ...
+# Subtest: sélection : missions verrouillées, démarrage valide et graine invalide sans destruction
+ok 58 - sélection : missions verrouillées, démarrage valide et graine invalide sans destruction
+  ---
+  duration_ms: 5.0819
+  type: 'test'
+  ...
+# Subtest: prévention des configurations impossibles : plafond, délais, reproduction et menaces
+ok 59 - prévention des configurations impossibles : plafond, délais, reproduction et menaces
+  ---
+  duration_ms: 2.1229
+  type: 'test'
+  ...
+# Subtest: mission 1 : dix créatures exigées à 60 secondes, pas avant, extinction prioritaire
+ok 60 - mission 1 : dix créatures exigées à 60 secondes, pas avant, extinction prioritaire
+  ---
+  duration_ms: 0.3783
+  type: 'test'
+  ...
+# Subtest: mission 2 : nourriture et poison présents, flux actifs et victoire à 120 secondes
+ok 61 - mission 2 : nourriture et poison présents, flux actifs et victoire à 120 secondes
+  ---
+  duration_ms: 1.3327
+  type: 'test'
+  ...
+# Subtest: missions 3 et 5 : génération atteinte et population simultanée, délai respecté
+ok 62 - missions 3 et 5 : génération atteinte et population simultanée, délai respecté
+  ---
+  duration_ms: 0.3042
+  type: 'test'
+  ...
+# Subtest: mission 4 : trois chasseurs persistants requis pendant les 180 secondes
+ok 63 - mission 4 : trois chasseurs persistants requis pendant les 180 secondes
+  ---
+  duration_ms: 1.8343
+  type: 'test'
+  ...
+# Subtest: chronomètre : accumulateur fixe, temps invalide ignoré, pause fige points et cooldowns
+ok 64 - chronomètre : accumulateur fixe, temps invalide ignoré, pause fige points et cooldowns
+  ---
+  duration_ms: 28.0228
+  type: 'test'
+  ...
+# Subtest: fin de mission : arrêt au pas gagnant, résultat gelé et aucune action après victoire
+ok 65 - fin de mission : arrêt au pas gagnant, résultat gelé et aucune action après victoire
+  ---
+  duration_ms: 1.2606
+  type: 'test'
+  ...
+# Subtest: défaite réelle : extinction, zéro étoile, aucune progression ni régénération après la fin
+ok 66 - défaite réelle : extinction, zéro étoile, aucune progression ni régénération après la fin
+  ---
+  duration_ms: 1.2812
+  type: 'test'
+  ...
+# Subtest: points : coût atomique, dépenses cumulées, régénération plafonnée et entrées invalides
+ok 67 - points : coût atomique, dépenses cumulées, régénération plafonnée et entrées invalides
+  ---
+  duration_ms: 0.3093
+  type: 'test'
+  ...
+# Subtest: nourriture : ressources réelles, coût/cooldown exacts, pas de manipulation de gènes
+ok 68 - nourriture : ressources réelles, coût/cooldown exacts, pas de manipulation de gènes
+  ---
+  duration_ms: 1.5151
+  type: 'test'
+  ...
+# Subtest: échec sans effet : coordonnées invalides, points insuffisants et plafond ne coûtent rien
+ok 69 - échec sans effet : coordonnées invalides, points insuffisants et plafond ne coûtent rien
+  ---
+  duration_ms: 0.8417
+  type: 'test'
+  ...
+# Subtest: nettoyage : poison local seulement, six éléments au maximum, aucun coût si vide
+ok 70 - nettoyage : poison local seulement, six éléments au maximum, aucun coût si vide
+  ---
+  duration_ms: 1.2832
+  type: 'test'
+  ...
+# Subtest: protection : entité Vehicle, zone locale de 8 secondes, capture bloquée puis permise
+ok 71 - protection : entité Vehicle, zone locale de 8 secondes, capture bloquée puis permise
+  ---
+  duration_ms: 1.8515
+  type: 'test'
+  ...
+# Subtest: protection limitée : aucun effet sur la faim, aucune protection globale ou permanente
+ok 72 - protection limitée : aucun effet sur la faim, aucune protection globale ou permanente
+  ---
+  duration_ms: 6.3139
+  type: 'test'
+  ...
+# Subtest: abondance : flux temporaire, aucune modification des réglages ni accumulation des effets
+ok 73 - abondance : flux temporaire, aucune modification des réglages ni accumulation des effets
+  ---
+  duration_ms: 1.2185
+  type: 'test'
+  ...
+# Subtest: abondance réelle : bonus alimentaire effectif et taux fractionnaires sans perte de budget
+ok 74 - abondance réelle : bonus alimentaire effectif et taux fractionnaires sans perte de budget
+  ---
+  duration_ms: 0.7961
+  type: 'test'
+  ...
+# Subtest: extensions moteur neutres au laboratoire et validation des callbacks/bonus
+ok 75 - extensions moteur neutres au laboratoire et validation des callbacks/bonus
+  ---
+  duration_ms: 34.7212
+  type: 'test'
+  ...
+# Subtest: progression : victoire débloque la suite, défaite ne débloque rien, meilleur résultat conservé
+ok 76 - progression : victoire débloque la suite, défaite ne débloque rien, meilleur résultat conservé
+  ---
+  duration_ms: 0.415
+  type: 'test'
+  ...
+# Subtest: étoiles : 0 en défaite ; 1, 2 ou 3 selon population et dépenses, seuils inclusifs
+ok 77 - étoiles : 0 en défaite ; 1, 2 ou 3 selon population et dépenses, seuils inclusifs
+  ---
+  duration_ms: 0.2385
+  type: 'test'
+  ...
+# Subtest: rejouer : nouveau monde avec même graine, points, effets, temps et cooldowns remis à zéro
+ok 78 - rejouer : nouveau monde avec même graine, points, effets, temps et cooldowns remis à zéro
+  ---
+  duration_ms: 3.7288
+  type: 'test'
+  ...
+# Subtest: mission suivante et abandon : règles de progression et arrêt immédiat
+ok 79 - mission suivante et abandon : règles de progression et arrêt immédiat
+  ---
+  duration_ms: 2.8808
+  type: 'test'
+  ...
+# Subtest: isolation : laboratoire conservé, réglages non importés, aucune avancée en arrière-plan
+ok 80 - isolation : laboratoire conservé, réglages non importés, aucune avancée en arrière-plan
+  ---
+  duration_ms: 4.7744
+  type: 'test'
+  ...
+# Subtest: clic Survie : sélection gratuite, interventions uniquement armées et payantes
+ok 81 - clic Survie : sélection gratuite, interventions uniquement armées et payantes
+  ---
+  duration_ms: 1.2707
+  type: 'test'
+  ...
+# Subtest: interface de jeu et HTML réel : sélection, modes, actions, résultat et progression
+ok 82 - interface de jeu et HTML réel : sélection, modes, actions, résultat et progression
+  ---
+  duration_ms: 8.6297
+  type: 'test'
+  ...
+# Subtest: rendu des actions : zone visible et abondance sans argument numérique invalide
+ok 83 - rendu des actions : zone visible et abondance sans argument numérique invalide
+  ---
+  duration_ms: 1.2093
+  type: 'test'
+  ...
+# Subtest: application complète : routage pause/reset/clics et retour au laboratoire sans régression
+ok 84 - application complète : routage pause/reset/clics et retour au laboratoire sans régression
+  ---
+  duration_ms: 35.2919
+  type: 'test'
+  ...
+# Subtest: équilibrage mission 1 : cinq graines réelles, politique de nourriture limitée, mission réalisable
+ok 85 - équilibrage mission 1 : cinq graines réelles, politique de nourriture limitée, mission réalisable
+  ---
+  duration_ms: 857.9186
+  type: 'test'
+  ...
+# Subtest: équilibrage mission 2 : cinq graines réelles, politique de nourriture limitée, mission réalisable
+ok 86 - équilibrage mission 2 : cinq graines réelles, politique de nourriture limitée, mission réalisable
+  ---
+  duration_ms: 855.888
+  type: 'test'
+  ...
+# Subtest: équilibrage mission 3 : cinq graines réelles, politique de nourriture limitée, mission réalisable
+ok 87 - équilibrage mission 3 : cinq graines réelles, politique de nourriture limitée, mission réalisable
+  ---
+  duration_ms: 231.332
+  type: 'test'
+  ...
+# Subtest: équilibrage mission 4 : cinq graines réelles, politique de nourriture limitée, mission réalisable
+ok 88 - équilibrage mission 4 : cinq graines réelles, politique de nourriture limitée, mission réalisable
+  ---
+  duration_ms: 1334.2562
+  type: 'test'
+  ...
+# Subtest: équilibrage mission 5 : cinq graines réelles, politique de nourriture limitée, mission réalisable
+ok 89 - équilibrage mission 5 : cinq graines réelles, politique de nourriture limitée, mission réalisable
+  ---
+  duration_ms: 743.7273
+  type: 'test'
+  ...
+# Subtest: trois étoiles réalisables dans chaque mission sur au moins une graine testée
+ok 90 - trois étoiles réalisables dans chaque mission sur au moins une graine testée
+  ---
+  duration_ms: 691.5222
+  type: 'test'
+  ...
+# Subtest: longue session : 20 000 pas actifs avec relecture de mission, aucune valeur NaN
+ok 91 - longue session : 20 000 pas actifs avec relecture de mission, aucune valeur NaN
+  ---
+  duration_ms: 480.4175
+  type: 'test'
+  ...
+# Subtest: accueil : quatre entrées, navigation Laboratoire/Survie sans réinitialiser les mondes
+ok 92 - accueil : quatre entrées, navigation Laboratoire/Survie sans réinitialiser les mondes
+  ---
+  duration_ms: 16.3897
+  type: 'test'
+  ...
+# Subtest: écrans secondaires : retour imbriqué, historique borné et focus du titre
+ok 93 - écrans secondaires : retour imbriqué, historique borné et focus du titre
+  ---
+  duration_ms: 3.601
+  type: 'test'
+  ...
+# Subtest: tutoriel : sept sujets, bornes, navigation, redémarrage et fermeture finale
+ok 94 - tutoriel : sept sujets, bornes, navigation, redémarrage et fermeture finale
+  ---
+  duration_ms: 3.0976
+  type: 'test'
+  ...
+# Subtest: paramètres : validation atomique, instantané immuable et restauration
+ok 95 - paramètres : validation atomique, instantané immuable et restauration
+  ---
+  duration_ms: 0.7651
+  type: 'test'
+  ...
+# Subtest: réduction système : activée par défaut et non contournable par le contrôle
+ok 96 - réduction système : activée par défaut et non contournable par le contrôle
+  ---
+  duration_ms: 2.6842
+  type: 'test'
+  ...
+# Subtest: paramètres HTML : effets, contraste, qualité et réduction reliés aux attributs visuels
+ok 97 - paramètres HTML : effets, contraste, qualité et réduction reliés aux attributs visuels
+  ---
+  duration_ms: 2.6516
+  type: 'test'
+  ...
+# Subtest: notifications : capacité trois, déduplication, expiration et fermeture clavier/native
+ok 98 - notifications : capacité trois, déduplication, expiration et fermeture clavier/native
+  ---
+  duration_ms: 1.2161
+  type: 'test'
+  ...
+# Subtest: missions : cartes verrouillées, HUD complet, raisons de désactivation et barres de cooldown
+ok 99 - missions : cartes verrouillées, HUD complet, raisons de désactivation et barres de cooldown
+  ---
+  duration_ms: 4.1154
+  type: 'test'
+  ...
+# Subtest: résultats : style victoire/défaite, étoiles accessibles, notifications sans doublons
+ok 100 - résultats : style victoire/défaite, étoiles accessibles, notifications sans doublons
+  ---
+  duration_ms: 7.6528
+  type: 'test'
+  ...
+# Subtest: HTML : tous les nouveaux composants existent, boutons natifs et labels sans duplications
+ok 101 - HTML : tous les nouveaux composants existent, boutons natifs et labels sans duplications
+  ---
+  duration_ms: 3.3861
+  type: 'test'
+  ...
+# Subtest: HTML : structure des écrans correctement imbriquée, sans balise ouverte restante
+ok 102 - HTML : structure des écrans correctement imbriquée, sans balise ouverte restante
+  ---
+  duration_ms: 3.1007
+  type: 'test'
+  ...
+# Subtest: CSS : responsive, mouvements réduits, focus visible et motifs non fondés sur la couleur seule
+ok 103 - CSS : responsive, mouvements réduits, focus visible et motifs non fondés sur la couleur seule
+  ---
+  duration_ms: 0.8144
+  type: 'test'
+  ...
+# Subtest: contrastes de palette : texte principal, texte secondaire et bouton primaire ≥ 4,5:1
+ok 104 - contrastes de palette : texte principal, texte secondaire et bouton primaire ≥ 4,5:1
+  ---
+  duration_ms: 1.191
+  type: 'test'
+  ...
+# Subtest: point d’entrée navigateur : window.setup ouvre bien l’accueil, sans avancer le monde
+ok 105 - point d’entrée navigateur : window.setup ouvre bien l’accueil, sans avancer le monde
+  ---
+  duration_ms: 27.8086
+  type: 'test'
+  ...
+# Subtest: rendu : lecture seule, aucun appel aléatoire et aucune valeur NaN
+ok 106 - rendu : lecture seule, aucun appel aléatoire et aucune valeur NaN
+  ---
+  duration_ms: 9.9566
+  type: 'test'
+  ...
+# Subtest: animations réduites/effets désactivés : halos stables, sélection et zone toujours visibles
+ok 107 - animations réduites/effets désactivés : halos stables, sélection et zone toujours visibles
+  ---
+  duration_ms: 4.8376
+  type: 'test'
+  ...
+# Subtest: qualité économique : moins de primitives, générations reconnaissables sans changer la physique
+ok 108 - qualité économique : moins de primitives, générations reconnaissables sans changer la physique
+  ---
+  duration_ms: 2.7437
+  type: 'test'
+  ...
+# Subtest: application : accueil initial, menus sans avancée, retour de partie et réglages purement visuels
+ok 109 - application : accueil initial, menus sans avancée, retour de partie et réglages purement visuels
+  ---
+  duration_ms: 24.4234
+  type: 'test'
+  ...
+# Subtest: temps simulé : 30 et 60 rendus/s donnent le même état, mêmes réglages scientifiques
+ok 110 - temps simulé : 30 et 60 rendus/s donnent le même état, mêmes réglages scientifiques
+  ---
+  duration_ms: 96.9946
+  type: 'test'
+  ...
+# Subtest: Survie suspendue par un menu : points, effets et actions préservés jusqu’au retour
+ok 111 - Survie suspendue par un menu : points, effets et actions préservés jusqu’au retour
+  ---
+  duration_ms: 7.4902
+  type: 'test'
+  ...
+# Subtest: HTML réel : tous les éléments utilisés par Interface existent, sans identifiant dupliqué
+ok 112 - HTML réel : tous les éléments utilisés par Interface existent, sans identifiant dupliqué
+  ---
+  duration_ms: 10.5677
+  type: 'test'
+  ...
+# Subtest: boutons réels de Interface : pause/reprise et réinitialisation synchronisent moteur et libellés
+ok 113 - boutons réels de Interface : pause/reprise et réinitialisation synchronisent moteur et libellés
+  ---
+  duration_ms: 14.925
+  type: 'test'
+  ...
+# Subtest: interface : temps actif, extinction, énergie moyenne et option perception
+ok 114 - interface : temps actif, extinction, énergie moyenne et option perception
+  ---
+  duration_ms: 2.7055
+  type: 'test'
+  ...
+# Subtest: lancement applicatif, pipeline de rendu, clics et redimensionnement sans exception (DOM/p5 simulés)
+ok 115 - lancement applicatif, pipeline de rendu, clics et redimensionnement sans exception (DOM/p5 simulés)
+  ---
+  duration_ms: 85.2427
+  type: 'test'
+  ...
+# Subtest: persistance : valeurs par défaut indépendantes, stockage absent et refus du getter
+ok 116 - persistance : valeurs par défaut indépendantes, stockage absent et refus du getter
+  ---
+  duration_ms: 4.2043
+  type: 'test'
+  ...
+# Subtest: persistance : étoiles et préférences survivent à une nouvelle instance
+ok 117 - persistance : étoiles et préférences survivent à une nouvelle instance
+  ---
+  duration_ms: 0.7557
+  type: 'test'
+  ...
+# Subtest: persistance : JSON corrompu, schéma inconnu et données surdimensionnées sans crash
+ok 118 - persistance : JSON corrompu, schéma inconnu et données surdimensionnées sans crash
+  ---
+  duration_ms: 0.5981
+  type: 'test'
+  ...
+# Subtest: persistance : rejet des étoiles invalides et de la progression discontinue
+ok 119 - persistance : rejet des étoiles invalides et de la progression discontinue
+  ---
+  duration_ms: 0.8286
+  type: 'test'
+  ...
+# Subtest: persistance : liste blanche et validation des types, pas de simulation sérialisée
+ok 120 - persistance : liste blanche et validation des types, pas de simulation sérialisée
+  ---
+  duration_ms: 0.5204
+  type: 'test'
+  ...
+# Subtest: persistance : quota et lecture refusée conservent la session utilisable
+ok 121 - persistance : quota et lecture refusée conservent la session utilisable
+  ---
+  duration_ms: 0.3899
+  type: 'test'
+  ...
+# Subtest: progression : callback uniquement après victoire et reset, conservation de la meilleure étoile
+ok 122 - progression : callback uniquement après victoire et reset, conservation de la meilleure étoile
+  ---
+  duration_ms: 0.651
+  type: 'test'
+  ...
+# Subtest: interface : reset de progression en deux clics, annulation par navigation et désabonnement
+ok 123 - interface : reset de progression en deux clics, annulation par navigation et désabonnement
+  ---
+  duration_ms: 7.8041
+  type: 'test'
+  ...
+# Subtest: application : sauvegarde événementielle, rechargement et isolation scientifique
+ok 124 - application : sauvegarde événementielle, rechargement et isolation scientifique
+  ---
+  duration_ms: 52.7763
+  type: 'test'
+  ...
+# Subtest: Predator hérite du Vehicle fourni et porte énergie, rayons, état et vecteurs finis
+ok 125 - Predator hérite du Vehicle fourni et porte énergie, rayons, état et vecteurs finis
+  ---
+  duration_ms: 3.3082
+  type: 'test'
+  ...
+# Subtest: détection : proie vivante la plus proche, rayon strict et proies hors portée ignorées
+ok 126 - détection : proie vivante la plus proche, rayon strict et proies hors portée ignorées
+  ---
+  duration_ms: 1.2888
+  type: 'test'
+  ...
+# Subtest: hystérésis : conserve la cible pertinente, abandonne la cible morte ou trop éloignée
+ok 127 - hystérésis : conserve la cible pertinente, abandonne la cible morte ou trop éloignée
+  ---
+  duration_ms: 0.5346
+  type: 'test'
+  ...
+# Subtest: protection des nouveau-nés : exclusion temporaire des descendants, fondateurs admissibles
+ok 128 - protection des nouveau-nés : exclusion temporaire des descendants, fondateurs admissibles
+  ---
+  duration_ms: 0.3308
+  type: 'test'
+  ...
+# Subtest: prédiction : conversion pixels/pas vers secondes, horizon plafonné et cible inchangée
+ok 129 - prédiction : conversion pixels/pas vers secondes, horizon plafonné et cible inchangée
+  ---
+  duration_ms: 1.2428
+  type: 'test'
+  ...
+# Subtest: Pursue : Seek vers la position future, force limitée et aucun déplacement direct
+ok 130 - Pursue : Seek vers la position future, force limitée et aucun déplacement direct
+  ---
+  duration_ms: 0.3893
+  type: 'test'
+  ...
+# Subtest: Evade : direction désirée opposée avant soustraction ; différent de -Pursue
+ok 131 - Evade : direction désirée opposée avant soustraction ; différent de -Pursue
+  ---
+  duration_ms: 0.3638
+  type: 'test'
+  ...
+# Subtest: positions confondues, vitesse nulle et acteur immobile : pas de NaN dans les prédictions
+ok 132 - positions confondues, vitesse nulle et acteur immobile : pas de NaN dans les prédictions
+  ---
+  duration_ms: 0.4583
+  type: 'test'
+  ...
+# Subtest: menace : sélection du prédateur vivant le plus proche dans le rayon utile
+ok 133 - menace : sélection du prédateur vivant le plus proche dans le rayon utile
+  ---
+  duration_ms: 0.3508
+  type: 'test'
+  ...
+# Subtest: composition : nourriture, poison et Evade contribuent ; norme finale et priorité aux bords
+ok 134 - composition : nourriture, poison et Evade contribuent ; norme finale et priorité aux bords
+  ---
+  duration_ms: 0.5429
+  type: 'test'
+  ...
+# Subtest: lissage : force Evade progressive, poids zéro et absence de modification de l’ADN
+ok 135 - lissage : force Evade progressive, poids zéro et absence de modification de l’ADN
+  ---
+  duration_ms: 2.5823
+  type: 'test'
+  ...
+# Subtest: hors menace et poids nourriture/poison identiques : force inchangée avec ou sans prédation
+ok 136 - hors menace et poids nourriture/poison identiques : force inchangée avec ou sans prédation
+  ---
+  duration_ms: 0.6258
+  type: 'test'
+  ...
+# Subtest: Wander : angle continu reproductible, force bornée, aucune modification de position
+ok 137 - Wander : angle continu reproductible, force bornée, aucune modification de position
+  ---
+  duration_ms: 0.41
+  type: 'test'
+  ...
+# Subtest: états : Wander sans cible, Pursue avec cible ; attaques comptées par épisode, pas par image
+ok 138 - états : Wander sans cible, Pursue avec cible ; attaques comptées par épisode, pas par image
+  ---
+  duration_ms: 0.6438
+  type: 'test'
+  ...
+# Subtest: capture : suppression unique, mort totale, métriques et effet discret, récupération plafonnée
+ok 139 - capture : suppression unique, mort totale, métriques et effet discret, récupération plafonnée
+  ---
+  duration_ms: 0.7463
+  type: 'test'
+  ...
+# Subtest: deux prédateurs, même proie : une seule capture et un seul enregistrement de mort
+ok 140 - deux prédateurs, même proie : une seule capture et un seul enregistrement de mort
+  ---
+  duration_ms: 0.5244
+  type: 'test'
+  ...
+# Subtest: capture : distance stricte, grâce initiale, protection, cooldown et petit effectif respectés
+ok 141 - capture : distance stricte, grâce initiale, protection, cooldown et petit effectif respectés
+  ---
+  duration_ms: 0.5939
+  type: 'test'
+  ...
+# Subtest: garde-fou collectif : plusieurs prédateurs ne font pas tomber les proies sous le minimum
+ok 142 - garde-fou collectif : plusieurs prédateurs ne font pas tomber les proies sous le minimum
+  ---
+  duration_ms: 19.9271
+  type: 'test'
+  ...
+# Subtest: ordre : victime capturée retirée avant reproduction, aucune naissance post-mortem
+ok 143 - ordre : victime capturée retirée avant reproduction, aucune naissance post-mortem
+  ---
+  duration_ms: 0.7757
+  type: 'test'
+  ...
+# Subtest: capture : proie morte naturellement, prédateur mort, étranger ou pause refusés
+ok 144 - capture : proie morte naturellement, prédateur mort, étranger ou pause refusés
+  ---
+  duration_ms: 0.3084
+  type: 'test'
+  ...
+# Subtest: énergie : drain par seconde via locomotion fournie, faim et absence de remplacement automatique
+ok 145 - énergie : drain par seconde via locomotion fournie, faim et absence de remplacement automatique
+  ---
+  duration_ms: 0.4114
+  type: 'test'
+  ...
+# Subtest: activation : prédateurs figés et inoffensifs hors mode actif ; reprise sans énergie offerte
+ok 146 - activation : prédateurs figés et inoffensifs hors mode actif ; reprise sans énergie offerte
+  ---
+  duration_ms: 1.2488
+  type: 'test'
+  ...
+# Subtest: pause : proies, prédateurs, cooldowns, effets et compteurs restent figés
+ok 147 - pause : proies, prédateurs, cooldowns, effets et compteurs restent figés
+  ---
+  duration_ms: 0.5645
+  type: 'test'
+  ...
+# Subtest: effectif : ajout, retrait, limite 8, paramètres atomiques et états sans cible périmée
+ok 148 - effectif : ajout, retrait, limite 8, paramètres atomiques et états sans cible périmée
+  ---
+  duration_ms: 1.1248
+  type: 'test'
+  ...
+# Subtest: graine et reset : mêmes prédateurs et mêmes événements, fondateurs identiques avec/sans prédateurs
+ok 149 - graine et reset : mêmes prédateurs et mêmes événements, fondateurs identiques avec/sans prédateurs
+  ---
+  duration_ms: 17.8804
+  type: 'test'
+  ...
+# Subtest: contrôles UI : activation, cinq paramètres, poids, boutons, diagnostics et compteurs
+ok 150 - contrôles UI : activation, cinq paramètres, poids, boutons, diagnostics et compteurs
+  ---
+  duration_ms: 5.6738
+  type: 'test'
+  ...
+# Subtest: diagnostic de rendu : prédateurs distincts, prévisions, forces et halo sans argument NaN
+ok 151 - diagnostic de rendu : prédateurs distincts, prévisions, forces et halo sans argument NaN
+  ---
+  duration_ms: 1.8637
+  type: 'test'
+  ...
+# Subtest: stabilité prédation arena : 20 000 pas, captures actives, quatre gènes et absence de NaN
+ok 152 - stabilité prédation arena : 20 000 pas, captures actives, quatre gènes et absence de NaN
+  ---
+  duration_ms: 2474.6147
+  type: 'test'
+  ...
+# Subtest: stabilité prédation tp : 20 000 pas, captures actives, quatre gènes et absence de NaN
+ok 153 - stabilité prédation tp : 20 000 pas, captures actives, quatre gènes et absence de NaN
+  ---
+  duration_ms: 2136.0955
+  type: 'test'
+  ...
+# Subtest: gènes : moyennes, extrêmes, variance et écart-type de population sur données connues
+ok 154 - gènes : moyennes, extrêmes, variance et écart-type de population sur données connues
+  ---
+  duration_ms: 4.633
+  type: 'test'
+  ...
+# Subtest: diversité : clones à zéro, extrêmes à 0,25 et population vide non définie
+ok 155 - diversité : clones à zéro, extrêmes à 0,25 et population vide non définie
+  ---
+  duration_ms: 1.1606
+  type: 'test'
+  ...
+# Subtest: population vide : pas de NaN, extrêmes et écarts-types absents, compteurs historiques préservés
+ok 156 - population vide : pas de NaN, extrêmes et écarts-types absents, compteurs historiques préservés
+  ---
+  duration_ms: 0.7965
+  type: 'test'
+  ...
+# Subtest: réplicats : moyenne et écart-type échantillonnal n−1, cas absent/unique explicites
+ok 157 - réplicats : moyenne et écart-type échantillonnal n−1, cas absent/unique explicites
+  ---
+  duration_ms: 0.9781
+  type: 'test'
+  ...
+# Subtest: historique : 1 Hz, événements de paramètres datés et paramètres environnementaux complets
+ok 158 - historique : 1 Hz, événements de paramètres datés et paramètres environnementaux complets
+  ---
+  duration_ms: 29.4095
+  type: 'test'
+  ...
+# Subtest: historique borné : pertes annoncées, configuration initiale préservée et instantanés indépendants
+ok 159 - historique borné : pertes annoncées, configuration initiale préservée et instantanés indépendants
+  ---
+  duration_ms: 25.9034
+  type: 'test'
+  ...
+# Subtest: capture de trace : lecture seule, photo terminale et limite de quatre expériences
+ok 160 - capture de trace : lecture seule, photo terminale et limite de quatre expériences
+  ---
+  duration_ms: 7.125
+  type: 'test'
+  ...
+# Subtest: reproductibilité : paramètres enregistrés, même état après relance et même nombre de pas
+ok 161 - reproductibilité : paramètres enregistrés, même état après relance et même nombre de pas
+  ---
+  duration_ms: 100.3511
+  type: 'test'
+  ...
+# Subtest: relance atomique : configuration invalide refusée sans modifier le monde courant
+ok 162 - relance atomique : configuration invalide refusée sans modifier le monde courant
+  ---
+  duration_ms: 3.6587
+  type: 'test'
+  ...
+# Subtest: huit configurations : axes indépendants, mêmes autres paramètres et aucune mutation du modèle source
+ok 163 - huit configurations : axes indépendants, mêmes autres paramètres et aucune mutation du modèle source
+  ---
+  duration_ms: 2.1968
+  type: 'test'
+  ...
+# Subtest: limites de déterminisme : générateur externe, hooks et interventions signalés
+ok 164 - limites de déterminisme : générateur externe, hooks et interventions signalés
+  ---
+  duration_ms: 4.3048
+  type: 'test'
+  ...
+# Subtest: CSV : lignes rectangulaires, métadonnées parsables, quatre gènes et précision numérique
+ok 165 - CSV : lignes rectangulaires, métadonnées parsables, quatre gènes et précision numérique
+  ---
+  duration_ms: 9.3791
+  type: 'test'
+  ...
+# Subtest: CSV : population vide et durée de vie non observée exportées en cellules vides
+ok 166 - CSV : population vide et durée de vie non observée exportées en cellules vides
+  ---
+  duration_ms: 1.5288
+  type: 'test'
+  ...
+# Subtest: CSV : échappement des textes et formules, sans transformer les nombres négatifs
+ok 167 - CSV : échappement des textes et formules, sans transformer les nombres négatifs
+  ---
+  duration_ms: 0.3376
+  type: 'test'
+  ...
+# Subtest: téléchargement : un seul fichier CSV et URL temporaire libérée après le clic
+ok 168 - téléchargement : un seul fichier CSV et URL temporaire libérée après le clic
+  ---
+  duration_ms: 0.8464
+  type: 'test'
+  ...
+# Subtest: graphiques : temps réel sur l’axe x, aucune division par zéro, lacune après extinction
+ok 169 - graphiques : temps réel sur l’axe x, aucune division par zéro, lacune après extinction
+  ---
+  duration_ms: 0.6379
+  type: 'test'
+  ...
+# Subtest: graphiques Canvas : rendu seulement si échantillon, taille ou source changent
+ok 170 - graphiques Canvas : rendu seulement si échantillon, taille ou source changent
+  ---
+  duration_ms: 9.4739
+  type: 'test'
+  ...
+# Subtest: tableau scientifique : contrôles, export, traces et relance des paramètres finaux
+ok 171 - tableau scientifique : contrôles, export, traces et relance des paramètres finaux
+  ---
+  duration_ms: 8.8221
+  type: 'test'
+  ...
+# Subtest: répétitions : extinction observée et durée censurée à l’horizon ne sont pas confondues
+ok 172 - répétitions : extinction observée et durée censurée à l’horizon ne sont pas confondues
+  ---
+  duration_ms: 1.2202
+  type: 'test'
+  ...
+# Subtest: agrégation : tous les essais pour population/survie, seulement survivants pour diversité
+ok 173 - agrégation : tous les essais pour population/survie, seulement survivants pour diversité
+  ---
+  duration_ms: 0.523
+  type: 'test'
+  ...
+# Subtest: batch : graines identiques, huit bras conservés, résultats répétables et validation des entrées
+ok 174 - batch : graines identiques, huit bras conservés, résultats répétables et validation des entrées
+  ---
+  duration_ms: 238.1245
+  type: 'test'
+  ...
+# Subtest: longue simulation scientifique : 40 000 pas, historique plafonné, données et export sans NaN
+ok 175 - longue simulation scientifique : 40 000 pas, historique plafonné, données et export sans NaN
+  ---
+  duration_ms: 1459.4961
+  type: 'test'
+  ...
+# Subtest: serveur HTTP : page et tous les scripts/modules locaux accessibles avec MIME correct
+ok 176 - serveur HTTP : page et tous les scripts/modules locaux accessibles avec MIME correct
+  ---
+  duration_ms: 1688.932
+  type: 'test'
+  ...
+# Subtest: syntaxe JavaScript vérifiée pour tous les modules du projet
+ok 177 - syntaxe JavaScript vérifiée pour tous les modules du projet
+  ---
+  duration_ms: 2530.4267
+  type: 'test'
+  ...
+1..177
+# tests 177
+# suites 0
+# pass 177
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5519.2294

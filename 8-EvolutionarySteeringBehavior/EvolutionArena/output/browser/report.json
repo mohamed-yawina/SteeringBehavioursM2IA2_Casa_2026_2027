@@ -1,0 +1,66 @@
+{
+  "date": "2026-10-25T22:20:57.046Z",
+  "origin": "http://127.0.0.1:56461",
+  "checks": [
+    "Accueil chargé avec p5 réel",
+    "Tutoriel : sept étapes",
+    "Paramètres appliqués",
+    "Préférence persistante après rechargement",
+    "Laboratoire : neuf Canvas scientifiques",
+    "Graphiques dessinés",
+    "Pause : chronomètre figé",
+    "Contrôles scientifiques dépliés",
+    "Comparaison : deux traces",
+    "Prédateurs actifs",
+    "Cinq missions affichées et verrouillage",
+    "Mission 1 démarrée",
+    "Mission 1 : démarrage avec fixture de déverrouillage",
+    "Mission 2 : démarrage avec fixture de déverrouillage",
+    "Mission 3 : démarrage avec fixture de déverrouillage",
+    "Mission 4 : démarrage avec fixture de déverrouillage",
+    "Mission 5 : démarrage avec fixture de déverrouillage",
+    "Reset progression persistant"
+  ],
+  "exceptions": [],
+  "consoleErrors": [],
+  "downloads": [
+    "695194eb-34b9-44bf-96a1-cbb159639381"
+  ],
+  "screenshots": [
+    "home.png",
+    "laboratory.png",
+    "mission.png",
+    "mobile.png"
+  ],
+  "measurements": {
+    "fps": 5.9171597633136095,
+    "heap": {
+      "used": 4494837,
+      "total": 10822045
+    },
+    "canvas": {
+      "width": 1334,
+      "height": 788.2727272727273
+    },
+    "population": "34",
+    "note": "Instantané Chrome headless, pas un benchmark matériel représentatif.",
+    "profile": {
+      "durationMs": 3000.300000011921,
+      "frames": 181,
+      "steps": 180,
+      "fps": 59.994000599701636,
+      "meanUpdateMs": 0.2427777777115504,
+      "meanArenaRenderMs": 1.2895027616406014,
+      "note": "Laboratoire par défaut avec deux prédateurs et diagnostic, headless ; rendu CPU, pas temps GPU ni latence écran."
+    }
+  },
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/155.0.8059.85",
+    "revision": "@0e66b94549a8bd85f03fbdf189b752d6e7b63c32",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+    "jsVersion": "15.5.35.25"
+  },
+  "status": "passed",
+  "limitations": "Headless : pas de validation humaine du rendu, pas de fin des cinq missions en navigateur ; lancement vérifié avec fixture de progression. FPS instantané non représentatif."
+}

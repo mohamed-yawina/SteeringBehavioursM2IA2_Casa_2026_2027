@@ -1,0 +1,191 @@
+{
+  "format": "NeuroDriveAI.initial-audit",
+  "version": 1,
+  "network": "../essai-2026/champion.json",
+  "dt": 0.008333333333333333,
+  "firstLap": 12.599999999999925,
+  "crash": 23.6499999999993,
+  "events": [
+    {
+      "time": 2.0499999999999954,
+      "checkpoints": 1,
+      "laps": 0
+    },
+    {
+      "time": 3.4583333333333237,
+      "checkpoints": 2,
+      "laps": 0
+    },
+    {
+      "time": 4.766666666666693,
+      "checkpoints": 3,
+      "laps": 0
+    },
+    {
+      "time": 5.950000000000085,
+      "checkpoints": 4,
+      "laps": 0
+    },
+    {
+      "time": 6.900000000000133,
+      "checkpoints": 5,
+      "laps": 0
+    },
+    {
+      "time": 7.5833333333335,
+      "checkpoints": 6,
+      "laps": 0
+    },
+    {
+      "time": 8.250000000000172,
+      "checkpoints": 7,
+      "laps": 0
+    },
+    {
+      "time": 9.108333333333457,
+      "checkpoints": 8,
+      "laps": 0
+    },
+    {
+      "time": 10.116666666666733,
+      "checkpoints": 9,
+      "laps": 0
+    },
+    {
+      "time": 11.125000000000009,
+      "checkpoints": 10,
+      "laps": 0
+    },
+    {
+      "time": 11.97499999999996,
+      "checkpoints": 11,
+      "laps": 0
+    },
+    {
+      "time": 12.599999999999925,
+      "checkpoints": 12,
+      "laps": 1
+    },
+    {
+      "time": 13.249999999999888,
+      "checkpoints": 13,
+      "laps": 1
+    },
+    {
+      "time": 14.116666666666505,
+      "checkpoints": 14,
+      "laps": 1
+    },
+    {
+      "time": 15.14999999999978,
+      "checkpoints": 15,
+      "laps": 1
+    },
+    {
+      "time": 16.10833333333306,
+      "checkpoints": 16,
+      "laps": 1
+    },
+    {
+      "time": 16.908333333333015,
+      "checkpoints": 17,
+      "laps": 1
+    },
+    {
+      "time": 17.524999999999647,
+      "checkpoints": 18,
+      "laps": 1
+    },
+    {
+      "time": 18.166666666666277,
+      "checkpoints": 19,
+      "laps": 1
+    },
+    {
+      "time": 19.04999999999956,
+      "checkpoints": 20,
+      "laps": 1
+    },
+    {
+      "time": 20.116666666666166,
+      "checkpoints": 21,
+      "laps": 1
+    },
+    {
+      "time": 21.05833333333278,
+      "checkpoints": 22,
+      "laps": 1
+    },
+    {
+      "time": 21.833333333332735,
+      "checkpoints": 23,
+      "laps": 1
+    },
+    {
+      "time": 22.4333333333327,
+      "checkpoints": 24,
+      "laps": 2
+    },
+    {
+      "time": 23.083333333332664,
+      "checkpoints": 25,
+      "laps": 2
+    }
+  ],
+  "snapshots": [
+    {
+      "horizon": 12,
+      "elapsed": 11.99999999999996,
+      "checkpoints": 11,
+      "laps": 0,
+      "speed": 170.49750737582966,
+      "crashed": false,
+      "nextCheckpoint": 0,
+      "distanceToNext": 95.83008028147522,
+      "position": {
+        "x": 788.527417105783,
+        "y": 254.85913533875518
+      }
+    },
+    {
+      "horizon": 20,
+      "elapsed": 19.999999999999506,
+      "checkpoints": 20,
+      "laps": 1,
+      "speed": 190.3022529843409,
+      "crashed": false,
+      "nextCheckpoint": 9,
+      "distanceToNext": 19.983158719984772,
+      "position": {
+        "x": 480.01684128001517,
+        "y": 111.02136624711055
+      }
+    },
+    {
+      "horizon": 30,
+      "elapsed": 23.6499999999993,
+      "checkpoints": 25,
+      "laps": 2,
+      "speed": 0,
+      "crashed": true,
+      "nextCheckpoint": 2,
+      "distanceToNext": 65.91104033501048,
+      "position": {
+        "x": 762.0559302639065,
+        "y": 559.4888024798146
+      }
+    }
+  ],
+  "oldDiversity": [
+    0.32646622121824076,
+    0.2723182667503272
+  ],
+  "oldDiversityRelativeDrop": 0.16586081789979723,
+  "protectedSources": {
+    "src/track/CheckpointManager.js": "6018027cc895a2b2a564a2e144148f45742efaebd33e6c0f2f77f29df9b113c2",
+    "src/simulation/Simulation.js": "d27d1c2342dcd36f09e2b4a13bac792632bbc1e8418e40d20b817ca2c5e4933e",
+    "src/core/Vehicle.js": "f007833b93faefd147b4e8626d08ba91032abec125ce6af0250cbc18af75d30b",
+    "src/track/Track.js": "e4655bebe8ac733c69c885a7ba07ac7acb0126978b79eba997934f45dd867561",
+    "src/ai/NeuralController.js": "9459b886a9f1d376ded486faafae6a4875ffb95f9a9958fede37cedbf561a710"
+  }
+}

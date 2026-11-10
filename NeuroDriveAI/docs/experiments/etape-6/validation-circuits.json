@@ -1,0 +1,104 @@
+{
+  "format": "NeuroDriveAI.track-validation",
+  "version": 1,
+  "dt": 0.008333333333333333,
+  "referenceSpeed": 55,
+  "disclaimer": "Diagnostic driver only: not a neural policy or evidence of learning. Human validation pending.",
+  "tracks": [
+    {
+      "id": "oval",
+      "name": "Training Oval",
+      "geometry": {
+        "valid": true,
+        "errors": [],
+        "minimumWidth": 116.7472019475003,
+        "startClearance": 59.72487251820497,
+        "length": 1875.7709296587666,
+        "checkpoints": 12
+      },
+      "referenceDriver": {
+        "laps": 1,
+        "checkpoints": 12,
+        "elapsed": 33.86666666666539,
+        "collision": false
+      },
+      "humanValidated": false
+    },
+    {
+      "id": "desert",
+      "name": "Desert Circuit",
+      "geometry": {
+        "valid": true,
+        "errors": [],
+        "minimumWidth": 87.36590945101727,
+        "startClearance": 43.97403496989698,
+        "length": 1872.9445922183868,
+        "checkpoints": 14
+      },
+      "referenceDriver": {
+        "laps": 1,
+        "checkpoints": 14,
+        "elapsed": 33.60833333333207,
+        "collision": false
+      },
+      "humanValidated": false
+    },
+    {
+      "id": "mountain",
+      "name": "Mountain Pass",
+      "geometry": {
+        "valid": true,
+        "errors": [],
+        "minimumWidth": 62.6210641179381,
+        "startClearance": 31.999982370655463,
+        "length": 2129.6110958265126,
+        "checkpoints": 18
+      },
+      "referenceDriver": {
+        "laps": 1,
+        "checkpoints": 18,
+        "elapsed": 38.108333333331814,
+        "collision": false
+      },
+      "humanValidated": false
+    },
+    {
+      "id": "neon",
+      "name": "Neon City",
+      "geometry": {
+        "valid": true,
+        "errors": [],
+        "minimumWidth": 75.02777962217124,
+        "startClearance": 37.998242374500585,
+        "length": 2209.5940759609102,
+        "checkpoints": 16
+      },
+      "referenceDriver": {
+        "laps": 1,
+        "checkpoints": 16,
+        "elapsed": 39.64166666666506,
+        "collision": false
+      },
+      "humanValidated": false
+    },
+    {
+      "id": "championship",
+      "name": "Evolution Championship",
+      "geometry": {
+        "valid": true,
+        "errors": [],
+        "minimumWidth": 65.22056802256792,
+        "startClearance": 32.9999875272704,
+        "length": 2081.04554619074,
+        "checkpoints": 20
+      },
+      "referenceDriver": {
+        "laps": 1,
+        "checkpoints": 20,
+        "elapsed": 37.28333333333186,
+        "collision": false
+      },
+      "humanValidated": false
+    }
+  ]
+}

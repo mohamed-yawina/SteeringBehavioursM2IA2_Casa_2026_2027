@@ -1,254 +1,275 @@
-// Daniel Shiffman
-// The Coding Train
-// Coding Challenge 69: Steering Evolution
-// Part 1: https://youtu.be/flxOkx0yLrY
-// Part 2: https://youtu.be/XaOVH8ZSRNA
-// Part 3: https://youtu.be/vZUWTlK7D2Q
-// Part 4: https://youtu.be/ykOcaInciBI
-// Part 5: https://youtu.be/VnFF5V5DS8s
+// =====================================================================
+// Vehicle — classe MÈRE de tous les objets animés.
+// Contient TOUS les comportements de base (steering behaviors de Reynolds).
+// Chaque instance possède un BehaviorManager (voir behavior_manager.js).
+// =====================================================================
 
-// https://editor.p5js.org/codingtrain/sketches/xgQNXkxx1
-
-var mr = 0.01;
+const GENE_WEIGHTS = [0, 1, 4];
+const GENE_PERCEPTIONS = [2, 3, 5];
 
 class Vehicle {
-  constructor(x, y, dna) {
-    this.acc = createVector(0, 0);
-    this.vel = createVector(0, -2);
+  constructor(x, y, parentDna, generation = 1, opts = {}) {
     this.pos = createVector(x, y);
-    this.r = 4;
-    this.maxSpeed = 5;
-    this.maxForce = 0.5;
-
-    // La vie, à zéro le véhicule est mort
+    this.vel = p5.Vector.random2D().mult(2);
+    this.acc = createVector(0, 0);
+    this.r = opts.r ?? 4;
+    this.maxSpeed = opts.maxSpeed ?? 4.5;
+    this.maxForce = opts.maxForce ?? 0.4;
+    this.eatRadius = opts.eatRadius ?? 5;
     this.health = 1;
+    this.age = 0;
+    this.generation = generation;
+    this.dna = parentDna ? Vehicle.mutate(parentDna) : Vehicle.randomDna();
 
-    // 4 gènes : poids de la force d'attraction vers la nourriture, 
-    //           poids  de la force d'attraction vers le poison, 
-    //           perception de la nourriture (rayon cercle de détection), 
-    //           perception du poison (rayon cercle de détection)
-    this.dna = [];
+    // État visuel
+    this.trail = [];
+    this.flash = 0;
+    this.hurtFlash = 0;
+    this.shield = 0;
+    this.color = opts.color ?? null;
 
-    // si le paramètre dna est défini alors on est dans un cas de mutation
-    // si il est undefined alors on crée des gènes aléatoires pour un nouvel individu
-    if (dna === undefined) {
-      // Food weight
-      this.dna[0] = random(-2, 2);
-      // Poison weight
-      this.dna[1] = random(-2, 2);
-      // Food perception (rayon cercle de détection)
-      this.dna[2] = random(0, 100);
-      // Poison Perception (rayon cercle de détection)
-      this.dna[3] = random(0, 100);
-    } else {
-      // Mutation lors d'un clonage, on va recréer 
-      // un individu avec des gènes légèrement modifiés
-      // poids des forces d'attraction / répulsion de la nourriture et du poison
-      this.dna[0] = dna[0];
-      // mr = mutation rate (en général très petit comme 0.01, soit une fois
-      // sur 100)
-      if (random(1) < mr) {
-        // et on donne une petite variation aléatoire entre des très petites valeurs
-        // ici entre -0.1 et 0.1
-        this.dna[0] += random(-0.1, 0.1);
-      }
-      this.dna[1] = dna[1];
-      if (random(1) < mr) {
-        this.dna[1] += random(-0.1, 0.1);
-      }
-      // rayons de perception, +/- 10 pixels pour la mutation
-      this.dna[2] = dna[2];
-      if (random(1) < mr) {
-        this.dna[2] += random(-10, 10);
-      }
-      this.dna[3] = dna[3];
-      if (random(1) < mr) {
-        this.dna[3] += random(-10, 10);
-      }
-    }
+    // NOUVEAU : BehaviorManager associé à chaque véhicule
+    this.behaviors = new BehaviorManager(this);
   }
 
+  // --- ADN / évolution -------------------------------------------------
+  static randomDna() {
+    return [random(-2, 2), random(-2, 2), random(20, 150),
+            random(20, 150), random(-2, 2), random(30, 200)];
+  }
+  static mutate(parentDna) {
+    const dna = parentDna.slice();
+    for (const i of GENE_WEIGHTS)
+      if (random(1) < CFG.mutation)
+        dna[i] = constrain(dna[i] + randomGaussian(0, 0.25), -3, 3);
+    for (const i of GENE_PERCEPTIONS)
+      if (random(1) < CFG.mutation)
+        dna[i] = constrain(dna[i] + randomGaussian(0, 12), 10, 300);
+    return dna;
+  }
+  reproduce() {
+    if (this.health > 0.6 && this.age > 200 && random(1) < CFG.repro) {
+      this.health -= 0.25;
+      return new Vehicle(this.pos.x + random(-6, 6), this.pos.y + random(-6, 6),
+                         this.dna, this.generation + 1);
+    }
+    return null;
+  }
 
-  // Method to update location
+  // --- Application ----------------------------------------------------
+  applyForce(force) { this.acc.add(force); }
+
   update() {
+    this.health -= CFG.drain;
+    this.age++;
+    if (this.flash > 0) this.flash--;
+    if (this.hurtFlash > 0) this.hurtFlash--;
+    if (this.shield > 0) this.shield--;
 
-    // 60 fois par seconde, on perd de la vie, d'où la 
-    // nécessité de se nourrir.
-    // à chaque frame on perd 0.005 de vie, donc à 60 images par
-    // seconde, on perd 0.3 de vie par seconde
-    this.health -= 0.005;
-
-    // Update velocity
     this.vel.add(this.acc);
-    // Limit speed
-    this.vel.limit(this.maxSpeed);
+    const sf = 0.55 + 0.45 * constrain(this.health, 0, 1);
+    this.vel.limit(this.maxSpeed * sf);
     this.pos.add(this.vel);
-    // Reset accelerationelertion to 0 each cycle
     this.acc.mult(0);
+
+    if (CFG.trails) {
+      this.trail.push(this.pos.copy());
+      if (this.trail.length > 12) this.trail.shift();
+    } else this.trail.length = 0;
   }
 
-  applyForce(force) {
-    // We could add mass here if we want A = F / M
-    this.acc.add(force);
+  dead() { return this.health <= 0; }
+
+  // =====================================================================
+  // COMPORTEMENTS DE BASE (tous dans Vehicle — exigence du cours)
+  // =====================================================================
+
+  // 1) SEEK — Reynolds : steer = desired - velocity
+  seek(target) {
+    const desired = p5.Vector.sub(target, this.pos).setMag(this.maxSpeed);
+    return p5.Vector.sub(desired, this.vel).limit(this.maxForce);
   }
 
-  behaviors(good, bad) {
-    // G = good (food)
-    // B = bad (poison)
-    // steerG = force qui attire vers la nourriture
-    // steerB = force qui repousse du poison
-    // 1er param = le tableau de nourriture (bonne ou poison)
-    // 2ème param = ce qu'on va ajouter à la sante si on mange
-    // sante = this.health
-    // 3ème param = rayon de perception   
-    const steerG = this.eat(good, 0.2, this.dna[2]);
-    const steerB = this.eat(bad, -1, this.dna[3]);
-
-    // on applique les poids des gènes
-    steerG.mult(this.dna[0]);
-    steerB.mult(this.dna[1]);
-
-    // on applique les forces
-    this.applyForce(steerG);
-    this.applyForce(steerB);
+  // 2) FLEE — l'inverse de SEEK. IMPORTANT : on inverse la VITESSE
+  //    désirée, PAS la force (cf. Craig Reynolds / page 18 du cours).
+  flee(target) {
+    const desired = p5.Vector.sub(target, this.pos).setMag(this.maxSpeed).mult(-1);
+    return p5.Vector.sub(desired, this.vel).limit(this.maxForce);
   }
 
-  clone() {
-    // 2 sur mille de chances de clonage
-    if (random(1) < 0.002) {
-      return new Vehicle(this.pos.x, this.pos.y, this.dna);
-    } else {
-      return null;
-    }
+  // 3) ARRIVE — seek avec slowing radius (page 22 du cours)
+  arrive(target, slowingRadius = 100, targetOffset = 0) {
+    const desired = p5.Vector.sub(target, this.pos);
+    const d = desired.mag() - targetOffset;
+    if (d < 0) return createVector(0, 0);
+    let speed = this.maxSpeed;
+    if (d < slowingRadius) speed = this.maxSpeed * (d / slowingRadius);
+    desired.setMag(speed);
+    return p5.Vector.sub(desired, this.vel).limit(this.maxForce);
   }
 
-  // comportement de recherche de nourriture
-  // nutrition peut être positive (nourriture) ou négative (poison)
-  // perception est le rayon de détection de la nourriture 
-  // ou du poison
-  eat(list, nutrition, perception) {
-    let record = Infinity;
-    let closest = null;
+  // 4) PURSUE — seek vers la position future de la cible (page 19-20)
+  pursue(target, predictionFrames = 12) {
+    const future = p5.Vector.add(target.pos, p5.Vector.mult(target.vel, predictionFrames));
+    return this.seek(future);
+  }
 
-    // on parcourt la liste des éléments à manger
-    // on cherche le plus proche
-    for (let i = list.length - 1; i >= 0; i--) {
-      const d = this.pos.dist(list[i]);
+  // 5) EVADE — l'inverse de PURSUE. On inverse la vitesse désirée.
+  evade(target, predictionFrames = 12) {
+    const future = p5.Vector.add(target.pos, p5.Vector.mult(target.vel, predictionFrames));
+    return this.flee(future);
+  }
 
-      // si l'élément est à portée
-      // on le mange et on gagne de la vie ou on en perd
-      // selon que c'est de la nourriture ou du poison
-      // on a pris this.maxSpeed qui vaut 5 ici pour la distance
-      // à partir de laquelle on mange l'élément. On aurait pu
-      // definir une nouvelle variable
-      if (d < 5) {
-        list.splice(i, 1);
-        this.health += nutrition;
-      } else {
-        // si l'élément n'est pas à portée, 
-        // on cherche le plus proche
-        if (d < record && d < perception) {
-          // on garde en mémoire la distance et l'élément
-          record = d;
-          closest = list[i];
-        }
+  // 6) WANDER — cercle devant le véhicule, cible qui dérive (page 26)
+  wander(thetaState, distance = 80, radius = 40, jitter = 0.35) {
+    thetaState.theta += random(-jitter, jitter);
+    const center = p5.Vector.add(this.pos, this.vel.copy().setMag(distance));
+    const target = p5.Vector.add(center,
+      p5.Vector.fromAngle(this.vel.heading() + thetaState.theta, radius));
+    return this.seek(target);
+  }
+
+  // 7) BOUNDARIES — confinement dans le canvas
+  boundaries() {
+    const d = 25;
+    let dx = this.vel.x, dy = this.vel.y, out = false;
+    if (this.pos.x < d) { dx = this.maxSpeed; out = true; }
+    else if (this.pos.x > width - d) { dx = -this.maxSpeed; out = true; }
+    if (this.pos.y < d) { dy = this.maxSpeed; out = true; }
+    else if (this.pos.y > height - d) { dy = -this.maxSpeed; out = true; }
+    if (!out) return createVector(0, 0);
+    const desired = createVector(dx, dy).setMag(this.maxSpeed);
+    return p5.Vector.sub(desired, this.vel).limit(this.maxForce);
+  }
+
+  // 8) SEPARATION — garder ses distances avec les voisins (page 39)
+  separation(neighbors, desiredSep = 30) {
+    let steer = createVector(0, 0), count = 0;
+    for (const other of neighbors) {
+      if (other === this) continue;
+      const d = p5.Vector.dist(this.pos, other.pos);
+      if (d > 0 && d < desiredSep) {
+        const diff = p5.Vector.sub(this.pos, other.pos);
+        diff.normalize().div(d);      // plus proche = plus fort
+        steer.add(diff);
+        count++;
       }
     }
-
-    // This is the moment of eating!
-    if (closest != null) {
-      return this.seek(closest);
+    if (count > 0) {
+      steer.div(count);
+      steer.setMag(this.maxSpeed);
+      steer.sub(this.vel).limit(this.maxForce);
     }
-
-    return createVector(0, 0);
-  }
-
-  // A method that calculates a steering force towards a target
-  // STEER = DESIRED MINUS VELOCITY
-  seek(target) {
-    const desired = p5.Vector.sub(target, this.pos); // A vector pointing from the location to the target
-
-    // Scale to maximum speed
-    desired.setMag(this.maxSpeed);
-
-    // Steering = Desired minus velocity
-    const steer = p5.Vector.sub(desired, this.vel);
-    steer.limit(this.maxForce); // Limit to maximum steering force
-
     return steer;
   }
 
-  dead() {
-    return (this.health <= 0)
+  // 9) ALIGNMENT — aller dans la même direction que les voisins (page 37)
+  alignment(neighbors, neighborDist = 60) {
+    let sum = createVector(0, 0), count = 0;
+    for (const other of neighbors) {
+      if (other === this) continue;
+      if (p5.Vector.dist(this.pos, other.pos) < neighborDist) {
+        sum.add(other.vel); count++;
+      }
+    }
+    if (count === 0) return createVector(0, 0);
+    sum.div(count).setMag(this.maxSpeed);
+    return p5.Vector.sub(sum, this.vel).limit(this.maxForce);
   }
 
-  display() {
-    // Draw a triangle rotated in the direction of velocity
-    const angle = this.vel.heading() + PI / 2;
+  // 10) COHESION — se rapprocher du centre des voisins (page 38)
+  cohesion(neighbors, neighborDist = 80) {
+    let sum = createVector(0, 0), count = 0;
+    for (const other of neighbors) {
+      if (other === this) continue;
+      if (p5.Vector.dist(this.pos, other.pos) < neighborDist) {
+        sum.add(other.pos); count++;
+      }
+    }
+    if (count === 0) return createVector(0, 0);
+    return this.seek(sum.div(count));
+  }
 
-    push();
-    translate(this.pos.x, this.pos.y);
-    rotate(angle);
+  // 11) OBSTACLE AVOIDANCE — évitement par "ahead" + "ahead2" (page 32-35)
+  obstacleAvoidance(obstacles, maxSeeAhead = 80) {
+    const ahead = p5.Vector.add(this.pos, this.vel.copy().setMag(maxSeeAhead));
+    const ahead2 = p5.Vector.add(this.pos, this.vel.copy().setMag(maxSeeAhead * 0.5));
+    let mostThreatening = null, minDist = Infinity;
 
-    if (debug.checked()) {
-      strokeWeight(3);
-      stroke(0, 255, 0);
-      noFill();
-      line(0, 0, 0, -this.dna[0] * 25);
-      strokeWeight(2);
-      ellipse(0, 0, this.dna[2] * 2);
-      stroke(255, 0, 0);
-      line(0, 0, 0, -this.dna[1] * 25);
-      ellipse(0, 0, this.dna[3] * 2);
+    for (const o of obstacles) {
+      const dAhead = p5.Vector.dist(ahead, o.pos);
+      const dAhead2 = p5.Vector.dist(ahead2, o.pos);
+      const dPos = p5.Vector.dist(this.pos, o.pos);
+      const d = min(dAhead, dAhead2, dPos);
+      if (d < o.r && d < minDist) { minDist = d; mostThreatening = o; }
     }
 
-    const gr = color(0, 255, 0);
-    const rd = color(255, 0, 0);
-    // couleur qui varie en fonction de la santé de l'individu
-    // lerpColor est une fonction p5 qui permet de faire une interpolation linéaire
-    // entre deux couleurs. Ici on fait une interpolation linéaire entre la couleur rouge
-    // et la couleur verte en fonction de la santé de l'individu
-    const col = lerpColor(rd, gr, this.health);
+    if (!mostThreatening) return createVector(0, 0);
 
-    fill(col);
-    stroke(col);
-    strokeWeight(1);
+    const avoidance = p5.Vector.sub(ahead, mostThreatening.pos);
+    avoidance.setMag(this.maxSpeed);
+    return p5.Vector.sub(avoidance, this.vel).limit(this.maxForce);
+  }
+
+  // =====================================================================
+  // MÉTHODE PRINCIPALE : délègue au BehaviorManager
+  // =====================================================================
+  applyBehaviors(world) {
+    const force = this.behaviors.getSteeringForce(world);
+    this.applyForce(force);
+  }
+
+  // =====================================================================
+  // AFFICHAGE
+  // =====================================================================
+  display(isChampion) {
+    if (this.trail.length > 1) {
+      noFill();
+      for (let i = 0; i < this.trail.length - 1; i++) {
+        stroke(110, 240, 176, (i / this.trail.length) * 120);
+        strokeWeight(1);
+        line(this.trail[i].x, this.trail[i].y,
+             this.trail[i + 1].x, this.trail[i + 1].y);
+      }
+    }
+    push();
+    translate(this.pos.x, this.pos.y);
+    if (CFG.debug) this.drawDebug();
+
+    if (this.shield > 0) {
+      noFill(); stroke(110, 200, 255, 180); strokeWeight(2);
+      circle(0, 0, 22 + 4 * sin(frameCount * 0.3));
+    }
+
+    let col = this.color ?? lerpColor(color(255, 50, 70), color(60, 255, 150),
+                                     constrain(this.health, 0, 1));
+    if (this.flash > 0) col = lerpColor(col, color(200, 255, 200), this.flash / 8);
+    if (this.hurtFlash > 0) col = lerpColor(col, color(255, 255, 255), this.hurtFlash / 8);
+
+    rotate(this.vel.heading() + HALF_PI);
+    fill(col); stroke(col); strokeWeight(1);
     beginShape();
     vertex(0, -this.r * 2);
     vertex(-this.r, this.r * 2);
     vertex(this.r, this.r * 2);
     endShape(CLOSE);
-
     pop();
+
+    if (isChampion) {
+      noFill(); stroke(255, 255, 255, 200); strokeWeight(1.5);
+      circle(this.pos.x, this.pos.y, 26);
+    }
   }
 
-
-  // Exerce une force renvoyant vers le centre du canvas si le véhicule s'approche
-  // des bords du canvas
-  boundaries() {
-    const d = 25;
-
-    let desired = null;
-
-    // si le véhicule est trop à gauche ou trop à droite
-    if (this.pos.x < d) {
-      desired = createVector(this.maxSpeed, this.vel.y);
-    } else if (this.pos.x > width - d) {
-      desired = createVector(-this.maxSpeed, this.vel.y);
-    }
-
-    if (this.pos.y < d) {
-      desired = createVector(this.vel.x, this.maxSpeed);
-    } else if (this.pos.y > height - d) {
-      desired = createVector(this.vel.x, -this.maxSpeed);
-    }
-
-    if (desired !== null) {
-      desired.normalize();
-      desired.mult(this.maxSpeed);
-      const steer = p5.Vector.sub(desired, this.vel);
-      steer.limit(this.maxForce);
-      this.applyForce(steer);
-    }
+  drawDebug() {
+    noFill(); strokeWeight(1);
+    stroke(60, 255, 150, 110);  circle(0, 0, this.dna[2] * 2);
+    stroke(255, 60, 80, 110);   circle(0, 0, this.dna[3] * 2);
+    stroke(255, 170, 40, 110);  circle(0, 0, this.dna[5] * 2);
+    push(); rotate(this.vel.heading() + HALF_PI); strokeWeight(2.5);
+    stroke(60, 255, 150);  line(0, 0, 0, -this.dna[0] * 20);
+    stroke(255, 60, 80);   line(6, 0, 6, -this.dna[1] * 20);
+    stroke(255, 170, 40);  line(-6, 0, -6, -this.dna[4] * 20);
+    pop();
   }
 }
